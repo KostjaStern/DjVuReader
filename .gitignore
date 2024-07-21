@@ -1,0 +1,14 @@
+
+target/
+
+# IntelliJ IDEA
+*.iml
+.idea/**
+
+# Eclipse
+.settings
+.classpath
+.project
+
+
+.DS_Store
