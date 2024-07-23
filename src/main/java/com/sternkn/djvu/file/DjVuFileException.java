@@ -1,4 +1,4 @@
-package com.sternkn.djvu;
+package com.sternkn.djvu.file;
 
 public class DjVuFileException extends RuntimeException {
 

@@ -1,4 +1,4 @@
-package com.sternkn.djvu;
+package com.sternkn.djvu.file.chunks;
 
 public enum ChunkId {
 
