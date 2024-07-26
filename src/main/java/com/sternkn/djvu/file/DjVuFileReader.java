@@ -63,6 +63,15 @@ public class DjVuFileReader implements Closeable {
         }
     }
 
+    public int readBytes(byte[] buffer) {
+        try {
+            return inputStream.read(buffer);
+        }
+        catch (IOException e) {
+            throw new DjVuFileException("Bytes reading problem", e);
+        }
+    }
+
     public byte readByte() {
         try {
             return inputStream.readByte();
@@ -77,7 +86,16 @@ public class DjVuFileReader implements Closeable {
             return inputStream.readShort();
         }
         catch (IOException e) {
-            throw new DjVuFileException("Short reading problem", e);
+            throw new DjVuFileException("Int16 reading problem", e);
+        }
+    }
+
+    public int readInt() {
+        try {
+            return inputStream.readInt();
+        }
+        catch (IOException e) {
+            throw new DjVuFileException("Int32 reading problem", e);
         }
     }
 
