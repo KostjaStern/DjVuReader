@@ -46,7 +46,7 @@ public class DirectoryChunk extends Chunk {
         }
         logOffsets();
 
-        this.bzzDataSize = this.getLength() - this.nFiles * 4 - 1;
+        this.bzzDataSize = this.getLength() - this.nFiles * 4 - 2;
         this.bzzData = new byte[this.bzzDataSize];
         int numberOfBytesRead = fileReader.readBytes(this.bzzData);
 

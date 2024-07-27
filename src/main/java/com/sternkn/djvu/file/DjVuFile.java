@@ -2,7 +2,10 @@ package com.sternkn.djvu.file;
 
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
+import com.sternkn.djvu.file.chunks.DjbzChunk;
+import com.sternkn.djvu.file.chunks.PageFormChunk;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
+import com.sternkn.djvu.file.chunks.SharedFormChunk;
 
 import java.io.File;
 
@@ -36,9 +39,25 @@ public class DjVuFile {
         DirectoryChunk directoryChunk = new DirectoryChunk(dirmChunkId, this.fileReader);
         System.out.println("directoryChunk = " + directoryChunk);
 
-//        int dirmChunkSize = this.fileReader.readChunkLength();  //
-//        System.out.println("dirmChunkSize = " + dirmChunkSize); // 4527
 
+        ChunkId chunkId1 = this.fileReader.readChunkId();
+        System.out.println("chunkId1 = " + chunkId1); // FORM
+
+        SharedFormChunk sharedFormChunk = new SharedFormChunk(chunkId1, this.fileReader);
+        System.out.println("sharedFormChunk = " + sharedFormChunk);
+
+        ChunkId chunkId2 = this.fileReader.readChunkId(); // FORM
+        System.out.println("chunkId2 = " + chunkId2);     // 4 bytes
+
+        PageFormChunk pageFormChunk = new PageFormChunk(chunkId2, this.fileReader);
+        System.out.println("pageFormChunk = " + pageFormChunk);
+
+        System.out.println("pageFormChunk.getInfoChunk() = " + pageFormChunk.getInfoChunk());
+
+//        int chunkLength2 = this.fileReader.readChunkLength(); // 1407719
+//        System.out.println("chunkLength2 = " + chunkLength2); // 4 bytes
+//
+//        SecondaryChunkId secondaryChunkId2 = this.fileReader.readSecondaryChunkId(); // DJVU
+//        System.out.println("secondaryChunkId2 = " + secondaryChunkId2); // 4 bytes
     }
-
 }
