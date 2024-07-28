@@ -56,7 +56,7 @@ public enum ChunkId {
 
     /*
          The chunk "CIDa" is not documented in djvu spec.
-
+         Obsolete chunk with unknown content. (according to https://en.wikipedia.org/wiki/DjVu)
      */
     CIDa;
 }

@@ -23,6 +23,6 @@ public enum ImageRotationType {
             }
         }
 
-        throw new DjVuFileException("Illegal flag " + flag + " in INFO chunk");
+        throw new DjVuFileException(String.format("Illegal flag %s in INFO chunk", flag));
     }
 }
