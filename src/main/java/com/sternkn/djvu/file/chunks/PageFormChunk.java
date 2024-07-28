@@ -1,5 +1,6 @@
 package com.sternkn.djvu.file.chunks;
 
+// import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.DjVuFileReader;
 
 /*
@@ -14,12 +15,54 @@ import com.sternkn.djvu.file.DjVuFileReader;
 public class PageFormChunk extends FormChunk {
 
     private final InfoChunk infoChunk;
+    // private final byte[] data;
 
     public PageFormChunk(ChunkId chunkId, DjVuFileReader fileReader) {
         super(chunkId, fileReader);
 
         ChunkId infoChunkId = fileReader.readChunkId();
         this.infoChunk = new InfoChunk(infoChunkId, fileReader);
+
+        ChunkId cidaChunkId = fileReader.readChunkId();
+        CidaChunk cidaChunk = new CidaChunk(cidaChunkId, fileReader);
+        System.out.println("cidaChunk = " + cidaChunk);
+
+        /*
+        this.data = new byte[this.getLength() - 9 - 4 - 4 - 4];
+
+        int numberOfBytesRead = fileReader.readBytes(this.data);
+
+        if (numberOfBytesRead < this.data.length) {
+            throw new DjVuFileException("Unexpected end of " + this.getChunkId() + " chunk after reading " +
+                    numberOfBytesRead + " bytes");
+        }
+        */
+
+        ChunkId chunkId1 = fileReader.readChunkId();
+        System.out.println("chunkId1 = " + chunkId1);
+
+        // Iw44FirstChunk bg44 = new Iw44FirstChunk(chunkId1, fileReader);
+        Iw44FirstChunk bg44_1 = new Iw44FirstChunk(chunkId1, fileReader, 1); // dataSize = 270913, data[270912] = 0
+        System.out.println("bg44_1 = " + bg44_1);
+
+        ChunkId chunkId2 = fileReader.readChunkId();
+        System.out.println("chunkId2 = " + chunkId2);
+
+        Bg44Chunk bg44_2 = new Bg44Chunk(chunkId2, fileReader, 0); // dataSize = 214740, data[214739] = -65
+        System.out.println("bg44_2 = " + bg44_2);
+
+        ChunkId chunkId3 = fileReader.readChunkId();
+        System.out.println("chunkId3 = " + chunkId3);
+
+        Bg44Chunk bg44_3 = new Bg44Chunk(chunkId3, fileReader, 1); // dataSize = 299300, data[299299] = 0
+        System.out.println("bg44_3 = " + bg44_3);
+
+        ChunkId chunkId4 = fileReader.readChunkId();
+        System.out.println("chunkId4 = " + chunkId4);
+
+        Bg44Chunk bg44_4 = new Bg44Chunk(chunkId4, fileReader, 1); // dataSize = 622654 , data[622653] = 0
+        System.out.println("bg44_4 = " + bg44_4);
+
     }
 
     public InfoChunk getInfoChunk() {
@@ -28,7 +71,7 @@ public class PageFormChunk extends FormChunk {
 
     @Override
     public String toString() {
-        return "SharedFormChunk{chunkId = " + this.getChunkId()
+        return "PageFormChunk{chunkId = " + this.getChunkId()
                 + ", length = " + this.getLength()
                 + ", secondaryChunkId = " + this.getSecondaryChunkId() + "}";
     }

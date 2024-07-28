@@ -52,5 +52,11 @@ public enum ChunkId {
     FGjp,
 
     /* G4 encoded mask */
-    Smmr;
+    Smmr,
+
+    /*
+         The chunk "CIDa" is not documented in djvu spec.
+
+     */
+    CIDa;
 }

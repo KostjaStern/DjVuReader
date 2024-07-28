@@ -2,10 +2,7 @@ package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.DjVuFileReader;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.sternkn.djvu.file.SimpleDataLogger;
 
 
 /*
@@ -17,7 +14,7 @@ public class DirectoryChunk extends Chunk {
     private final boolean isBundled;
     private final int version;
     private final int nFiles;
-    private final List<Integer> offsets;
+    private final int[] offsets;
     private final int bzzDataSize;
     private final byte[] bzzData;
 
@@ -36,13 +33,13 @@ public class DirectoryChunk extends Chunk {
         this.nFiles = fileReader.readShort(); // 02 4C
 
         if (this.isBundled) {
-            this.offsets = new ArrayList<>(this.nFiles);
+            this.offsets = new int[this.nFiles];
             for (int ind = 0; ind < this.nFiles; ind++) {
-                this.offsets.add(fileReader.readInt());
+                this.offsets[ind] = fileReader.readInt();
             }
         }
         else {
-            this.offsets = Collections.emptyList();
+            this.offsets = new int[0];
         }
         logOffsets();
 
@@ -55,53 +52,29 @@ public class DirectoryChunk extends Chunk {
                     numberOfBytesRead + " bytes");
         }
 
-        logBzzData();
+        SimpleDataLogger.logData(bzzData, 10, "bzzData");
     }
 
     private void logOffsets() {
-        final int size = this.offsets.size();
+        final int size = this.offsets.length;
         System.out.println("------   offsets     ------");
         if (size < 6) {
             for (int ind = 0; ind < size; ind++) {
-                System.out.println("offsets[" + ind + "] = " + this.offsets.get(ind));
+                System.out.println("offsets[" + ind + "] = " + this.offsets[ind]);
             }
         }
         else {
-            System.out.println("offsets[0] = " + this.offsets.get(0));
-            System.out.println("offsets[1] = " + this.offsets.get(1));
-            System.out.println("offsets[2] = " + this.offsets.get(2));
+            System.out.println("offsets[0] = " + this.offsets[0]);
+            System.out.println("offsets[1] = " + this.offsets[1]);
+            System.out.println("offsets[2] = " + this.offsets[2]);
             System.out.println(".........................");
-            System.out.println("offsets[" + (size - 3) + "] = " + this.offsets.get(size - 3));
-            System.out.println("offsets[" + (size - 2) + "] = " + this.offsets.get(size - 2));
-            System.out.println("offsets[" + (size - 1) + "] = " + this.offsets.get(size - 1));
+            System.out.println("offsets[" + (size - 3) + "] = " + this.offsets[size - 3]);
+            System.out.println("offsets[" + (size - 2) + "] = " + this.offsets[size - 2]);
+            System.out.println("offsets[" + (size - 1) + "] = " + this.offsets[size - 1]);
         }
         System.out.println("-------------------------------");
     }
 
-    private void logBzzData() {
-        System.out.println("------   bzzData     ------");
-        System.out.println("this.bzzDataSize = " + this.bzzDataSize);
-
-        if (this.bzzDataSize < 10) {
-            for (int ind = 0; ind < this.bzzDataSize; ind++) {
-                System.out.println("bzzData[" + ind + "] = " + bzzData[ind]);
-            }
-        }
-        else {
-            System.out.println("bzzData[0] = " + bzzData[0]);
-            System.out.println("bzzData[1] = " + bzzData[1]);
-            System.out.println("bzzData[2] = " + bzzData[2]);
-            System.out.println("bzzData[3] = " + bzzData[3]);
-            System.out.println("bzzData[4] = " + bzzData[4]);
-            System.out.println(".........................");
-            System.out.println("bzzData[" + (bzzDataSize - 5) + "] = " + bzzData[bzzDataSize - 5]);
-            System.out.println("bzzData[" + (bzzDataSize - 4) + "] = " + bzzData[bzzDataSize - 4]);
-            System.out.println("bzzData[" + (bzzDataSize - 3) + "] = " + bzzData[bzzDataSize - 3]);
-            System.out.println("bzzData[" + (bzzDataSize - 2) + "] = " + bzzData[bzzDataSize - 2]);
-            System.out.println("bzzData[" + (bzzDataSize - 1) + "] = " + bzzData[bzzDataSize - 1]);
-        }
-        System.out.println("---------------------");
-    }
 
     @Override
     public String toString() {

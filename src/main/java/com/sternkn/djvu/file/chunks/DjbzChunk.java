@@ -2,6 +2,7 @@ package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.DjVuFileReader;
+import com.sternkn.djvu.file.SimpleDataLogger;
 
 /*
    Shared shape table
@@ -24,33 +25,7 @@ public class DjbzChunk extends Chunk {
                     numberOfBytesRead + " bytes");
         }
 
-        logJb2();
-    }
-
-    private void logJb2() {
-        System.out.println("------   jb2     ------");
-        final int jb2Size = this.jb2.length;
-        System.out.println("this.jb2.length = " + jb2Size);
-
-        if (jb2Size < 10) {
-            for (int ind = 0; ind < jb2Size; ind++) {
-                System.out.println("jb2[" + ind + "] = " + jb2[ind]);
-            }
-        }
-        else {
-            System.out.println("jb2[0] = " + jb2[0]);
-            System.out.println("jb2[1] = " + jb2[1]);
-            System.out.println("jb2[2] = " + jb2[2]);
-            System.out.println("jb2[3] = " + jb2[3]);
-            System.out.println("jb2[4] = " + jb2[4]);
-            System.out.println(".........................");
-            System.out.println("jb2[" + (jb2Size - 5) + "] = " + jb2[jb2Size - 5]);
-            System.out.println("jb2[" + (jb2Size - 4) + "] = " + jb2[jb2Size - 4]);
-            System.out.println("jb2[" + (jb2Size - 3) + "] = " + jb2[jb2Size - 3]);
-            System.out.println("jb2[" + (jb2Size - 2) + "] = " + jb2[jb2Size - 2]);
-            System.out.println("jb2[" + (jb2Size - 1) + "] = " + jb2[jb2Size - 1]);
-        }
-        System.out.println("---------------------");
+        SimpleDataLogger.logData(jb2, 10, "jb2");
     }
 
     @Override

@@ -54,10 +54,13 @@ public class DjVuFile {
 
         System.out.println("pageFormChunk.getInfoChunk() = " + pageFormChunk.getInfoChunk());
 
-//        int chunkLength2 = this.fileReader.readChunkLength(); // 1407719
-//        System.out.println("chunkLength2 = " + chunkLength2); // 4 bytes
-//
-//        SecondaryChunkId secondaryChunkId2 = this.fileReader.readSecondaryChunkId(); // DJVU
-//        System.out.println("secondaryChunkId2 = " + secondaryChunkId2); // 4 bytes
+        ChunkId chunkId3 = this.fileReader.readChunkId(); //
+        System.out.println("chunkId3 = " + chunkId3);     // 4 bytes
+
+        int chunkLength2 = this.fileReader.readChunkLength(); // 1407719
+        System.out.println("chunkLength2 = " + chunkLength2); // 4 bytes
+
+        SecondaryChunkId secondaryChunkId2 = this.fileReader.readSecondaryChunkId(); // DJVU
+        System.out.println("secondaryChunkId2 = " + secondaryChunkId2); // 4 bytes
     }
 }
