@@ -1,6 +1,11 @@
 package com.sternkn.djvu.file;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public final class SimpleDataLogger {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleDataLogger.class);
 
     private SimpleDataLogger() {
     }
@@ -8,27 +13,27 @@ public final class SimpleDataLogger {
     public static void logData(byte[] data, int capacity, String header) {
         assert capacity > 0 : "logging capacity should be positive";
 
-        System.out.println("------   " + header + "    ------");
+        LOG.debug("------    {}    ------", header);
         final int dataSize = data.length;
-        System.out.println("dataSize = " + dataSize);
+        LOG.debug("dataSize = {}", dataSize);
 
         if (dataSize < capacity) {
             for (int ind = 0; ind < dataSize; ind++) {
-                System.out.println("data[" + ind + "] = " + data[ind]);
+                LOG.debug("data[{}] = {}", ind, data[ind]);
             }
         }
         else {
             final int logSize = capacity / 2;
             for (int ind = 0; ind < logSize; ind++) {
-                System.out.println("data[" + ind + "] = " + data[ind]);
+                LOG.debug("data[{}] = {}", ind, data[ind]);
             }
 
-            System.out.println(".........................");
+            LOG.debug(".........................");
 
             for (int ind = dataSize - logSize; ind < dataSize; ind++) {
-                System.out.println("data[" + ind + "] = " + data[ind]);
+                LOG.debug("data[{}] = {}", ind, data[ind]);
             }
         }
-        System.out.println("---------------------");
+        LOG.debug("---------------------");
     }
 }

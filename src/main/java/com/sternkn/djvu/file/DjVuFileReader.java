@@ -8,14 +8,19 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class DjVuFileReader implements Closeable {
+    private static final Logger LOG = LoggerFactory.getLogger(DjVuFileReader.class);
 
     private DataInputStream inputStream;
+    private long position;
 
     public DjVuFileReader(File file) {
         open(file);
+        this.position = 0;
     }
 
     @Override
@@ -32,6 +37,10 @@ public class DjVuFileReader implements Closeable {
         catch (IOException e) {
             throw new DjVuFileException(String.format("Can not open stream for file %s", file.getAbsolutePath()), e);
         }
+    }
+
+    public long getPosition() {
+        return position;
     }
 
     public ChunkId readChunkId() {
@@ -55,26 +64,34 @@ public class DjVuFileReader implements Closeable {
     }
 
     public int readChunkLength() {
-        try {
-            return inputStream.readInt();
-        }
-        catch (IOException e) {
-            throw new DjVuFileException("Chunk length reading problem", e);
-        }
+        return readInt();
     }
 
     public int readBytes(byte[] buffer) {
+        int result = 0;
         try {
-            return inputStream.read(buffer);
+            result = inputStream.read(buffer);
         }
         catch (IOException e) {
             throw new DjVuFileException("Bytes reading problem", e);
         }
+
+        if (result < 0) {
+            throw new DjVuFileException("There is no more data because the end of the stream has been reached.");
+        }
+        else {
+            this.position += result;
+            LOG.debug("Current offset: {}, {} bytes were read", this.position, result);
+        }
+        return result;
     }
 
     public byte readByte() {
         try {
-            return inputStream.readByte();
+            byte result = inputStream.readByte();
+            this.position += 1;
+            LOG.debug("Current offset: {}, 1 byte was read", this.position);
+            return result;
         }
         catch (IOException e) {
             throw new DjVuFileException("Byte reading problem", e);
@@ -83,7 +100,10 @@ public class DjVuFileReader implements Closeable {
 
     public short readShort() {
         try {
-            return inputStream.readShort();
+            short result = inputStream.readShort();
+            this.position += 2;
+            LOG.debug("Current offset: {}, 2 bytes were read", this.position);
+            return result;
         }
         catch (IOException e) {
             throw new DjVuFileException("Int16 reading problem", e);
@@ -92,7 +112,10 @@ public class DjVuFileReader implements Closeable {
 
     public int readInt() {
         try {
-            return inputStream.readInt();
+            int result = inputStream.readInt();
+            this.position += 4;
+            LOG.debug("Current offset: {}, 4 bytes were read", this.position);
+            return result;
         }
         catch (IOException e) {
             throw new DjVuFileException("Int32 reading problem", e);
@@ -109,6 +132,8 @@ public class DjVuFileReader implements Closeable {
 
         try {
             numberBites = inputStream.read(bytes);
+            this.position += numberBites;
+            LOG.debug("Current offset: {}, {} bytes were read", this.position, numberBites);
         }
         catch (IOException e) {
             throw new DjVuFileException("String token reading problem", e);

@@ -3,19 +3,34 @@ package com.sternkn.djvu.file.chunks;
 import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.DjVuFileReader;
 import com.sternkn.djvu.file.SimpleDataLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /*
+  8.3.2 Directory Chunk: DIRM
+
+  The first contained chunk in a FORM:DJVM composite chunk is the DIRM chunk containing the document directory.
+  It contains information the decoder will need to access the component files (see Multipage Documents).
+
   13 Appendix 4: BZZ coding
   https://codesearch.isocpp.org/actcd19/main/d/djvulibre/djvulibre_3.5.27.1-10/libdjvu/BSByteStream.cpp
+
+  https://github.com/traycold/djvulibre/blob/master/libdjvu/BSByteStream.cpp
+
+  https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform
  */
 public class DirectoryChunk extends Chunk {
+    private static final Logger LOG = LoggerFactory.getLogger(DirectoryChunk.class);
 
     private final boolean isBundled;
     private final int version;
     private final int nFiles;
     private final int[] offsets;
     private final int bzzDataSize;
+
+    // The rest of the chunk is entirely compressed with the BZZ general purpose compressor.
+    // (see BSByteStream.cpp and appendix 4)
     private final byte[] bzzData;
 
 
@@ -24,7 +39,7 @@ public class DirectoryChunk extends Chunk {
         // fileReader.readChunkLength() -> 00 00 11 AF
 
         byte dirmFlags = fileReader.readByte();
-        System.out.println("dirmFlags = " + dirmFlags); // -127 -> 81
+        LOG.debug("dirmFlags = {}", dirmFlags); // -127 -> 81
 
         this.isBundled = (dirmFlags & 0b1000_0000) == 0b1000_0000;
         this.version = dirmFlags & 0b0111_1111;
@@ -52,27 +67,27 @@ public class DirectoryChunk extends Chunk {
                     numberOfBytesRead + " bytes");
         }
 
-        SimpleDataLogger.logData(bzzData, 10, "bzzData");
+        SimpleDataLogger.logData(bzzData, 20, "bzzData");
     }
 
     private void logOffsets() {
         final int size = this.offsets.length;
-        System.out.println("------   offsets     ------");
+        LOG.debug("------   offsets     ------");
         if (size < 6) {
             for (int ind = 0; ind < size; ind++) {
-                System.out.println("offsets[" + ind + "] = " + this.offsets[ind]);
+                LOG.debug("offsets[{}] = {}", ind, this.offsets[ind]);
             }
         }
         else {
-            System.out.println("offsets[0] = " + this.offsets[0]);
-            System.out.println("offsets[1] = " + this.offsets[1]);
-            System.out.println("offsets[2] = " + this.offsets[2]);
-            System.out.println(".........................");
-            System.out.println("offsets[" + (size - 3) + "] = " + this.offsets[size - 3]);
-            System.out.println("offsets[" + (size - 2) + "] = " + this.offsets[size - 2]);
-            System.out.println("offsets[" + (size - 1) + "] = " + this.offsets[size - 1]);
+            LOG.debug("offsets[0] = {}", this.offsets[0]);
+            LOG.debug("offsets[1] = {}", this.offsets[1]);
+            LOG.debug("offsets[2] = {}", this.offsets[2]);
+            LOG.debug(".........................");
+            LOG.debug("offsets[{}] = {}", (size - 3), this.offsets[size - 3]);
+            LOG.debug("offsets[{}] = {}", (size - 2), this.offsets[size - 2]);
+            LOG.debug("offsets[{}] = {}", (size - 1), this.offsets[size - 1]);
         }
-        System.out.println("-------------------------------");
+        LOG.debug("-------------------------------");
     }
 
 

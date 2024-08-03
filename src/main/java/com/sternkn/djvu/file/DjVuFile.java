@@ -6,10 +6,14 @@ import com.sternkn.djvu.file.chunks.DjbzChunk;
 import com.sternkn.djvu.file.chunks.PageFormChunk;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.SharedFormChunk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
+
 public class DjVuFile {
+    private static final Logger LOG = LoggerFactory.getLogger(DjVuFile.class);
 
     private String header;
     private long fileSize;
@@ -21,25 +25,25 @@ public class DjVuFile {
         this.fileReader = new DjVuFileReader(file);
         this.header = this.fileReader.readHeader();
 
-        System.out.println("fileSize = " + fileSize);
-        System.out.println("header = " + header);
+        LOG.debug("fileSize = {}", fileSize);
+        LOG.debug("header = {}", header);
 
         ChunkId chunkId = this.fileReader.readChunkId();  // FORM -> 46 4F 52 4D
-        System.out.println("chunkId = " + chunkId);
+        LOG.debug("chunkId = {}", chunkId);
 
         int chunkSize = this.fileReader.readChunkLength();  // 29451857 bytes -> 01 C1 66 51
-        System.out.println("chunkSize = " + chunkSize);
+        LOG.debug("chunkSize = {}", chunkSize);
 
         SecondaryChunkId secondaryId = this.fileReader.readSecondaryChunkId(); // DJVM -> 44 4A 56 AD
-        System.out.println("secondaryId = " + secondaryId);
+        LOG.debug("secondaryId = {}", secondaryId);
 
         ChunkId dirmChunkId = this.fileReader.readChunkId(); // DIRM
-        System.out.println("dirmChunkId = " + dirmChunkId);
+        LOG.debug("dirmChunkId = {}", dirmChunkId);
 
         DirectoryChunk directoryChunk = new DirectoryChunk(dirmChunkId, this.fileReader);
-        System.out.println("directoryChunk = " + directoryChunk);
+        LOG.debug("directoryChunk = {}", directoryChunk);
 
-
+/*
         ChunkId chunkId1 = this.fileReader.readChunkId();
         System.out.println("chunkId1 = " + chunkId1); // FORM
 
@@ -62,5 +66,6 @@ public class DjVuFile {
 
         SecondaryChunkId secondaryChunkId2 = this.fileReader.readSecondaryChunkId(); // DJVU
         System.out.println("secondaryChunkId2 = " + secondaryChunkId2); // 4 bytes
+ */
     }
 }
