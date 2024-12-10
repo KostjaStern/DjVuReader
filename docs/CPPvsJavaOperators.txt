@@ -1,0 +1,42 @@
+
+C++ Bitwise Operators                          |  Java Bitwise Operators
+------------------------------------------------------------------------------------------------------------------------
+Operator   |    Description                    | Operator | Description
+------------------------------------------------------------------------------------------------------------------------
+  &        |    Binary AND                     |    &     | bitwise AND operation
+  |        |    Binary OR                      |    |     | inclusive OR operation
+  ^        |    Binary XOR                     |    ^     | exclusive OR operation
+  ~        |    Binary One's Complement        |    ~     | inverts a bit pattern; it can be applied to any of the integral
+           |                                   |          | types, making every "0" a "1" and every "1" a "0".
+  <<       |    Binary Shift Left              |    <<    | shifts a bit pattern to the left
+  >>       |    Binary Shift Right             |    >>    | the signed right shift operator
+           |                                   |    >>>   | The unsigned right shift operator
+------------------------------------------------------------------------------------------------------------------------
+
+
+C++ memory operators
+------------------------------------------------------------------------------------------------------------------------
+Operator   |    Description                                                | Example
+------------------------------------------------------------------------------------------------------------------------
+  &        | represents memory address of the operand                      | &num; // address of num
+  ->       | used with pointers to access the class or struct variables    | ptr->marks = 92;
+  .        | accesses members of struct variables or class objects         | s1.marks = 92;
+  sizeof   | returns the size of data type                                 | sizeof(int); // 4
+------------------------------------------------------------------------------------------------------------------------
+
+
+Java Primitive Data Types  (https://docs.oracle.com/javase%2Ftutorial%2F/java/nutsandbolts/datatypes.html)
+------------------------------------------------------------------------------------------------------------------------
+ Type    |  Size                                                       | Min /Max values
+------------------------------------------------------------------------------------------------------------------------
+ byte    |  8-bit                                                      | -128 ... 127
+ short   |  16-bit                                                     | -32768 ... 32767
+ int     |  32-bit                                                     | -2^31 ... 2^31 - 1
+ long    |  64-bit                                                     | -2^63 ... 2^63 - 1
+ float   |  32-bit                                                     | IEEE 754 floating point
+ double  |  64-bit                                                     | IEEE 754 floating point
+ boolean |  This data type represents one bit of information,          | has only two possible values: true and false
+         |  but its "size" isn't something that's precisely defined.   |
+ char    |  16-bit                                                     | '\u0000' ... '\uffff'
+------------------------------------------------------------------------------------------------------------------------
+
