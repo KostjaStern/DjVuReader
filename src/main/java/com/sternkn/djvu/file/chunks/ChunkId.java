@@ -59,4 +59,8 @@ public enum ChunkId {
          Obsolete chunk with unknown content. (according to https://en.wikipedia.org/wiki/DjVu)
      */
     CIDa;
+
+    public boolean isComposite() {
+        return this == FORM;
+    }
 }

@@ -1,10 +1,13 @@
 package com.sternkn.djvu;
 
 import com.sternkn.djvu.file.DjVuFile;
+import com.sternkn.djvu.file.DjVuFileReader;
+import com.sternkn.djvu.file.chunks.Chunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 
 
 public class Main {
@@ -16,7 +19,22 @@ public class Main {
         LOG.info("djvuFile.exists() = {}", file.exists());
         LOG.info("djvuFile.length() = {}", file.length());
 
-        DjVuFile djvuFile = new DjVuFile(file);
+        try (DjVuFileReader reader = new DjVuFileReader(file)) {
+
+            DjVuFile djvuFile = reader.readFile();
+            List<Chunk> chunks = djvuFile.getChunks();
+            System.out.println("chunks.size() = " + chunks.size());
+        }
+
+        // System.out.println("Integer.toHexString(256) = " + Integer.toHexString(256));
+        //        int test1 = 1 << 1;
+//        LOG.info("test1 = {}", test1);
+//
+//        int test10 = 1 << 10;
+//        LOG.info("test10 = {}", test10);
+//
+//        int test24 = 1 << 24;
+//        LOG.info("test24 = {}", test24);
 
 /*
         // The signed left shift operator "<<" shifts a bit pattern to the left

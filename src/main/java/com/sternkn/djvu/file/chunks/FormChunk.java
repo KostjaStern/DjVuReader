@@ -1,15 +1,11 @@
 package com.sternkn.djvu.file.chunks;
 
-import com.sternkn.djvu.file.DjVuFileReader;
 
-public abstract class FormChunk extends Chunk {
+public abstract class FormChunk {
 
-    private final SecondaryChunkId secondaryChunkId;
+    private SecondaryChunkId secondaryChunkId;
 
-    public FormChunk(ChunkId chunkId, DjVuFileReader fileReader) {
-        super(chunkId, fileReader.readChunkLength());
-
-        this.secondaryChunkId = fileReader.readSecondaryChunkId();
+    public FormChunk() {
     }
 
     public SecondaryChunkId getSecondaryChunkId() {

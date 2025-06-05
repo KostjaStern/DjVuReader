@@ -1,0 +1,42 @@
+
+
+$ xxd Abert_Mozart_book__1.djvu | less
+
+-- Configure C/C++ debugging
+https://code.visualstudio.com/docs/cpp/launch-json-reference 
+
+-- Debug C++ in Visual Studio Code
+https://code.visualstudio.com/docs/cpp/cpp-debug
+
+-- EA IFF 85 Standard for Interchange Format Files
+https://wiki.amigaos.net/wiki/EA_IFF_85_Standard_for_Interchange_Format_Files
+
+> The ckSize is a logical block size—how many data bytes are in ckData. If ckData is an odd number of bytes long, a 0 pad byte follows which is not included in ckSize. 
+  (Cf. Alignment.) A chunk’s total physical size is ckSize rounded up to an even number plus the size of the header. So the smallest chunk is 8 bytes long with ckSize = 0. 
+  For the sake of following chunks, programs must respect every chunk’s ckSize as a virtual end-of-file for reading its ckData even if that data is malformed, e.g., 
+  if nested contents are truncated.
+
+
+-- gcc/g++ option to place all object files into separate directory
+https://stackoverflow.com/questions/1814270/gcc-g-option-to-place-all-object-files-into-separate-directory
+
+-- Using G++ to compile multiple .cpp and .h files
+https://stackoverflow.com/questions/3202136/using-g-to-compile-multiple-cpp-and-h-files
+
+
+-- Core Foundation
+-- Access low-level functions, primitive data types, 
+-- and various collection types that are bridged seamlessly with the Foundation framework.
+https://developer.apple.com/documentation/corefoundation
+
+
+https://github.com/macmade/CoreFoundation
+https://stackoverflow.com/questions/9959358/where-to-download-for-apples-open-source-core-foundation
+
+https://github.com/mlabbe/CoreFoundation
+https://opensource.apple.com/projects/swift/
+
+https://developer.apple.com/forums/thread/115518
+https://stackoverflow.com/questions/55618516/installing-ruby-with-rvm-cannot-find-corefoundation-cfstring-h
+https://stackoverflow.com/questions/55525660/installing-ruby-2-3-1-on-mojave-osx-with-rbenv-or-rvm
+
