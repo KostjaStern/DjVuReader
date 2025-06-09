@@ -3,6 +3,8 @@ package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.DjVuFileException;
 
+import java.io.ByteArrayInputStream;
+
 public class Chunk {
 
     private final long id;
@@ -10,6 +12,7 @@ public class Chunk {
     private final SecondaryChunkId secondaryChunkId;
 
     private final Chunk parent;
+    private final ByteArrayInputStream data; // = ByteArrayInputStream(byte[] buf);
 
     /**
      * This is true only for ChunkId.FORM
@@ -40,6 +43,7 @@ public class Chunk {
         this.offsetStart = builder.offsetStart;
         this.size = builder.size;
         this.offsetEnd = this.offsetStart + this.size;
+        this.data = builder.data;
 
         if (this.size <= 0) {
             throw new DjVuFileException(String.format("The chunk %s:%s size is %s - negative value",
@@ -79,6 +83,10 @@ public class Chunk {
         return this.size;
     }
 
+    public ByteArrayInputStream getData() {
+        return this.data;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -90,6 +98,7 @@ public class Chunk {
         private Chunk parent;
         private long offsetStart;
         private long size;
+        private ByteArrayInputStream data;
 
         public Builder() {
         }
@@ -121,6 +130,11 @@ public class Chunk {
 
         public Builder withSize(long size) {
             this.size = size;
+            return this;
+        }
+
+        public Builder withData(ByteArrayInputStream data) {
+            this.data = data;
             return this;
         }
 
