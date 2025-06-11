@@ -27,7 +27,7 @@ public class DirectoryChunk {
     // private final int bzzDataSize;
 
     // The rest of the chunk is entirely compressed with the BZZ general purpose compressor.
-    // (see BSByteStreamDecode.cpp and appendix 4)
+    // (see BSByteInputStream.cpp and appendix 4)
     // private final byte[] bzzData;
 
     private int indexBzzData;
