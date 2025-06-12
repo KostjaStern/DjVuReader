@@ -12,7 +12,7 @@ public class Chunk {
     private final SecondaryChunkId secondaryChunkId;
 
     private final Chunk parent;
-    private final ByteArrayInputStream data; // = ByteArrayInputStream(byte[] buf);
+    protected final ByteArrayInputStream data;
 
     /**
      * This is true only for ChunkId.FORM
@@ -33,6 +33,18 @@ public class Chunk {
      *  Actually, size = offsetEnd - offsetStart
      */
     private final long size;
+
+    public Chunk(Chunk chunk) {
+        this.id = chunk.getId();
+        this.chunkId = chunk.getChunkId();
+        this.secondaryChunkId = chunk.getSecondaryChunkId();
+        this.parent = chunk.getParent();
+        this.data = chunk.getData();
+        this.isComposite = chunk.isComposite();
+        this.offsetStart = chunk.getOffsetStart();
+        this.offsetEnd = chunk.getOffsetEnd();
+        this.size = chunk.getSize();
+    }
 
     public Chunk(Builder builder) {
         this.id = builder.id;

@@ -11,4 +11,8 @@ public final class NumberUtils {
     public static long asUnsignedShort(long value) {
         return value & 0xFFFFL;
     }
+
+    public static int asUnsignedByte(byte value) {
+        return value & 0xFF;
+    }
 }

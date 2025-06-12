@@ -24,7 +24,7 @@ import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
  */
 public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(ZpCodecInputStream.class);
-    private static final int NO_MORE_BYTE = 0xFF;
+    private static final int NO_MORE_BYTE = -1;
 
     private final InputStream inputStream;
 
@@ -111,22 +111,22 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         }
     }
 
-    private void readNextByte() {
+    private int readNextByte() {
+        int value = NO_MORE_BYTE;
         try {
-            this.currentByte = this.inputStream.read();
+            value = this.inputStream.read();
         } catch (IOException e) {
             throw new DjVuFileException("We can not read next byte", e);
         }
 
-        if (this.currentByte == -1) {
-            this.currentByte = NO_MORE_BYTE;
-        }
+        this.currentByte = value == NO_MORE_BYTE ? 0xFF : value;
+        return value;
     }
 
     private void preload() {
         while (this.scount <= 24) {
-            readNextByte();
-            if (currentByte == NO_MORE_BYTE) {
+            // readNextByte();
+            if (readNextByte() == NO_MORE_BYTE) {
                 --this.delay;
                 if (this.delay < 1) {
                     throw new DjVuFileException("End of djvu file");

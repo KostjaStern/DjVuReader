@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestBSByteInputStream {
@@ -56,6 +57,20 @@ public class TestBSByteInputStream {
 
             assertEquals(expectedData.length(), length);
             assertEquals(expectedData, actualData);
+        }
+    }
+
+    @Test
+    public void testReadDIRMChunkDecoding() throws IOException {
+        try (InputStream inputStream = classLoader.getResourceAsStream("bzz/DIRM_2.bzz");
+             InputStream decodedStream = classLoader.getResourceAsStream("bzz/DIRM_decoded.data")) {
+
+            BSByteInputStream bsByteInputStream = new BSByteInputStream(inputStream);
+
+            byte[] data = bsByteInputStream.readAllBytes();
+            byte[] expectedData = decodedStream.readAllBytes();
+
+            assertArrayEquals(expectedData, data);
         }
     }
 }

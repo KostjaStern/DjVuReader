@@ -1,8 +1,16 @@
 package com.sternkn.djvu.file.chunks;
 
+import com.sternkn.djvu.file.coders.BSByteInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.stream.IntStream;
+
+import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.file.utils.InputStreamUtils.read32;
+import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
+import static com.sternkn.djvu.file.utils.InputStreamUtils.readZeroTerminatedString;
 
 /*
   8.3.2 Directory Chunk: DIRM
@@ -17,47 +25,70 @@ import org.slf4j.LoggerFactory;
 
   https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform
  */
-public class DirectoryChunk {
+public class DirectoryChunk extends Chunk {
     private static final Logger LOG = LoggerFactory.getLogger(DirectoryChunk.class);
 
-    private boolean isBundled;
-    private int version;
-    private int nFiles;
-    private int[] offsets;
-    // private final int bzzDataSize;
+    private final boolean isBundled;
+    private final int version;
+    private final int nFiles;
 
-    // The rest of the chunk is entirely compressed with the BZZ general purpose compressor.
-    // (see BSByteInputStream.cpp and appendix 4)
-    // private final byte[] bzzData;
+    private final List<ComponentInfo> components;
 
-    private int indexBzzData;
 
-//    private int currentByte;  // unsigned char byte;
-//    private byte delay;        // unsigned char delay;
-//    private byte scount;       // unsigned char scount;
-//    private int code;          // unsigned int  code;
-//    private int a;             // unsigned int  a;
+    public DirectoryChunk(Chunk chunk) {
+        super(chunk);
 
-    public DirectoryChunk() {
+        int flags = data.read();
+        isBundled = (flags & 0x80) != 0;
+        version = flags & 0x7f;
+        nFiles = read16(data);
+        components = IntStream.range(0, nFiles).mapToObj(i -> new ComponentInfo()).toList();
+
+        readComponents();
     }
 
-    private void logOffsets() {
-        final int size = this.offsets.length;
-        LOG.debug("------   offsets     ------");
-        if (size < 6) {
-            for (int ind = 0; ind < size; ind++) {
-                LOG.debug("offsets[{}] = {}", ind, this.offsets[ind]);
+    public boolean isBundled() {
+        return isBundled;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public int getNumberOfComponents() {
+        return nFiles;
+    }
+
+    public List<ComponentInfo> getComponents() {
+        return components;
+    }
+
+    private void readComponents() {
+        if (isBundled) {
+            for (int ind = 0; ind < nFiles; ind++) {
+                components.get(ind).setOffset(read32(data));
             }
         }
-        else {
-            LOG.debug("offsets[0] = {}", this.offsets[0]);
-            LOG.debug("offsets[1] = {}", this.offsets[1]);
-            LOG.debug("offsets[2] = {}", this.offsets[2]);
-            LOG.debug(".........................");
-            LOG.debug("offsets[{}] = {}", (size - 3), this.offsets[size - 3]);
-            LOG.debug("offsets[{}] = {}", (size - 2), this.offsets[size - 2]);
-            LOG.debug("offsets[{}] = {}", (size - 1), this.offsets[size - 1]);
+
+        final BSByteInputStream bzzData = new BSByteInputStream(data);
+
+        for (int ind = 0; ind < nFiles; ind++) {
+            components.get(ind).setSize(read24(bzzData));
         }
-        LOG.debug("-------------------------------");
+
+        for (int ind = 0; ind < nFiles; ind++) {
+            components.get(ind).setFlag(bzzData.read());
+        }
+
+        for (int ind = 0; ind < nFiles; ind++) {
+            final ComponentInfo component = components.get(ind);
+            component.setId(readZeroTerminatedString(bzzData));
+            if (component.hasName()) {
+                component.setName(readZeroTerminatedString(bzzData));
+            }
+            if (component.hasTitle()) {
+                component.setTitle(readZeroTerminatedString(bzzData));
+            }
+        }
     }
 }
