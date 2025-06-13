@@ -2,28 +2,22 @@ package com.sternkn.djvu.file.coders;
 
 public final class ZpCodecUtils {
 
-    /** Context variable.
-     Variables of type #BitContext# hold a single byte describing how to encode
-     or decode message bits with similar statistical properties.  This single
-     byte simultaneously represents the current estimate of the bit probability
-     distribution (which is determined by the frequencies of #1#s and #0#s
-     already coded with this context) and the confidence in this estimate
-     (which determines how fast the estimate can change.)
-
-     A coding program typically allocates hundreds of context variables.  Each
-     coding context is initialized to zero before encoding or decoding.  Value
-     zero represents equal probabilities for #1#s and #0#s with a minimal
-     confidence and therefore a maximum adaptation speed.  Each message bit is
-     encoded using a coding context determined as a function of previously
-     encoded message bits.  The decoder therefore can examine the previously
-     decoded message bits and decode the current bit using the same context as
-     the encoder.  This is critical for proper decoding.
-     */
-    // see ZPCodec.h
-    // typedef unsigned char  BitContext;
-
-
     private ZpCodecUtils() {
+    }
+
+    // Create machine independent ffz table
+    public static byte[] getFFZTable() {
+        final byte[] ffzt = new byte[256];
+
+        for (int index = 0; index < ffzt.length; index++) {
+            ffzt[index] = 0;
+
+            for (int j = index; (j & 0x80) != 0; j = j << 1) {
+                ffzt[index] += 1;
+            }
+        }
+
+        return ffzt;
     }
 
     public static ZpCodecTable[] getDefaultTable() {

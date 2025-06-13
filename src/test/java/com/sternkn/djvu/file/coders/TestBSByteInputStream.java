@@ -30,13 +30,11 @@ public class TestBSByteInputStream {
 
             BSByteInputStream bsByteInputStream = new BSByteInputStream(inputStream);
 
-            byte[] buffer = new byte[500];
+            byte[] buffer = bsByteInputStream.readAllBytes();
 
-            int length = bsByteInputStream.read(buffer);
-            String actualData = new String(buffer, 0, length, StandardCharsets.UTF_8);
+            String actualData = new String(buffer, StandardCharsets.UTF_8);
             String expectedData = "(maparea \"#463\" \"\" (rect 78 3999 1464 96 ) (border #0000FF ) ) ";
 
-            assertEquals(expectedData.length(), length);
             assertEquals(expectedData, actualData);
         }
     }
@@ -46,16 +44,13 @@ public class TestBSByteInputStream {
         try (InputStream inputStream = classLoader.getResourceAsStream("bzz/ANTz_293.bzz")) {
 
             BSByteInputStream bsByteInputStream = new BSByteInputStream(inputStream);
+            byte[] buffer = bsByteInputStream.readAllBytes();
 
-            byte[] buffer = new byte[500];
-
-            int length = bsByteInputStream.read(buffer);
-            String actualData = new String(buffer, 0, length, StandardCharsets.UTF_8);
+            String actualData = new String(buffer, StandardCharsets.UTF_8);
             String expectedData = "(maparea \"#465\" \"\" (rect 84 3811 1240 88 ) (border #0000FF ) ) " +
                                   "(maparea \"#466\" \"\" (rect 236 3019 640 76 ) (border #0000FF ) ) " +
                                   "(maparea \"#466\" \"\" (rect 960 124 1708 88 ) (border #0000FF ) ) ";
 
-            assertEquals(expectedData.length(), length);
             assertEquals(expectedData, actualData);
         }
     }

@@ -17,24 +17,16 @@ import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
 
     https://sourceforge.net/p/djvu/djvulibre-git/ci/master/tree/libdjvu/ZPCodec.h
     https://sourceforge.net/p/djvu/djvulibre-git/ci/master/tree/libdjvu/ZPCodec.cpp
-
-    // CPP types size
-    assert(sizeof(unsigned int)==4);
-    assert(sizeof(unsigned short)==2);
  */
 public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(ZpCodecInputStream.class);
+
     private static final int NO_MORE_BYTE = -1;
 
     private final InputStream inputStream;
 
-    private byte[] ffzt;
-
-    //
-    private int[] p;
-    private int[] m;
-    private int[] up;
-    private int[] dn;
+    private final byte[] ffzt;
+    private final ZpCodecTable[] table;
 
     private byte delay;
     private int scount;
@@ -46,20 +38,17 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
     private long a;
     private long code;
 
-
+    /**
+     * At the beginning of a chunk, the values of {a} and {code} are reinitialized. When the decoder is
+     * decoding a chunk, it may require more bits than are present within the chunk's data. In
+     * this case, all additional required bits are to be assumed by the decoder to be 1. If there are
+     * excess bits at the end of a chunk, they are ignored.
+     */
     public ZpCodecInputStream(InputStream inputStream) {
         this.inputStream = inputStream;
 
-        // Create machine independent ffz table
-        this.ffzt = new byte[256];
-        for (int i = 0; i < this.ffzt.length; i++) {
-            this.ffzt[i] = 0;
-            for (int j = i; (j & 0x80) != 0; j = j << 1) {
-                this.ffzt[i] += 1;
-            }
-        }
-
-        newTable();
+        this.ffzt = ZpCodecUtils.getFFZTable();
+        this.table = ZpCodecUtils.getDefaultTable();
 
         this.fence = 0;
         this.buffer = 0;
@@ -72,24 +61,15 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         this.inputStream.close();
     }
 
-    private void newTable() {
-        final ZpCodecTable[] defaultTable = ZpCodecUtils.getDefaultTable();
-        final int size = defaultTable.length;
+    /*
+       Initially, A is set to 0x0000. Two octets are read from the input data stream into the
+       lowest 16 bits of C. If the bits of C are numbered such that bit 15 is the most significant
+       bit and bit 0 is the least significant bit, then the first input octet is stored in bits 15
+       through 8, and the second input octet is stored in bits 7 through 0.
 
-        this.p = new int[size];
-        this.m = new int[size];
-        this.up = new int[size];
-        this.dn = new int[size];
-
-        for (int index = 0; index < size; index++) {
-            ZpCodecTable table = defaultTable[index];
-            this.p[index] = table.p();
-            this.m[index] = table.m();
-            this.up[index] = table.up();
-            this.dn[index] = table.dn();
-        }
-    }
-
+       this.a    <-> A
+       this.code <-> C
+     */
     private void init() {
         this.a = 0;
 
@@ -105,14 +85,11 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         preload();
 
         /* Compute initial fence */
-        this.fence = this.code;
-        if (this.code >= 0x8000) {
-            this.fence = 0x7fff;
-        }
+        this.fence = Math.min(this.code, 0x7fff);
     }
 
     private int readNextByte() {
-        int value = NO_MORE_BYTE;
+        int value;
         try {
             value = this.inputStream.read();
         } catch (IOException e) {
@@ -125,9 +102,11 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
 
     private void preload() {
         while (this.scount <= 24) {
-            // readNextByte();
             if (readNextByte() == NO_MORE_BYTE) {
                 --this.delay;
+
+                LOG.debug("preload: delay = {}", this.delay);
+
                 if (this.delay < 1) {
                     throw new DjVuFileException("End of djvu file");
                 }
@@ -139,7 +118,10 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
     }
 
     /**
+     *  In pass-through mode, the decoder is invoked with no input argument. No context is
+     *  involved.
      *
+     *  B is the 1-bit value returned by the decoder.
      */
     @Override
     public int decoder() {
@@ -151,11 +133,13 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
      */
     @Override
     public int decoder(BitContext ctx) {
-        int index = ctx.getValue();
+        final int index = ctx.getValue();
 
-        assert index < 0 || this.p.length >= index : "The index should be in range 0 .. " + (this.p.length - 1);
+        if (index < 0 || index >= this.table.length ) {
+            throw new IllegalArgumentException("The index should be in range 0 .. " + (this.table.length - 1));
+        }
 
-        long z = this.a + this.p[index];
+        long z = this.a + this.table[index].p();
         if (z <= this.fence) {
             this.a = z;
             return (index & 1);
@@ -165,9 +149,9 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
     }
 
     private int ffz(long x) {
-        int index1 = (int) (x & 0xff);
-        int index2 = (int) ((x >> 8) & 0xff);
-        return (x >= 0xff00) ? (this.ffzt[index1] + 8) : (this.ffzt[index2]);
+        final int lastByte = (int) (x & 0xff);
+        final int penultimateByte = (int) ((x >> 8) & 0xff);
+        return (x >= 0xff00) ? (this.ffzt[lastByte] + 8) : (this.ffzt[penultimateByte]);
     }
 
     /**
@@ -175,8 +159,8 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
      */
     private int decodeSub(BitContext ctx, long z) {
         long zz = z;
-        int ind = ctx.getValue();
-        int bit = (ind & 1);
+        int index = ctx.getValue();
+        int bit = (index & 1);
 
         /* Avoid interval reversion (#ifdef ZPCODER) */
         long d = asUnsignedInt(0x6000 + ((zz + this.a) >> 2));
@@ -193,7 +177,7 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
             this.code = this.code + zz;
 
             /* LPS adaptation */
-            ctx.setValue(this.dn[ind]);
+            ctx.setValue(this.table[index].dn());
 
             /* LPS renormalization */
             lpsRenormalization();
@@ -205,16 +189,14 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         else
         {
             /* MPS adaptation */
-            if (this.a >= this.m[ind]) {
-                ctx.setValue(this.up[ind]);
+            if (this.a >= this.table[index].m()) {
+                ctx.setValue(this.table[index].up());
             }
 
             /* MPS renormalization */
             this.scount -= 1;
             this.a = asUnsignedShort(zz << 1);
             this.code = asUnsignedShort((this.code << 1) | ((this.buffer >> this.scount) & 1));
-
-            // bitcount += 1;
 
             adjustFence();
 
@@ -263,9 +245,6 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
             preload();
         }
 
-        this.fence = this.code;
-        if (this.code >= 0x8000) {
-            this.fence = 0x7fff;
-        }
+        this.fence = Math.min(this.code, 0x7fff);
     }
 }

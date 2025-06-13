@@ -63,6 +63,7 @@ public class BSByteInputStream extends InputStream {
 
     public BSByteInputStream(InputStream inputStream) {
         this.zpDecoder = new ZpCodecInputStream(inputStream);
+        // this.zpDecoder = new MyZpCodecInputStream(inputStream);
 
         this.offset = 0;
         this.bptr = 0;
