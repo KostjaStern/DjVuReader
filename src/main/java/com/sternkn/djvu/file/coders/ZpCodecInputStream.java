@@ -22,24 +22,30 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(ZpCodecInputStream.class);
 
     private static final int NO_MORE_BYTE = -1;
+    private static final int BYTE_SIZE = 8;
 
     private final InputStream inputStream;
 
     private final byte[] ffzt;
     private final ZpCodecTable[] table;
 
+    // buffer related fields
     private byte delay;
-    private int scount;
-
+    private int bufferSize;
     private int currentByte;
+    private long buffer;
 
     private long fence;
-    private long buffer;
     private long a;
-    private long code;
+    private long c;
+
+    enum SymbolType {
+        MPS, // The more probable symbol
+        LPS  // The less probable symbol
+    }
 
     /**
-     * At the beginning of a chunk, the values of {a} and {code} are reinitialized. When the decoder is
+     * At the beginning of a chunk, the values of {a} and {c} are reinitialized. When the decoder is
      * decoding a chunk, it may require more bits than are present within the chunk's data. In
      * this case, all additional required bits are to be assumed by the decoder to be 1. If there are
      * excess bits at the end of a chunk, they are ignored.
@@ -49,9 +55,6 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
 
         this.ffzt = ZpCodecUtils.getFFZTable();
         this.table = ZpCodecUtils.getDefaultTable();
-
-        this.fence = 0;
-        this.buffer = 0;
 
         init();
     }
@@ -66,26 +69,24 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
        lowest 16 bits of C. If the bits of C are numbered such that bit 15 is the most significant
        bit and bit 0 is the least significant bit, then the first input octet is stored in bits 15
        through 8, and the second input octet is stored in bits 7 through 0.
-
-       this.a    <-> A
-       this.code <-> C
      */
     private void init() {
         this.a = 0;
 
         readNextByte();
-        this.code = ((long) this.currentByte << 8);
+        this.c = ((long) this.currentByte << 8);
 
         readNextByte();
-        this.code = this.code | this.currentByte;
+        this.c = this.c | this.currentByte;
+
+        /* Compute initial fence */
+        this.fence = Math.min(this.c, 0x7fff);
 
         /* Preload buffer */
         this.delay = 25;
-        this.scount = 0;
-        preload();
-
-        /* Compute initial fence */
-        this.fence = Math.min(this.code, 0x7fff);
+        this.bufferSize = 0;
+        this.buffer = 0;
+        preloadBuffer();
     }
 
     private int readNextByte() {
@@ -100,8 +101,10 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         return value;
     }
 
-    private void preload() {
-        while (this.scount <= 24) {
+    private void preloadBuffer() {
+        if (this.bufferSize >= 2 * BYTE_SIZE) return;
+
+        while (this.bufferSize <= 3 * BYTE_SIZE) {
             if (readNextByte() == NO_MORE_BYTE) {
                 --this.delay;
 
@@ -112,20 +115,41 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
                 }
             }
 
-            this.buffer = asUnsignedInt((this.buffer << 8) | this.currentByte);
-            this.scount += 8;
+            this.buffer = asUnsignedInt((this.buffer << BYTE_SIZE) | this.currentByte);
+            this.bufferSize += BYTE_SIZE;
         }
     }
 
     /**
-     *  In pass-through mode, the decoder is invoked with no input argument. No context is
-     *  involved.
+     *  In pass-through mode, the decoder is invoked with no input argument.
+     *  No context is involved.
      *
-     *  B is the 1-bit value returned by the decoder.
+     *  @return  the 1-bit value returned by the decoder.
      */
     @Override
     public int decoder() {
-        return decodeSubSimple(0, 0x8000 + (this.a >> 1));
+        int bit;
+
+        final SymbolType symbolType;
+        long z = 0x8000 + (this.a >> 1);
+
+        if (z > this.c) {
+            symbolType = SymbolType.LPS;
+
+            z = 0x10000 - z;
+            this.a = this.a + z;
+            this.c = this.c + z;
+
+            bit = 1;
+        }
+        else {
+            symbolType = SymbolType.MPS;
+            this.a = z;
+            bit = 0;
+        }
+
+        renormalization(symbolType);
+        return bit;
     }
 
     /**
@@ -162,89 +186,47 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         int index = ctx.getValue();
         int bit = (index & 1);
 
-        /* Avoid interval reversion (#ifdef ZPCODER) */
         long d = asUnsignedInt(0x6000 + ((zz + this.a) >> 2));
         if (zz > d) {
             zz = d;
         }
 
+        final SymbolType symbolType;
+
         /* Test MPS/LPS */
-        if (zz > this.code)
-        {
-            /* LPS branch */
+        if (zz > this.c) {
+            symbolType = SymbolType.LPS;
             zz = 0x10000 - zz;
             this.a = this.a + zz;
-            this.code = this.code + zz;
-
-            /* LPS adaptation */
+            this.c = this.c + zz;
             ctx.setValue(this.table[index].dn());
 
-            /* LPS renormalization */
-            lpsRenormalization();
-
-            adjustFence();
-
-            return bit ^ 1;
+            bit = bit ^ 1;
         }
-        else
-        {
-            /* MPS adaptation */
+        else {
+            symbolType = SymbolType.MPS;
             if (this.a >= this.table[index].m()) {
                 ctx.setValue(this.table[index].up());
             }
 
-            /* MPS renormalization */
-            this.scount -= 1;
-            this.a = asUnsignedShort(zz << 1);
-            this.code = asUnsignedShort((this.code << 1) | ((this.buffer >> this.scount) & 1));
-
-            adjustFence();
-
-            return bit;
+            this.a = zz;
         }
+
+        renormalization(symbolType);
+        return bit;
     }
 
-    /**
-     *  see decode_sub_simple from ZPCodec.cpp
-     */
-    private int decodeSubSimple(int mps, long z) {
-        long zz = z;
-        if (zz > this.code) {
-            /* LPS branch */
-            zz = 0x10000 - zz;
-            this.a = this.a + zz;
-            this.code = this.code + zz;
-
-            /* LPS renormalization */
-            lpsRenormalization();
-
-            adjustFence();
-            return mps ^ 1;
-        }
-        else {
-            /* MPS renormalization */
-            this.scount -= 1;
-            this.a = asUnsignedShort(zz << 1);
-            this.code = asUnsignedShort((this.code << 1) | ((this.buffer >> this.scount) & 1));
-
-            adjustFence();
-            return mps;
-        }
-    }
-
-    /* LPS renormalization */
-    private void lpsRenormalization() {
-        final int shift = ffz(this.a);
-        this.scount -= shift;
+    /*
+       When the values in the registers are too large, they must be renormalized.
+    */
+    private void renormalization(SymbolType symbolType) {
+        final int shift = symbolType == SymbolType.MPS ? 1 : ffz(this.a);
+        this.bufferSize -= shift;
         this.a = asUnsignedShort(this.a << shift);
-        this.code = asUnsignedShort((this.code << shift) | ((this.buffer >> this.scount) & ((1L << shift) - 1)));
-    }
+        this.c = asUnsignedShort((this.c << shift) | ((this.buffer >> this.bufferSize) & ((1L << shift) - 1)));
 
-    private void adjustFence() {
-        if (this.scount < 16) {
-            preload();
-        }
+        this.fence = Math.min(this.c, 0x7fff);
 
-        this.fence = Math.min(this.code, 0x7fff);
+        preloadBuffer();
     }
 }
