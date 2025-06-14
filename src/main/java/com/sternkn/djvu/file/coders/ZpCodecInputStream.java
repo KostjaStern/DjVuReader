@@ -39,13 +39,17 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
     private int currentByte;
     private long buffer;
 
+    /**
+     * {fence} allows to provide improved decoding speed through a “fast path” design wherein decoding of
+     * a most probable symbol (MPS) requires few computational steps.
+     */
     private long fence;
     private long a;
     private long c;
 
     enum SymbolType {
-        MPS, // The more probable symbol
-        LPS  // The less probable symbol
+        MPS, // more probable symbol
+        LPS  // less probable symbol
     }
 
     /**
