@@ -1,5 +1,6 @@
 package com.sternkn.djvu.file.coders;
 
+import com.sternkn.djvu.file.DjVuFileException;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -17,21 +18,33 @@ public class TestZpCodecInputStream {
 
     @Test
     public void testDecoderMPSCase() {
-        zpCodec = buildCodec("FF");
+        zpCodec = buildZpCodec("FF");
 
         assertEquals(0, zpCodec.decoder());
     }
 
     @Test
+    public void testDecoderEndOfFileException() {
+        zpCodec = buildZpCodec("");
+
+        for (int ind = 0; ind < 176; ind++) {
+            assertEquals(0, zpCodec.decoder());
+        }
+
+        Exception exception = assertThrows(DjVuFileException.class, () -> zpCodec.decoder());
+        assertEquals("End of djvu file", exception.getMessage());
+    }
+
+    @Test
     public void testDecoderLPSCase() {
-        zpCodec = buildCodec("70");
+        zpCodec = buildZpCodec("70");
 
         assertEquals(1, zpCodec.decoder());
     }
 
     @Test
     public void testDecoderValidationLowerIndexBorder() {
-        zpCodec = buildCodec("FF FF BF FE FE E2");
+        zpCodec = buildZpCodec("FF FF BF FE FE E2");
 
         Exception exception = assertThrows(IllegalArgumentException.class,
                                            () -> zpCodec.decoder(new BitContext(-1)));
@@ -41,17 +54,17 @@ public class TestZpCodecInputStream {
 
     @Test
     public void testDecoderValidationUpperIndexBorder() {
-        zpCodec = buildCodec("FF FF BF FE FE E2");
+        zpCodec = buildZpCodec("FF FF BF FE FE E2");
 
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> zpCodec.decoder(new BitContext(260)));
+                () -> zpCodec.decoder(new BitContext(256)));
 
         assertEquals("The index should be in range 0 .. 255", exception.getMessage());
     }
 
     @Test
     public void testDecoderFastPathPositive() {
-        zpCodec = buildCodec("70 FA 23 BB FF 4F");
+        zpCodec = buildZpCodec("70 FA 23 BB FF 4F");
         final int index = 23;
         BitContext bitContext = new BitContext(index);
 
@@ -63,7 +76,7 @@ public class TestZpCodecInputStream {
 
     @Test
     public void testDecoderFastPathNegative() {
-        zpCodec = buildCodec("70 FA 23 BB FF 4F");
+        zpCodec = buildZpCodec("70 FA 23 BB FF 4F");
         final int index = 22;
         BitContext bitContext = new BitContext(index);
 
@@ -75,7 +88,7 @@ public class TestZpCodecInputStream {
 
     @Test
     public void testDecoderMPSPositiveWithBitContextIndexUpdate() {
-        zpCodec = buildCodec("80 00 23 BB FF 4F");
+        zpCodec = buildZpCodec("80 00 23 BB FF 4F");
         final int index = 1;
         BitContext bitContext = new BitContext(index);
 
@@ -87,7 +100,7 @@ public class TestZpCodecInputStream {
 
     @Test
     public void testDecoderLPSNegativeWithBitContextIndexUpdate() {
-        zpCodec = buildCodec("00 1F 23 BB FF 4F");
+        zpCodec = buildZpCodec("00 1F 23 BB FF 4F");
         final int index = 1;
         BitContext bitContext = new BitContext(index);
 
@@ -99,7 +112,7 @@ public class TestZpCodecInputStream {
 
     @Test
     public void testDecoderLPSPositiveWithBitContextIndexUpdate() {
-        zpCodec = buildCodec("00 1F 23 BB FF 4F");
+        zpCodec = buildZpCodec("00 1F 23 BB FF 4F");
         final int index = 2;
         BitContext bitContext = new BitContext(index);
 
@@ -109,7 +122,7 @@ public class TestZpCodecInputStream {
         assertEquals(3, bitContext.getValue());
     }
 
-    private ZpCodecInputStream buildCodec(String data) {
+    private ZpCodecInputStream buildZpCodec(String data) {
         return new ZpCodecInputStream(new ByteArrayInputStream(HEX_FORMAT.parseHex(data)));
     }
 }

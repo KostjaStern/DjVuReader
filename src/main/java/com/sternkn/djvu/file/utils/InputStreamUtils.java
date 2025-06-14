@@ -1,5 +1,7 @@
 package com.sternkn.djvu.file.utils;
 
+import com.sternkn.djvu.file.DjVuFileException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -15,7 +17,7 @@ public final class InputStreamUtils {
     public static int read16(InputStream data) {
         try {
             byte[] int16 = new byte[2];
-            data.read(int16);
+            validateLength(data.read(int16), int16.length);
 
             int b1 = asUnsignedByte(int16[0]);
             int b2 = asUnsignedByte(int16[1]);
@@ -30,7 +32,7 @@ public final class InputStreamUtils {
     public static int read24(InputStream data) {
         try {
             byte[] int24 = new byte[3];
-            data.read(int24);
+            validateLength(data.read(int24), int24.length);
 
             int b1 = asUnsignedByte(int24[0]);
             int b2 = asUnsignedByte(int24[1]);
@@ -46,7 +48,7 @@ public final class InputStreamUtils {
     public static long read32(InputStream data) {
         try {
             byte[] int32 = new byte[4];
-            data.read(int32);
+            validateLength(data.read(int32) , int32.length);
 
             long b1 = asUnsignedByte(int32[0]);
             long b2 = asUnsignedByte(int32[1]);
@@ -57,6 +59,12 @@ public final class InputStreamUtils {
         }
         catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void validateLength(int length, int expectedLength) {
+        if (length != expectedLength) {
+            throw new DjVuFileException("Unexpected end of file");
         }
     }
 
