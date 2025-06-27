@@ -139,7 +139,7 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         final int bit;
         final SymbolType symbolType;
         long z = 0x8000 + (this.a >> 1);
-        dumpState(z, null);
+        // dumpState(z, null);
 
         if (z > this.c) {
             symbolType = SymbolType.LPS;
@@ -188,7 +188,7 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
         }
 
         long z = this.a + table[index].p();
-        dumpState(z, ctx);
+        // dumpState(z, ctx);
 
         if (z <= this.fence) {
             this.a = z;
@@ -243,7 +243,7 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
 
         final long nextBit = (this.buffer >> this.bufferSize) & ((1L << shift) - 1);
 
-        LOG.debug("renormalization: symbolType = {}, nextBit = {}, shift = {}", symbolType, nextBit, shift);
+        // LOG.debug("renormalization: symbolType = {}, nextBit = {}, shift = {}", symbolType, nextBit, shift);
 
         this.c = asUnsignedShort((this.c << shift) | nextBit);
 

@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class DjVuFileReader implements Closeable, ByteStream {
+public class DjVuFileReader implements Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuFileReader.class);
 
     private final File file;
@@ -167,28 +167,6 @@ public class DjVuFileReader implements Closeable, ByteStream {
         }
         catch (IllegalArgumentException e) {
             throw new DjVuFileException(String.format("Unexpected secondary chunk id: %s", value), e);
-        }
-    }
-
-    @Override
-    public Data readBytes(int requestedSize) {
-        final byte[] buffer = new byte[requestedSize];
-        try {
-            final int size = inputStream.read(buffer);
-            if (size < 0) {
-                this.isEndOfFile = true;
-                LOG.debug("readBytes: It's end of file.");
-                // throw new DjVuFileException("There is no more data because the end of the stream has been reached.");
-            }
-            else {
-                this.rawOffset += size;
-                this.isEndOfFile = false;
-                // LOG.debug("Current offset: {}, {} bytes were read", this.position, size);
-            }
-            return new Data(buffer, size);
-        }
-        catch (IOException e) {
-            throw new DjVuFileException("Bytes reading problem", e);
         }
     }
 
