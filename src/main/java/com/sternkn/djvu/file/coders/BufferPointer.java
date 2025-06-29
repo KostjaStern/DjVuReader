@@ -17,4 +17,20 @@ public class BufferPointer {
     public void setValue(int offset, int value) {
         buffer[pointer + offset] = value;
     }
+
+    public BufferPointer shiftPointer(int offset) {
+        int newPointer = pointer + offset;
+        return new BufferPointer(buffer, newPointer);
+    }
+
+    public boolean isCurrentValueZero() {
+        return buffer[pointer] == 0;
+    }
+
+    public boolean isPointerLess(BufferPointer p) {
+        if (this.buffer != p.buffer) {
+            throw new IllegalArgumentException("Buffer pointers must point to the same buffer.");
+        }
+        return this.pointer < p.pointer;
+    }
 }

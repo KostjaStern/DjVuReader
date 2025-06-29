@@ -64,6 +64,7 @@ public class JB2CodecDecoder {
     private BitContext[] rightcell;
 
     private BitContext[] bitdist;
+    private BitContext[] cbitdist;
 
     private int last_left;
     private int last_row_left;
@@ -75,9 +76,9 @@ public class JB2CodecDecoder {
 
     private boolean refinementp;
 
-    private List<Integer> shape2lib;
-    private List<Integer> lib2shape;
-    private List<LibRect> libinfo;
+//    private List<Integer> shape2lib;
+//    private List<Integer> lib2shape;
+//    private List<LibRect> libinfo;
 
 
     private BitContext[] getInitialBitContext(int size) {
@@ -148,18 +149,20 @@ public class JB2CodecDecoder {
         this.rightcell = getInitialBitContext(CELLCHUNK + CELLEXTRA);
 
         this.bitdist = getInitialBitContext(1024);
+        this.cbitdist = getInitialBitContext(2048);
+
         this.refinementp = false;
         this.cur_ncell = 1;
     }
 
     // JB2Image.cpp
     // void JB2Dict::JB2Codec::Decode::code(const GP<JB2Dict> &gjim)
-    public void decode(JB2Dict gjim) {
+    public void decode(JB2Dict dict) {
         int rectype;
-        JB2Shape tmpshape = new JB2Shape();
+        // JB2Shape tmpshape = new JB2Shape();
 
         do {
-            rectype = codeRecord(gjim, tmpshape);
+            rectype = codeRecord(dict);
         }
         while (rectype != END_OF_DATA);
 
@@ -167,9 +170,10 @@ public class JB2CodecDecoder {
     }
 
     // void JB2Dict::JB2Codec::code_record(int &rectype, const GP<JB2Dict> &gjim, JB2Shape *xjshp)
-    private int codeRecord(JB2Dict dict, JB2Shape shape) {
+    private int codeRecord(JB2Dict dict) {
         GBitmap cbm = null;
         GBitmap bm = null;
+        JB2Shape shape = null;
         int shapeno = -1;
         int rectype = codeRecordType();
 
@@ -177,10 +181,10 @@ public class JB2CodecDecoder {
             case NEW_MARK_LIBRARY_ONLY:
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
-                if (shape == null) {
-                    throw new DjVuFileException("JB2Image.bad_number");
-                }
-
+//                if (shape == null) {
+//                    throw new DjVuFileException("JB2Image.bad_number");
+//                }
+                shape = new JB2Shape();
                 shape.setBits(new GBitmap()); // = GBitmap::create();
                 shape.setParent(-1);
                 bm = shape.getBits();
@@ -201,7 +205,7 @@ public class JB2CodecDecoder {
                 code_image_size(dict);
                 code_eventual_lossless_refinement();
                 // if (! encoding) // encoding = false
-                init_library(dict);
+                dict.init_library();
                 break;
             }
             case NEW_MARK_LIBRARY_ONLY:
@@ -212,19 +216,21 @@ public class JB2CodecDecoder {
             }
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
-//                if(tmpshape == null || gjim == null) {
+//                if(shape == null || gjim == null) {
 //                    throw new DjVuFileException("JB2Image.bad_number");
 //                    // G_THROW( ERR_MSG("JB2Image.bad_number") );
 //                }
                 // JB2Dict &jim=*gjim;
                 // JB2Shape &jshp=*xjshp;
-                int match = code_match_index(shape); // shape.getParent()
+                int match = code_match_index(dict, shape); // shape.getParent()
                 cbm = dict.get_shape(shape.getParent()).getBits();
-                LibRect libRect = libinfo.get(match);
+                LibRect libRect = dict.get_lib(match); // libinfo.get(match);
                 code_relative_mark_size(bm,
                                         libRect.getRight() - libRect.getLeft() + 1,
                                         libRect.getTop() - libRect.getBottom() + 1, 4);
-                code_bitmap_by_cross_coding(bm, cbm, shape.getParent());
+
+                libRect = dict.get_lib(shape.getParent());
+                code_bitmap_by_cross_coding(bm, cbm, libRect);
                 break;
             }
             case PRESERVED_COMMENT:
@@ -270,13 +276,15 @@ public class JB2CodecDecoder {
                 case NEW_MARK_LIBRARY_ONLY:
                 case MATCHED_REFINE_LIBRARY_ONLY:
                 {
-//                    if(!xjshp||!gjim)
-//                    {
-//                        G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                    }
-//                    JB2Shape &jshp=*xjshp;
-//                    shapeno = gjim->add_shape(jshp);
-//                    add_library(shapeno, jshp);
+                    // xjshp -> shape
+                    // gjim -> dict
+                    if(dict == null) { // shape == null ||
+                        // G_THROW( ERR_MSG("JB2Image.bad_number") );
+                        throw new DjVuFileException("JB2Image.bad_number");
+                    }
+                    // JB2Shape &jshp=*xjshp;
+                    shapeno = dict.add_shape(shape);
+                    dict.add_library(shapeno, shape);
                     break;
                 }
             }
@@ -292,22 +300,23 @@ public class JB2CodecDecoder {
     }
 
     // void JB2Dict::JB2Codec::code_bitmap_by_cross_coding (GBitmap &bm, GP<GBitmap> &cbm, const int libno)
-    void code_bitmap_by_cross_coding(GBitmap bm, GBitmap cbm, int libno) {
+    void code_bitmap_by_cross_coding(GBitmap bm, GBitmap cbm, LibRect libRect) {
         // Make sure bitmaps will not be disturbed
-        GBitmap copycbm = new GBitmap(); // GBitmap::create()
+        // GBitmap copycbm = new GBitmap(); // GBitmap::create()
         // if (cbm.monitor())
         // {
             // Perform a copy when the bitmap is explicitely shared
             // GMonitorLock lock2(cbm->monitor());
-            copycbm.init(cbm, 0);
-            cbm = copycbm;
+            // copycbm.init(cbm, 0);
+            // cbm = copycbm;
         // }
         // GMonitorLock lock1(bm.monitor());
         // Center bitmaps
         final int cw = cbm.columns();
         final int dw = bm.columns();
         final int dh = bm.rows();
-        final LibRect libRect = libinfo.get(libno);
+        // final LibRect libRect = libinfo.get(libno);
+        // xd2c = 0 , yd2c = 0
         final int xd2c = (dw/2 - dw + 1) - ((libRect.getRight() - libRect.getLeft() + 1)/2 - libRect.getRight());
         final int yd2c = (dh/2 - dh + 1) - ((libRect.getTop() - libRect.getBottom() + 1)/2 - libRect.getTop());
         // Ensure borders are adequate
@@ -318,14 +327,74 @@ public class JB2CodecDecoder {
         // Initialize row pointers
         final int dy = dh - 1;
         final int cy = dy + yd2c;
-// #ifndef NDEBUG
+
         bm.check_border();
         cbm.check_border();
-// #endif
-//        code_bitmap_by_cross_coding (bm,*cbm, xd2c, dw, dy, cy, bm[dy+1], bm[dy],
-//                (*cbm)[cy+1] + xd2c, (*cbm)[cy  ] + xd2c, (*cbm)[cy-1] + xd2c);
+
+        code_bitmap_by_cross_coding(bm, cbm, xd2c, dw, dy, cy);
     }
 
+    private void code_bitmap_by_cross_coding(GBitmap bm, GBitmap cbm, int xd2c, int dw, int dy, int cy) {
+        BufferPointer up1 = bm.getRow(dy + 1); // bm[dy+1]
+        BufferPointer up0 = bm.getRow(dy); // bm[dy]
+        BufferPointer xup1 = cbm.getRow(cy + 1).shiftPointer(xd2c); // (*cbm)[cy+1] + xd2c
+        BufferPointer xup0 = cbm.getRow(cy).shiftPointer(xd2c); // (*cbm)[cy  ] + xd2c
+        BufferPointer xdn1 = cbm.getRow(cy - 1).shiftPointer(xd2c); // (*cbm)[cy-1] + xd2c
+
+        // zpDecoder.decoder(bitdist[context]);
+        // ZPCodec &zp=*gzp;
+        // iterate on rows (decoding)
+        while (dy >= 0)
+        {
+            int context = get_cross_context(
+                    up1, up0, xup1, xup0, xdn1, 0);
+            for(int dx=0; dx < dw;)
+            {
+                final int n = zpDecoder.decoder(cbitdist[context]);
+                // up0[dx++] = n;
+                up0.setValue(dx, n);
+                dx++;
+                context = shift_cross_context(context, n, up1, up0, xup1, xup0, xdn1, dx);
+            }
+            // next row
+            --dy;
+            up1 = up0;
+            up0 = bm.getRow(dy);
+            xup1 = xup0;
+            xup0 = xdn1;
+            --cy; // [(--cy)-1] + xd2c;
+            xdn1 = cbm.getRow(cy - 1).shiftPointer(xd2c); // [(--cy)-1] + xd2c;
+// #ifndef NDEBUG
+            bm.check_border();
+// #endif
+        }
+    }
+
+    private int get_cross_context(BufferPointer up1, BufferPointer up0, BufferPointer xup1,
+                                  BufferPointer xup0, BufferPointer xdn1, int column)
+    {
+        return (up1.getValue(column - 1) << 10)  |
+               (up1.getValue(column) <<  9)             |
+               (up1.getValue(column + 1) <<  8)  |
+               (up0.getValue(column - 1) <<  7)  |
+               (xup1.getValue(column) <<  6)            |
+               (xup0.getValue(column - 1) <<  5) |
+               (xup0.getValue(column) <<  4)            |
+               (xup0.getValue(column + 1) <<  3) |
+               (xdn1.getValue(column - 1) <<  2) |
+               (xdn1.getValue(column) <<  1)            |
+               xdn1.getValue(column + 1);
+    }
+
+    private int shift_cross_context(int context, int n, BufferPointer up1, BufferPointer up0, BufferPointer xup1,
+                                    BufferPointer xup0, BufferPointer xdn1, int column) {
+        return ((context << 1) & 0x636)               |
+               (up1.getValue(column + 1) << 8)  |
+               (xup1.getValue(column) << 6)            |
+               (xup0.getValue(column + 1) << 3) |
+               xdn1.getValue(column + 1)        |
+               (n << 7);
+    }
 
     // void JB2Dict::JB2Codec::Decode::code_relative_mark_size(GBitmap &bm, int cw, int ch, int border)
     private void code_relative_mark_size(GBitmap bm, int cw, int ch, int border) {
@@ -341,10 +410,20 @@ public class JB2CodecDecoder {
         bm.init(ysize, xsize, border);
     }
 
+    /*
+    int JB2Dict::JB2Codec::Decode::code_match_index(int &index, JB2Dict &)
+{
+    // match = 3,
+    int match=CodeNum(0, lib2shape.hbound(), dist_match_index); // lib2shape.hbound() = 3,
+    index = lib2shape[match]; // index = 3
+    return match;
+}
+     */
     // int JB2Dict::JB2Codec::Decode::code_match_index(int &index, JB2Dict &)
-    private int code_match_index(JB2Shape shape) {
+    private int code_match_index(JB2Dict dict, JB2Shape shape) {
+        List<Integer> lib2shape = dict.getLib2shape();
         // lib2shape.hbound() - Returns the upper bound of the valid subscript range.
-        int match = codeNumber(0, lib2shape.size(), dist_match_index, 0); // lib2shape.hbound() ? size
+        int match = codeNumber(0, lib2shape.size() - 1, dist_match_index, 0); // lib2shape.hbound() ? size
         shape.setParent(lib2shape.get(match));
         return match;
     }
@@ -352,24 +431,6 @@ public class JB2CodecDecoder {
     // inline void JB2Dict::JB2Codec::code_eventual_lossless_refinement(void)  (see JB2Image.h)
     private void code_eventual_lossless_refinement() {
         this.refinementp = codeBit(dist_refinement_flag);
-    }
-
-    // void JB2Dict::JB2Codec::init_library(JB2Dict &jim)
-    private void init_library(JB2Dict dict) {
-        int nshape = dict.getInheritedShapes(); // .get_inherited_shape_count();
-
-        shape2lib = new ArrayList<>(nshape);
-        lib2shape = new ArrayList<>(nshape);
-
-        // shape2lib.resize(0,nshape-1);
-        // lib2shape.resize(0,nshape-1);
-        // libinfo.resize(0,nshape-1);
-        for (int i=0; i < nshape; i++) {
-            shape2lib.add(i); // shape2lib[i] = i;
-            lib2shape.add(i); // lib2shape[i] = i;
-
-            dict.get_bounding_box(i, libinfo.get(i));
-        }
     }
 
     // codeNumber(START_OF_DATA, END_OF_DATA, dist_record_type, 0);
@@ -380,7 +441,6 @@ public class JB2CodecDecoder {
 
         if (w != 0 || h != 0) {
             throw new DjVuFileException("JB2Image.bad_dict2");
-            // G_THROW( ERR_MSG("JB2Image.bad_dict2") );
         }
 
         // JB2Codec::code_image_size(jim);
@@ -401,27 +461,6 @@ public class JB2CodecDecoder {
         this.short_list_pos = 0;
     }
 
-    /*
-    void
-    JB2Dict::JB2Codec::code_image_size(JB2Dict &)
-    {
-        last_left = 1;
-        last_row_left = 0;
-        last_row_bottom = 0;
-        last_right = 0;
-        fill_short_list(last_row_bottom);
-        gotstartrecordp = 1;
-    }
-
-    inline void
-    JB2Dict::JB2Codec::fill_short_list(const int v)
-    {
-        short_list[0] = short_list[1] = short_list[2] = v;
-        short_list_pos = 0;
-    }
-*/
-
-
     private void code_absolute_mark_size(GBitmap bm, int border) {
         int xsize = codeNumber(0, BIGPOSITIVE, abs_size_x, 0);
         int ysize = codeNumber(0, BIGPOSITIVE, abs_size_y, 0);
@@ -430,27 +469,9 @@ public class JB2CodecDecoder {
             throw new DjVuFileException("JB2Image.bad_number");
         }
 
-        // if ((xsize != (unsigned short)xsize) || (ysize!=(unsigned short)ysize))
-        // G_THROW( ERR_MSG("JB2Image.bad_number") );
         bm.init(ysize, xsize, border);
     }
 
-/*
-    // void JB2Dict::JB2Codec::code_bitmap_directly (GBitmap &bm)
-    private void code_bitmap_directly(GBitmap bm) {
-        // Make sure bitmap will not be disturbed
-        // GMonitorLock lock(bm.monitor());
-        // ensure borders are adequate
-        bm.minborder(3);
-        // initialize row pointers
-        int dy = bm.rows() - 1;
-        // code_bitmap_directly(bm, bm.columns(), dy, bm[dy+2], bm[dy+1], bm[dy]);
-    }
-*/
-
-//    void JB2Dict::JB2Codec::Decode::code_bitmap_directly(
-//            GBitmap &bm,const int dw, int dy,
-//            unsigned char *up2, unsigned char *up1, unsigned char *up0 )
     private void code_bitmap_directly(GBitmap bm)
     {
         int dw = bm.columns();
@@ -460,8 +481,6 @@ public class JB2CodecDecoder {
         BufferPointer up1 = bm.getRow(dy + 1);
         BufferPointer up0 = bm.getRow(dy);
 
-        // ZPCodec &zp=*gzp;
-        // iterate on rows (decoding)
         while (dy >= 0)
         {
             int context = get_direct_context(up2, up1, up0, 0);
@@ -478,40 +497,28 @@ public class JB2CodecDecoder {
             up1 = up0;
             up0 = bm.getRow(dy);
         }
-// #ifndef NDEBUG
-        // bm.check_border();
-// #endif
+
+        bm.check_border();
     }
 
-//    inline int
-//    JB2Dict::JB2Codec::get_direct_context( unsigned char const * const up2,
-//                                           unsigned char const * const up1,
-//                                           unsigned char const * const up0, const int column)
     public int get_direct_context(BufferPointer up2, BufferPointer up1, BufferPointer up0, int column) {
-        return ( (up2.getValue(column - 1) << 9) |
-                 (up2.getValue(column    ) << 8)        |
-                (up2.getValue(column + 1) << 7) |
-                (up1.getValue(column - 2) << 6) |
-                (up1.getValue(column - 1) << 5) |
-                (up1.getValue(column    ) << 4) |
-                (up1.getValue(column + 1) << 3) |
-                (up1.getValue(column + 2) << 2) |
-                (up0.getValue(column - 2) << 1) |
-                up0.getValue(column - 1) );
+        return (up2.getValue(column - 1) << 9) |
+               (up2.getValue(column    ) << 8)        |
+               (up2.getValue(column + 1) << 7) |
+               (up1.getValue(column - 2) << 6) |
+               (up1.getValue(column - 1) << 5) |
+               (up1.getValue(column    ) << 4)        |
+               (up1.getValue(column + 1) << 3) |
+               (up1.getValue(column + 2) << 2) |
+               (up0.getValue(column - 2) << 1) |
+               up0.getValue(column - 1);
     }
 
-
-//    inline int
-//    JB2Dict::JB2Codec::shift_direct_context(const int context, const int next,
-//                                            unsigned char const * const up2,
-//                                            unsigned char const * const up1,
-//                                            unsigned char const * const up0, const int column)
-    public int shift_direct_context(int context, int next, BufferPointer up2, BufferPointer up1, BufferPointer up0, int column)
-    {
-        return ( ((context << 1) & 0x37a)                 |
-                 (up1.getValue(column + 2) << 2)   |
-                 (up2.getValue(column + 1) << 7)   |
-                 next             );
+    public int shift_direct_context(int context, int next, BufferPointer up2, BufferPointer up1, BufferPointer up0, int column) {
+        return ((context << 1) & 0x37a)               |
+               (up1.getValue(column + 2) << 2) |
+               (up2.getValue(column + 1) << 7) |
+               next;
     }
 
     private int codeRecordType() {
@@ -520,9 +527,6 @@ public class JB2CodecDecoder {
 
     // int JB2Dict::JB2Codec::CodeNum(int low, int high, NumContext *pctx, int v)
     private int codeNumber(int low, int high, BitContext pctx, int v) {
-        // Check
-//        if (!pctx || ((int)*pctx >= cur_ncell))
-//        G_THROW( ERR_MSG("JB2Image.bad_numcontext") );
         if (pctx == null || pctx.getValue() >= cur_ncell) {
             throw new DjVuFileException("JB2Image.bad_numcontext");
         }
@@ -550,30 +554,21 @@ public class JB2CodecDecoder {
                 leftcell[pctx.getValue()].setValue(0);
                 rightcell[pctx.getValue()].setValue(0);
             }
-            // encoding = false !!!
+
             final boolean decision = (low >= cutoff) || ((high >= cutoff) && codeBit(bitcells[pctx.getValue()]));
-
-//            const bool decision = encoding
-//                    ? ((low < cutoff && high >= cutoff) ? CodeBit((v>=cutoff),bitcells[*pctx]) : (v >= cutoff))
-//                    : ((low >= cutoff) || ((high >= cutoff) && CodeBit(false, bitcells[*pctx])));
-
-
-            // context for new bit
             pctx = decision ? rightcell[pctx.getValue()] : leftcell[pctx.getValue()];
-            // phase dependent part
+
             switch (phase)
             {
                 case 1:
                     negative = !decision;
                     if (negative) {
-//                        if (encoding) // encoding false
-//                            v = - v - 1;
                         final int temp = - low - 1;
                         low = - high - 1;
                         high = temp;
                     }
                     phase = 2;
-                    cutoff =  1;
+                    cutoff = 1;
                     break;
 
                 case 2:
@@ -614,13 +609,4 @@ public class JB2CodecDecoder {
     private boolean codeBit(BitContext ctx) {
         return zpDecoder.decoder(ctx) != 0; // gzp->decoder(ctx)?true:false;
     }
-
-    /*
-    int
-JB2Dict::JB2Codec::Decode::CodeNum(int low, int high, NumContext &ctx)
-{
-  return JB2Codec::CodeNum(low,high,&ctx,0);
-}
-
-     */
 }

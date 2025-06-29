@@ -10,7 +10,7 @@ public class LibRect {
     public LibRect() {
 
     }
-/*
+
     public void compute_bounding_box(GBitmap bm) {
         // Avoid trouble
         // GMonitorLock lock(bm.monitor());
@@ -18,48 +18,56 @@ public class LibRect {
         final int w = bm.columns();
         final int h = bm.rows();
         final int s = bm.rowsize();
+
         // Right border
-        for(right=w-1;right >= 0;--right)
-        {
-            unsigned char const *p = bm[0] + right;
-            unsigned char const * const pe = p+(s*h);
-            for (;(p<pe)&&(!*p);p+=s)
-                continue;
-            if (p<pe)
-                break;
+        for(right = w - 1; right >= 0; --right) {
+            BufferPointer p = bm.getRow(0).shiftPointer(right);
+            BufferPointer pe = p.shiftPointer(s * h);
+
+            while(p.isPointerLess(pe) && p.isCurrentValueZero()) {
+                p = p.shiftPointer(s);
+            }
+
+            if (p.isPointerLess(pe)) break;
         }
+
         // Top border
-        for(top=h-1;top >= 0;--top)
-        {
-            unsigned char const *p = bm[top];
-            unsigned char const * const pe = p+w;
-            for (;(p<pe)&&(!*p); ++p)
-                continue;
-            if (p<pe)
-                break;
+        for(top = h - 1; top >= 0; --top) {
+            BufferPointer p = bm.getRow(top);
+            BufferPointer pe = p.shiftPointer(w);
+
+            while(p.isPointerLess(pe) && p.isCurrentValueZero()) {
+                p = p.shiftPointer(1);
+            }
+
+            if (p.isPointerLess(pe)) break;
         }
+
         // Left border
-        for (left=0;left <= right;++left)
-        {
-            unsigned char const *p = bm[0] + left;
-            unsigned char const * const pe=p+(s*h);
-            for (;(p<pe)&&(!*p);p+=s)
-                continue;
-            if (p<pe)
-                break;
+        for (left = 0; left <= right; ++left) {
+            BufferPointer p = bm.getRow(0).shiftPointer(left);
+            BufferPointer pe = p.shiftPointer(s * h);
+
+            while(p.isPointerLess(pe) && p.isCurrentValueZero()) {
+                p = p.shiftPointer(s);
+            }
+
+            if (p.isPointerLess(pe)) break;
         }
+
         // Bottom border
-        for(bottom=0;bottom <= top;++bottom)
-        {
-            unsigned char const *p = bm[bottom];
-            unsigned char const * const pe = p+w;
-            for (;(p<pe)&&(!*p); ++p)
-                continue;
-            if (p<pe)
-                break;
+        for(bottom = 0; bottom <= top; ++bottom) {
+            BufferPointer p = bm.getRow(bottom);
+            BufferPointer pe = p.shiftPointer(w);
+
+            while(p.isPointerLess(pe) && p.isCurrentValueZero()) {
+                p = p.shiftPointer(1);
+            }
+
+            if (p.isPointerLess(pe)) break;
         }
     }
-*/
+
     public int getTop() {
         return top;
     }

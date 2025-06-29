@@ -69,6 +69,9 @@ public class GBitmap {
         return rows;
     }
 
+    public int rowsize() {
+        return bytes_per_row;
+    }
 
     // inline const unsigned char * GBitmap::operator[](int row) const
     /*
@@ -172,24 +175,31 @@ public class GBitmap {
 */
     // void GBitmap::check_border() const
     public void check_border() {
-//        int col;
-//        if (bytes)
-//        {
-//           const unsigned char *p = (*this)[-1];
-//            for (col=-border; col<ncolumns+border; col++)
-//                if (p[col])
-//                    G_THROW( ERR_MSG("GBitmap.zero_damaged") );
-//            for (int row=0; row<nrows; row++)
-//            {
-//                p = (*this)[row];
-//                for (col=-border; col<0; col++)
-//                    if (p[col])
-//                        G_THROW( ERR_MSG("GBitmap.left_damaged") );
-//                for (col=ncolumns; col<ncolumns+border; col++)
-//                    if (p[col])
-//                        G_THROW( ERR_MSG("GBitmap.right_damaged") );
-//            }
-//        }
+        if (this.bytes_data == null) {
+            return;
+        }
+
+        BufferPointer p = getRow(-1);
+        for (int col = -border; col < columns + border; col++) {
+            if (p.getValue(col) != 0) {
+                throw new DjVuFileException("GBitmap.zero_damaged");
+            }
+        }
+
+        for (int row = 0; row < rows; row++) {
+            p = getRow(row);
+            for (int col = -border; col < 0; col++) {
+                if (p.getValue(col) != 0) {
+                    throw new DjVuFileException("GBitmap.left_damaged");
+                }
+            }
+
+            for (int col = columns; col < columns + border; col++) {
+                if (p.getValue(col) != 0) {
+                    throw new DjVuFileException("GBitmap.right_damaged");
+                }
+            }
+        }
     }
 
 
@@ -251,6 +261,26 @@ public class GBitmap {
 //        }
     }
 
+    /*
+    void
+GBitmap::compress()
+{
+  if (grays > 2)
+    G_THROW( ERR_MSG("GBitmap.cant_compress") );
+  GMonitorLock lock(monitor());
+  if (bytes)
+    {
+      grle.resize(0);
+      grlerows.resize(0);
+      rlelength = encode(rle,grle);
+      if (rlelength)
+        {
+          gbytes_data.resize(0);
+          bytes = 0;
+        }
+    }
+}
+     */
     public void compress() {
 
     }
