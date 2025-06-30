@@ -38,7 +38,7 @@ public class JB2CodecDecoder {
     private final ZPCodecDecoder zpDecoder;
 
     // ??
-    private char gotstartrecordp;
+    private boolean gotStartRecord;
 
     private int cur_ncell;
     // Code comment
@@ -151,6 +151,7 @@ public class JB2CodecDecoder {
         this.bitdist = getInitialBitContext(1024);
         this.cbitdist = getInitialBitContext(2048);
 
+        this.gotStartRecord = false;
         this.refinementp = false;
         this.cur_ncell = 1;
     }
@@ -166,7 +167,11 @@ public class JB2CodecDecoder {
         }
         while (rectype != END_OF_DATA);
 
-        // return;
+        if (!gotStartRecord) {
+            throw new DjVuFileException("JB2Image.no_start");
+        }
+
+        // dict.compress();
     }
 
     // void JB2Dict::JB2Codec::code_record(int &rectype, const GP<JB2Dict> &gjim, JB2Shape *xjshp)
@@ -299,26 +304,15 @@ public class JB2CodecDecoder {
         return rectype;
     }
 
-    // void JB2Dict::JB2Codec::code_bitmap_by_cross_coding (GBitmap &bm, GP<GBitmap> &cbm, const int libno)
-    void code_bitmap_by_cross_coding(GBitmap bm, GBitmap cbm, LibRect libRect) {
-        // Make sure bitmaps will not be disturbed
-        // GBitmap copycbm = new GBitmap(); // GBitmap::create()
-        // if (cbm.monitor())
-        // {
-            // Perform a copy when the bitmap is explicitely shared
-            // GMonitorLock lock2(cbm->monitor());
-            // copycbm.init(cbm, 0);
-            // cbm = copycbm;
-        // }
-        // GMonitorLock lock1(bm.monitor());
+    private void code_bitmap_by_cross_coding(GBitmap bm, GBitmap cbm, LibRect libRect) {
         // Center bitmaps
         final int cw = cbm.columns();
         final int dw = bm.columns();
         final int dh = bm.rows();
-        // final LibRect libRect = libinfo.get(libno);
-        // xd2c = 0 , yd2c = 0
+
         final int xd2c = (dw/2 - dw + 1) - ((libRect.getRight() - libRect.getLeft() + 1)/2 - libRect.getRight());
         final int yd2c = (dh/2 - dh + 1) - ((libRect.getTop() - libRect.getBottom() + 1)/2 - libRect.getTop());
+
         // Ensure borders are adequate
         bm.minborder(2);
         cbm.minborder(2 - xd2c);
@@ -335,15 +329,12 @@ public class JB2CodecDecoder {
     }
 
     private void code_bitmap_by_cross_coding(GBitmap bm, GBitmap cbm, int xd2c, int dw, int dy, int cy) {
-        BufferPointer up1 = bm.getRow(dy + 1); // bm[dy+1]
-        BufferPointer up0 = bm.getRow(dy); // bm[dy]
-        BufferPointer xup1 = cbm.getRow(cy + 1).shiftPointer(xd2c); // (*cbm)[cy+1] + xd2c
-        BufferPointer xup0 = cbm.getRow(cy).shiftPointer(xd2c); // (*cbm)[cy  ] + xd2c
-        BufferPointer xdn1 = cbm.getRow(cy - 1).shiftPointer(xd2c); // (*cbm)[cy-1] + xd2c
+        BufferPointer up1 = bm.getRow(dy + 1);
+        BufferPointer up0 = bm.getRow(dy);
+        BufferPointer xup1 = cbm.getRow(cy + 1).shiftPointer(xd2c);
+        BufferPointer xup0 = cbm.getRow(cy).shiftPointer(xd2c);
+        BufferPointer xdn1 = cbm.getRow(cy - 1).shiftPointer(xd2c);
 
-        // zpDecoder.decoder(bitdist[context]);
-        // ZPCodec &zp=*gzp;
-        // iterate on rows (decoding)
         while (dy >= 0)
         {
             int context = get_cross_context(
@@ -351,22 +342,19 @@ public class JB2CodecDecoder {
             for(int dx=0; dx < dw;)
             {
                 final int n = zpDecoder.decoder(cbitdist[context]);
-                // up0[dx++] = n;
                 up0.setValue(dx, n);
                 dx++;
                 context = shift_cross_context(context, n, up1, up0, xup1, xup0, xdn1, dx);
             }
-            // next row
-            --dy;
+
+            --dy; // next row
             up1 = up0;
             up0 = bm.getRow(dy);
             xup1 = xup0;
             xup0 = xdn1;
-            --cy; // [(--cy)-1] + xd2c;
-            xdn1 = cbm.getRow(cy - 1).shiftPointer(xd2c); // [(--cy)-1] + xd2c;
-// #ifndef NDEBUG
+            --cy;
+            xdn1 = cbm.getRow(cy - 1).shiftPointer(xd2c);
             bm.check_border();
-// #endif
         }
     }
 
@@ -396,34 +384,21 @@ public class JB2CodecDecoder {
                (n << 7);
     }
 
-    // void JB2Dict::JB2Codec::Decode::code_relative_mark_size(GBitmap &bm, int cw, int ch, int border)
     private void code_relative_mark_size(GBitmap bm, int cw, int ch, int border) {
         int xdiff = codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_size_x, 0);
         int ydiff = codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_size_y, 0);
         int xsize = cw + xdiff;
         int ysize = ch + ydiff;
         if ((xsize != asUnsignedShort(xsize)) || (ysize != asUnsignedShort(ysize))) {
-            // G_THROW( ERR_MSG("JB2Image.bad_number") );
             throw new DjVuFileException("JB2Image.bad_number");
         }
 
         bm.init(ysize, xsize, border);
     }
 
-    /*
-    int JB2Dict::JB2Codec::Decode::code_match_index(int &index, JB2Dict &)
-{
-    // match = 3,
-    int match=CodeNum(0, lib2shape.hbound(), dist_match_index); // lib2shape.hbound() = 3,
-    index = lib2shape[match]; // index = 3
-    return match;
-}
-     */
-    // int JB2Dict::JB2Codec::Decode::code_match_index(int &index, JB2Dict &)
     private int code_match_index(JB2Dict dict, JB2Shape shape) {
         List<Integer> lib2shape = dict.getLib2shape();
-        // lib2shape.hbound() - Returns the upper bound of the valid subscript range.
-        int match = codeNumber(0, lib2shape.size() - 1, dist_match_index, 0); // lib2shape.hbound() ? size
+        int match = codeNumber(0, lib2shape.size() - 1, dist_match_index, 0);
         shape.setParent(lib2shape.get(match));
         return match;
     }
@@ -448,11 +423,10 @@ public class JB2CodecDecoder {
         this.last_row_left = 0;
         this.last_row_bottom = 0;
         this.last_right = 0;
-        this.gotstartrecordp = 1;
+        this.gotStartRecord = true;
         fill_short_list(this.last_row_bottom);
     }
 
-    // inline void JB2Dict::JB2Codec::fill_short_list(const int v) (see JB2Image.h)
     private void fill_short_list(int v) {
         this.short_list = new int[3];
         this.short_list[0] = v;
@@ -607,6 +581,6 @@ public class JB2CodecDecoder {
     }
 
     private boolean codeBit(BitContext ctx) {
-        return zpDecoder.decoder(ctx) != 0; // gzp->decoder(ctx)?true:false;
+        return zpDecoder.decoder(ctx) != 0;
     }
 }
