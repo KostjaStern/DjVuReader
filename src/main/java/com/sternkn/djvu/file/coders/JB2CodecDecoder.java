@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
@@ -50,15 +49,23 @@ public class JB2CodecDecoder {
     private BitContext dist_refinement_flag;
     private BitContext image_size_dist;
 
+    private BitContext inherited_shape_count_dist;
+    private BitContext rel_loc_x_current;
+    private BitContext rel_loc_x_last;
+    private BitContext rel_loc_y_current;
+    private BitContext rel_loc_y_last;
+
     private BitContext abs_size_x;
     private BitContext abs_size_y;
+
+    private BitContext abs_loc_x;
+    private BitContext abs_loc_y;
 
     private BitContext rel_size_x;
     private BitContext rel_size_y;
 
-//    private BitContext bitcells;
-//    private BitContext leftcell;
-//    private BitContext rightcell;
+    private BitContext offset_type_dist;
+
     private BitContext[] bitcells;
     private BitContext[] leftcell;
     private BitContext[] rightcell;
@@ -70,15 +77,11 @@ public class JB2CodecDecoder {
     private int last_row_left;
     private int last_row_bottom;
     private int last_right;
-    // private int gotstartrecordp; // char
+    private int last_bottom;
     private int[] short_list; // int short_list[3];
     private int short_list_pos;
 
     private boolean refinementp;
-
-//    private List<Integer> shape2lib;
-//    private List<Integer> lib2shape;
-//    private List<LibRect> libinfo;
 
 
     private BitContext[] getInitialBitContext(int size) {
@@ -128,39 +131,20 @@ public class JB2CodecDecoder {
     public JB2CodecDecoder(InputStream inputStream) {
         this.zpDecoder = new ZpCodecInputStream(inputStream);
 
-        this.dist_comment_byte  = new BitContext();
-        this.dist_comment_length = new BitContext();
-        this.dist_record_type = new BitContext();
-        this.dist_match_index = new BitContext();
         this.dist_refinement_flag = new BitContext();
+        this.offset_type_dist = new BitContext();
 
-        this.image_size_dist = new BitContext();
-        this.abs_size_x = new BitContext();
-        this.abs_size_y = new BitContext();
-
-        this.rel_size_x = new BitContext();
-        this.rel_size_y = new BitContext();
-
-//        this.bitcells = new BitContext();
-//        this.leftcell = new BitContext();
-//        this.rightcell = new BitContext();
-        this.bitcells = getInitialBitContext(CELLCHUNK + CELLEXTRA);
-        this.leftcell = getInitialBitContext(CELLCHUNK + CELLEXTRA);
-        this.rightcell = getInitialBitContext(CELLCHUNK + CELLEXTRA);
+        reset_numcoder();
 
         this.bitdist = getInitialBitContext(1024);
         this.cbitdist = getInitialBitContext(2048);
 
         this.gotStartRecord = false;
         this.refinementp = false;
-        this.cur_ncell = 1;
     }
 
-    // JB2Image.cpp
-    // void JB2Dict::JB2Codec::Decode::code(const GP<JB2Dict> &gjim)
     public void decode(JB2Dict dict) {
         int rectype;
-        // JB2Shape tmpshape = new JB2Shape();
 
         do {
             rectype = codeRecord(dict);
@@ -174,7 +158,350 @@ public class JB2CodecDecoder {
         // dict.compress();
     }
 
-    // void JB2Dict::JB2Codec::code_record(int &rectype, const GP<JB2Dict> &gjim, JB2Shape *xjshp)
+    public void decode(JB2Image image) {
+        int rectype;
+
+        do {
+            rectype = codeRecord(image);
+        }
+        while (rectype != END_OF_DATA);
+
+        if (!gotStartRecord) {
+            throw new DjVuFileException("JB2Image.no_start");
+        }
+
+        // dict.compress();
+    }
+
+    private int codeRecord(JB2Image image) {
+        GBitmap cbm = null;
+        GBitmap bm = null;
+        JB2Shape shape = null;
+        JB2Blit blit = null;
+        int shapeno = -1;
+        int match;
+
+        int rectype = codeRecordType();
+
+        switch (rectype) {
+            case NEW_MARK:
+            case NEW_MARK_LIBRARY_ONLY:
+            case NEW_MARK_IMAGE_ONLY:
+            case MATCHED_REFINE:
+            case MATCHED_REFINE_LIBRARY_ONLY:
+            case MATCHED_REFINE_IMAGE_ONLY:
+            case NON_MARK_DATA:
+            {
+                shape = new JB2Shape();
+                shape.setBits(new GBitmap());
+                shape.setParent(-1);
+
+                if (rectype == NON_MARK_DATA) {
+                    shape.setParent(-2);
+                }
+
+                bm = shape.getBits();
+                break;
+            }
+        }
+
+        // Coding actions
+        switch (rectype)
+        {
+            case START_OF_DATA:
+            {
+                code_image_size(image);
+                code_eventual_lossless_refinement();
+                image.init_library();
+                break;
+            }
+            case NEW_MARK:
+            {
+                code_absolute_mark_size(bm, 4);
+                code_bitmap_directly(bm);
+                blit = code_relative_location(bm.rows(), bm.columns());
+                break;
+            }
+            case NEW_MARK_LIBRARY_ONLY:
+            {
+                code_absolute_mark_size(bm, 4);
+                code_bitmap_directly(bm);
+                break;
+            }
+            case NEW_MARK_IMAGE_ONLY:
+            {
+//                code_absolute_mark_size (*bm, 3);
+//                code_bitmap_directly (*bm);
+//                code_relative_location (jblt, bm->rows(), bm->columns() );
+                break;
+            }
+            case MATCHED_REFINE:
+            {
+                match = code_match_index(image, shape);
+                cbm = image.get_shape(shape.getParent()).getBits();
+                LibRect libRect = image.get_lib(match);
+                code_relative_mark_size(bm,
+                                    libRect.getRight() - libRect.getLeft() + 1,
+                                    libRect.getTop() - libRect.getBottom() + 1, 4);
+                code_bitmap_by_cross_coding(bm, cbm, libRect);
+                blit = code_relative_location (bm.rows(), bm.columns());
+                break;
+            }
+            case MATCHED_REFINE_LIBRARY_ONLY:
+            {
+//                if(!xjshp||!gjim)
+//                {
+//                    G_THROW( ERR_MSG("JB2Image.bad_number") );
+//                }
+//                JB2Image &jim=*gjim;
+//                JB2Shape &jshp=*xjshp;
+//                match = code_match_index (jshp.parent, jim);
+//                cbm = jim.get_shape(jshp.parent).bits;
+//                LibRect &l = libinfo[match];
+//                code_relative_mark_size (*bm, l.right-l.left+1, l.top-l.bottom+1, 4);
+                break;
+            }
+            case MATCHED_REFINE_IMAGE_ONLY:
+            {
+//                if(!xjshp||!gjim)
+//                {
+//                    G_THROW( ERR_MSG("JB2Image.bad_number") );
+//                }
+//                JB2Image &jim=*gjim;
+//                JB2Shape &jshp=*xjshp;
+//                match = code_match_index (jshp.parent, jim);
+//                cbm = jim.get_shape(jshp.parent).bits;
+//                LibRect &l = libinfo[match];
+//                code_relative_mark_size (*bm, l.right-l.left+1, l.top-l.bottom+1, 4);
+//                code_bitmap_by_cross_coding (*bm, cbm, match);
+//                code_relative_location (jblt, bm->rows(), bm->columns() );
+                break;
+            }
+            case MATCHED_COPY:
+            {
+                blit = new JB2Blit();
+                match = code_match_index(image, blit);
+                bm = image.get_shape(blit.getShapeno()).getBits();
+                LibRect libRect = image.get_lib(match);
+                blit.setLeft(libRect.getLeft());
+                blit.setBottom(libRect.getBottom());
+
+                JB2Blit jblt;
+                if (image.isReproduceOldBug()) {
+                    jblt = code_relative_location(bm.rows(), bm.columns());
+                }
+                else {
+                    jblt = code_relative_location(libRect.getTop() - libRect.getBottom() + 1,
+                            libRect.getRight() - libRect.getLeft() + 1);
+                }
+
+                blit.setLeft(jblt.getLeft() - libRect.getLeft());
+                blit.setBottom(jblt.getBottom() - libRect.getBottom());
+                break;
+            }
+            case NON_MARK_DATA:
+            {
+//                code_absolute_mark_size (*bm, 3);
+//                code_bitmap_directly (*bm);
+//                code_absolute_location (jblt, bm->rows(), bm->columns() );
+                break;
+            }
+            case PRESERVED_COMMENT:
+            {
+//                if(!gjim)
+//                {
+//                    G_THROW( ERR_MSG("JB2Image.bad_number") );
+//                }
+//                JB2Image &jim=*gjim;
+//                code_comment(jim.comment);
+                break;
+            }
+            case REQUIRED_DICT_OR_RESET:
+            {
+                if (!this.gotStartRecord) {
+                    // Indicates need for a shape dictionary
+                    code_inherited_shape_count(image);
+                }
+                else {
+                    // Reset all numerical contexts to zero
+                    reset_numcoder();
+                }
+                break;
+            }
+            case END_OF_DATA:
+            {
+                break;
+            }
+            default:
+            {
+                throw new DjVuFileException("JB2Image.unknown_type");
+            }
+        }
+
+        // Post-coding action
+        // add shape to image
+        switch(rectype)
+        {
+            case NEW_MARK:
+            case NEW_MARK_LIBRARY_ONLY:
+            case NEW_MARK_IMAGE_ONLY:
+            case MATCHED_REFINE:
+            case MATCHED_REFINE_LIBRARY_ONLY:
+            case MATCHED_REFINE_IMAGE_ONLY:
+            case NON_MARK_DATA:
+            {
+                shapeno = image.add_shape(shape);
+                break;
+            }
+        }
+        // add shape to library
+        switch(rectype)
+        {
+            case NEW_MARK:
+            case NEW_MARK_LIBRARY_ONLY:
+            case MATCHED_REFINE:
+            case MATCHED_REFINE_LIBRARY_ONLY:
+                image.add_library(shapeno, shape);
+                break;
+        }
+        // make sure everything is compacted
+        // decompaction will occur automatically on cross-coding bitmaps
+        if (bm != null) {
+            bm.compress();
+        }
+        // add blit to image
+        switch (rectype)
+        {
+            case NEW_MARK:
+            case NEW_MARK_IMAGE_ONLY:
+            case MATCHED_REFINE:
+            case MATCHED_REFINE_IMAGE_ONLY:
+            case NON_MARK_DATA:
+                blit.setShapeno(shapeno);
+            case MATCHED_COPY:
+                image.add_blit(blit);
+                break;
+        }
+
+        return rectype;
+    }
+
+    private JB2Blit code_relative_location(int rows, int columns)
+    {
+        // Check start record
+        if (!this.gotStartRecord) {
+            throw new DjVuFileException("JB2Image.no_start");
+        }
+
+        // Find location
+        int bottom = 0;
+        int left = 0;
+        int right = 0;
+        int x_diff;
+        int y_diff;
+
+        // Code offset type
+        boolean new_row = codeBit(offset_type_dist);
+        if (new_row)
+        {
+            // Begin a new row
+            x_diff = get_diff(rel_loc_x_last);
+            y_diff = get_diff(rel_loc_y_last);
+
+            left = last_row_left + x_diff;
+            int top = last_row_bottom + y_diff;
+            right = left + columns - 1;
+            bottom = top - rows + 1;
+
+            last_left = left;
+            last_row_left = left;
+            last_right = right;
+            last_bottom = last_row_bottom = bottom;
+            fill_short_list(bottom);
+        }
+        else
+        {
+            // Same row
+            x_diff = get_diff(rel_loc_x_current);
+            y_diff = get_diff(rel_loc_y_current);
+
+            left = last_right + x_diff;
+            bottom = last_bottom + y_diff;
+            right = left + columns - 1;
+
+            last_left = left;
+            last_right = right;
+            last_bottom = update_short_list(bottom);
+        }
+
+        // Store in blit record
+        JB2Blit blit = new JB2Blit();
+        blit.setBottom(bottom - 1);
+        blit.setLeft(left - 1);
+        return blit;
+    }
+
+    private int update_short_list(int v) {
+        ++short_list_pos;
+        if (short_list_pos == 3) {
+            short_list_pos = 0;
+        }
+
+        short_list[short_list_pos] = v;
+
+        return (short_list[0] >= short_list[1])
+            ? ((short_list[0] > short_list[2]) ? Math.max(short_list[1], short_list[2]) : short_list[0])
+            : ((short_list[0] < short_list[2]) ? Math.min(short_list[1], short_list[2]) : short_list[0]);
+    }
+
+    private int get_diff(BitContext rel_loc) {
+        return codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_loc, 0);
+    }
+
+    private void code_inherited_shape_count(JB2Image image) {
+        final int size = codeNumber(0, BIGPOSITIVE, inherited_shape_count_dist, 0);
+        if (size <= 0) {
+            return;
+        }
+
+        JB2Dict dict = image.getDictionary();
+        if (dict == null) {
+            throw new DjVuFileException("JB2Image.need_dict");
+        }
+
+        if (size != dict.get_shape_count()) {
+            throw new DjVuFileException("JB2Image.bad_dict");
+        }
+    }
+
+    private void reset_numcoder() {
+        this.dist_comment_byte  = new BitContext();
+        this.dist_comment_length = new BitContext();
+        this.dist_record_type = new BitContext();
+        this.dist_match_index = new BitContext();
+
+        this.abs_loc_x = new BitContext();
+        this.abs_loc_y = new BitContext();
+        this.abs_size_x = new BitContext();
+        this.abs_size_y = new BitContext();
+
+        this.image_size_dist = new BitContext();
+        this.inherited_shape_count_dist = new BitContext();
+
+        this.rel_loc_x_current = new BitContext();
+        this.rel_loc_x_last = new BitContext();
+        this.rel_loc_y_current = new BitContext();
+        this.rel_loc_y_last = new BitContext();
+        this.rel_size_x = new BitContext();
+        this.rel_size_y = new BitContext();
+
+        this.bitcells = getInitialBitContext(CELLCHUNK + CELLEXTRA);
+        this.leftcell = getInitialBitContext(CELLCHUNK + CELLEXTRA);
+        this.rightcell = getInitialBitContext(CELLCHUNK + CELLEXTRA);
+
+        this.cur_ncell = 1;
+    }
+
     private int codeRecord(JB2Dict dict) {
         GBitmap cbm = null;
         GBitmap bm = null;
@@ -186,11 +513,8 @@ public class JB2CodecDecoder {
             case NEW_MARK_LIBRARY_ONLY:
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
-//                if (shape == null) {
-//                    throw new DjVuFileException("JB2Image.bad_number");
-//                }
                 shape = new JB2Shape();
-                shape.setBits(new GBitmap()); // = GBitmap::create();
+                shape.setBits(new GBitmap());
                 shape.setParent(-1);
                 bm = shape.getBits();
                 break;
@@ -204,12 +528,10 @@ public class JB2CodecDecoder {
             {
                 if (dict == null) {
                     throw new DjVuFileException("JB2Image.bad_number");
-                    // G_THROW( ERR_MSG("JB2Image.bad_number") );
                 }
-                // JB2Dict &jim=*gjim;
+
                 code_image_size(dict);
                 code_eventual_lossless_refinement();
-                // if (! encoding) // encoding = false
                 dict.init_library();
                 break;
             }
@@ -221,12 +543,6 @@ public class JB2CodecDecoder {
             }
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
-//                if(shape == null || gjim == null) {
-//                    throw new DjVuFileException("JB2Image.bad_number");
-//                    // G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                }
-                // JB2Dict &jim=*gjim;
-                // JB2Shape &jshp=*xjshp;
                 int match = code_match_index(dict, shape); // shape.getParent()
                 cbm = dict.get_shape(shape.getParent()).getBits();
                 LibRect libRect = dict.get_lib(match); // libinfo.get(match);
@@ -396,10 +712,10 @@ public class JB2CodecDecoder {
         bm.init(ysize, xsize, border);
     }
 
-    private int code_match_index(JB2Dict dict, JB2Shape shape) {
+    private int code_match_index(Dict dict, Parent parent) {
         List<Integer> lib2shape = dict.getLib2shape();
         int match = codeNumber(0, lib2shape.size() - 1, dist_match_index, 0);
-        shape.setParent(lib2shape.get(match));
+        parent.setParent(lib2shape.get(match));
         return match;
     }
 
@@ -422,6 +738,24 @@ public class JB2CodecDecoder {
         this.last_left = 1;
         this.last_row_left = 0;
         this.last_row_bottom = 0;
+        this.last_right = 0;
+        this.gotStartRecord = true;
+        fill_short_list(this.last_row_bottom);
+    }
+
+    private void code_image_size(JB2Image image) {
+        final int image_columns = codeNumber(0, BIGPOSITIVE, image_size_dist, 0);
+        final int image_rows = codeNumber(0, BIGPOSITIVE, image_size_dist, 0);
+
+        if (image_columns == 0 || image_rows == 0) {
+            throw new DjVuFileException("JB2Image.zero_dim");
+        }
+
+        image.set_dimension(image_columns, image_rows);
+
+        this.last_left = 1 + image_columns;
+        this.last_row_left = 0;
+        this.last_row_bottom = image_rows;
         this.last_right = 0;
         this.gotStartRecord = true;
         fill_short_list(this.last_row_bottom);

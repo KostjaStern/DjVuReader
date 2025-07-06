@@ -5,9 +5,14 @@ import com.sternkn.djvu.file.DjVuFileException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JB2Dict {
+/**
+ * JB2 Dictionary - class {JB2Dict} is a peculiar kind of {JB2Image} which only contains an array of shapes.
+ * These shapes can be referenced from another JB2Dict/JB2Image. This is arranged by setting the `inherited dictionary'
+ * of a JB2Dict/JB2Image using function {JB2Dict.setInheritedDict}. Several JB2Images can use shapes from a
+ * same JB2Dict encoded separately. This is how several pages of a same document can share information.
+ */
+public class JB2Dict implements Dict {
 
-    // int inherited_shapes;
     private int inheritedShapes;
     private JB2Dict inheritedDict;
 
@@ -18,25 +23,12 @@ public class JB2Dict {
     private List<Integer> lib2shape;
     private List<LibRect> libinfo;
 
-
-    /*
-    // JB2Image.cpp (void JB2Dict::init())
-    void JB2Dict::decode(const GP<ByteStream> &gbs, JB2DecoderCallback *cb, void *arg) {
-        init();
-        JB2Codec::Decode codec;
-        codec.init(gbs);
-        codec.set_dict_callback(cb,arg);
-        codec.code(this);
-    }
-    */
     public JB2Dict() {
         this.inheritedShapes = 0;
         this.inheritedDict = null;
         this.shapes = new ArrayList<>();
         this.boxes = new ArrayList<>();
 
-        // this.shape2lib = new ArrayList<>();
-        // this.lib2shape = new ArrayList<>();
         this.libinfo = new ArrayList<>();
     }
 
@@ -61,50 +53,39 @@ public class JB2Dict {
         this.shapes = shapes;
     }
 
-    // void JB2Dict::JB2Codec::init_library(JB2Dict &jim)
     public void init_library() {
-        int nshape = this.getInheritedShapes(); // .get_inherited_shape_count();
+        int nshape = this.getInheritedShapes();
 
         shape2lib = new ArrayList<>(nshape);
         lib2shape = new ArrayList<>(nshape);
 
-        // shape2lib.resize(0,nshape-1);
-        // lib2shape.resize(0,nshape-1);
-        // libinfo.resize(0,nshape-1);
         for (int i = 0; i < nshape; i++) {
-            shape2lib.add(i); // shape2lib[i] = i;
-            lib2shape.add(i); // lib2shape[i] = i;
+            shape2lib.add(i);
+            lib2shape.add(i);
 
             this.get_bounding_box(i, libinfo.get(i));
         }
     }
 
-    // List<Integer> lib2shape
+    @Override
     public List<Integer> getLib2shape() {
         return lib2shape;
     }
 
-    // int JB2Dict::JB2Codec::add_library(const int shapeno, JB2Shape &jshp)
     public int add_library(int shapeno, JB2Shape jshp) {
-        final int libno = lib2shape.size(); // lib2shape.hbound() + 1;
-        // lib2shape.touch(libno);
-        // lib2shape[libno] = shapeno;
+        final int libno = lib2shape.size();
         lib2shape.add(shapeno);
-        // shape2lib.touch(shapeno);
-        // shape2lib[shapeno] = libno;
+
         shape2lib.add(libno);
-        // libinfo.touch(libno);
-        // final LibRect libRect = libinfo.get(libno);
+
         final LibRect libRect = new LibRect();
         libRect.compute_bounding_box(jshp.getBits());
 
         libinfo.add(libRect);
-        // libinfo[libno].compute_bounding_box(*(jshp.bits));
+
         return libno;
     }
 
-    // GTArray<LibRect> boxes;
-    // void JB2Dict::get_bounding_box(int shapeno, LibRect &dest) (see JB2Image.cpp)
     public LibRect get_bounding_box(int shapeno, LibRect dest) {
         LibRect libRect = dest;
         if (shapeno < inheritedShapes && inheritedDict != null) {
@@ -117,18 +98,17 @@ public class JB2Dict {
         }
         else
         {
-            final JB2Shape jshp = get_shape(shapeno);
-            // libRect.compute_bounding_box(jshp.getBits());
+            final JB2Shape shape = get_shape(shapeno);
+            libRect = new LibRect();
+            libRect.compute_bounding_box(shape.getBits());
         }
         return libRect;
     }
 
-    // LibRect libRect = libinfo.get(match);
     public LibRect get_lib(int index) {
         return libinfo.get(index);
     }
 
-    // JB2Shape &JB2Dict::get_shape(const int shapeno)
     public JB2Shape get_shape(int shapeno)
     {
         JB2Shape shape;
@@ -139,25 +119,19 @@ public class JB2Dict {
             shape = inheritedDict.get_shape(shapeno);
         }
         else {
-            // G_THROW( ERR_MSG("JB2Image.bad_number") );
             throw new DjVuFileException("JB2Image.bad_number");
         }
         return shape;
     }
 
-    // int
-    //JB2Dict::add_shape(const JB2Shape &shape)
     public int add_shape(JB2Shape shape) {
         if (shape.getParent() >= get_shape_count()) {
-            // G_THROW( ERR_MSG("JB2Image.bad_parent_shape") );
             throw new DjVuFileException("JB2Image.bad_parent_shape");
         }
 
         int index = shapes.size();
-        // shapes.touch(index);
         shapes.add(shape);
-        // return index + inherited_shapes;
-        return index + inheritedShapes; // get_shape_count();
+        return index + inheritedShapes;
     }
 
     public int get_shape_count() {

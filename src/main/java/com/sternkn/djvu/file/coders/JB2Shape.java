@@ -1,6 +1,12 @@
 package com.sternkn.djvu.file.coders;
 
-public class JB2Shape {
+/**
+ *  Shape data structure. A {JB2Image} contains an array of {JB2Shape} data structures.
+ *  Each array entry represents an elementary blob of ink such as a character or a segment of line art.
+ *  Member {bits} points to a bilevel image representing the shape pixels.
+ *  Member #parent# is the subscript of the parent shape.
+ **/
+public class JB2Shape implements Parent {
 
     /** Subscript of the parent shape.  The parent shape must always be located
      before the current shape in the shape array.  A negative value indicates
@@ -29,6 +35,8 @@ public class JB2Shape {
     public int getParent() {
         return parent;
     }
+
+    @Override
     public void setParent(int parent) {
         this.parent = parent;
     }
