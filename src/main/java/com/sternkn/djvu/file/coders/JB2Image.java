@@ -21,6 +21,10 @@ public class JB2Image implements Dict {
 
     private boolean reproduce_old_bug;
 
+    public JB2Image() {
+        this(null);
+    }
+
     public JB2Image(JB2Dict dict) {
         this.dictionary = dict;
 
@@ -63,7 +67,8 @@ public class JB2Image implements Dict {
     }
 
     public void init_library() {
-        int nshape = this.dictionary.get_shape_count();
+        // this.dictionary != null ? this.dictionary.get_shape_count() : 0;
+        int nshape = get_inherited_shape_count();
 
         shape2lib = new ArrayList<>(nshape);
         lib2shape = new ArrayList<>(nshape);
@@ -78,9 +83,8 @@ public class JB2Image implements Dict {
         }
     }
 
-    public JB2Shape get_shape(int shapeno)
-    {
-        int inheritedShapes = this.dictionary.get_shape_count();
+    public JB2Shape get_shape(int shapeno) {
+        int inheritedShapes = get_inherited_shape_count(); // this.dictionary.get_shape_count();
 
         JB2Shape shape;
         if(shapeno >= inheritedShapes) {
@@ -107,7 +111,7 @@ public class JB2Image implements Dict {
         int index = shapes.size();
         shapes.add(shape);
 
-        int shapeno = index + this.dictionary.get_shape_count();
+        int shapeno = index + get_inherited_shape_count(); // this.dictionary.get_shape_count();
         // shape2lib.add(shapeno);
 
         return shapeno;
@@ -128,11 +132,11 @@ public class JB2Image implements Dict {
     }
 
     public int get_shape_count() {
-        return this.dictionary.get_shape_count() + shapes.size();
+        return get_inherited_shape_count() + shapes.size();
     }
 
     public int get_inherited_shape_count() {
-        return this.dictionary.get_shape_count();
+        return this.dictionary == null ? 0 : this.dictionary.get_shape_count();
     }
 
     public int add_blit(JB2Blit blit) {

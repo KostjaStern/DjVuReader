@@ -57,11 +57,11 @@ public class Main {
 
     public static void main(String ... args) throws IOException {
 
-        // sicilianskaya-zashchita-ataka-rauzera.djvu
-        File file = new File("./test_files/Abert_Mozart_book__1.djvu");
+        // sicilianskaya-zashchita-ataka-rauzera.djvu , Abert_Mozart_book__1.djvu
+        File file = new File("./test_files/sample1.djvu");
         LOG.info("djvuFile.exists() = {}", file.exists());
         LOG.info("djvuFile.length() = {}", file.length());
-
+        splitDjVuFileByChunks(file);
     }
 
     private static void splitDjVuFileByChunks(File file) {
@@ -75,12 +75,16 @@ public class Main {
             System.out.println("chunkIds = " + chunkIds);
 
             // chunkIds = [INFO, CIDa, Djbz, TXTz, FORM, ANTz, BG44, INCL, Sjbz, DIRM]
+            // chunkIds = [DIRM, INFO, Sjbz, TXTz, FORM]
+
             Map<ChunkId, Integer> chunksCount = new HashMap<>();
-            chunksCount.put(ChunkId.INFO, 0);
-            chunksCount.put(ChunkId.CIDa, 0);
-            chunksCount.put(ChunkId.Djbz, 0);
-            chunksCount.put(ChunkId.BG44, 0);
-            chunksCount.put(ChunkId.INCL, 0);
+            // chunksCount.put(ChunkId.INFO, 0);
+            // chunksCount.put(ChunkId.CIDa, 0);
+            // chunksCount.put(ChunkId.Djbz, 0);
+            // chunksCount.put(ChunkId.BG44, 0);
+            // chunksCount.put(ChunkId.INCL, 0);
+            chunksCount.put(ChunkId.DIRM, 0);
+            chunksCount.put(ChunkId.TXTz, 0);
             chunksCount.put(ChunkId.Sjbz, 0);
 
             for (Chunk chunk : chunks) {
@@ -115,6 +119,7 @@ public class Main {
                     throw new RuntimeException(e);
                 }
             }
+
         }
     }
 }

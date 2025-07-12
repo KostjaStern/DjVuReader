@@ -230,10 +230,11 @@ public class JB2CodecDecoder {
             }
             case NEW_MARK_IMAGE_ONLY:
             {
+                throw new DjVuFileException("Unsupported record type NEW_MARK_IMAGE_ONLY");
 //                code_absolute_mark_size (*bm, 3);
 //                code_bitmap_directly (*bm);
 //                code_relative_location (jblt, bm->rows(), bm->columns() );
-                break;
+                // break;
             }
             case MATCHED_REFINE:
             {
@@ -249,6 +250,7 @@ public class JB2CodecDecoder {
             }
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
+                throw new DjVuFileException("Unsupported record type MATCHED_REFINE_LIBRARY_ONLY");
 //                if(!xjshp||!gjim)
 //                {
 //                    G_THROW( ERR_MSG("JB2Image.bad_number") );
@@ -259,10 +261,11 @@ public class JB2CodecDecoder {
 //                cbm = jim.get_shape(jshp.parent).bits;
 //                LibRect &l = libinfo[match];
 //                code_relative_mark_size (*bm, l.right-l.left+1, l.top-l.bottom+1, 4);
-                break;
+                // break;
             }
             case MATCHED_REFINE_IMAGE_ONLY:
             {
+                throw new DjVuFileException("Unsupported record type MATCHED_REFINE_IMAGE_ONLY");
 //                if(!xjshp||!gjim)
 //                {
 //                    G_THROW( ERR_MSG("JB2Image.bad_number") );
@@ -275,7 +278,7 @@ public class JB2CodecDecoder {
 //                code_relative_mark_size (*bm, l.right-l.left+1, l.top-l.bottom+1, 4);
 //                code_bitmap_by_cross_coding (*bm, cbm, match);
 //                code_relative_location (jblt, bm->rows(), bm->columns() );
-                break;
+                // break;
             }
             case MATCHED_COPY:
             {
@@ -301,20 +304,22 @@ public class JB2CodecDecoder {
             }
             case NON_MARK_DATA:
             {
+                throw new DjVuFileException("Unsupported record type NON_MARK_DATA");
 //                code_absolute_mark_size (*bm, 3);
 //                code_bitmap_directly (*bm);
 //                code_absolute_location (jblt, bm->rows(), bm->columns() );
-                break;
+                // break;
             }
             case PRESERVED_COMMENT:
             {
+                throw new DjVuFileException("Unsupported record type PRESERVED_COMMENT");
 //                if(!gjim)
 //                {
 //                    G_THROW( ERR_MSG("JB2Image.bad_number") );
 //                }
 //                JB2Image &jim=*gjim;
 //                code_comment(jim.comment);
-                break;
+                // break;
             }
             case REQUIRED_DICT_OR_RESET:
             {
@@ -556,16 +561,17 @@ public class JB2CodecDecoder {
             }
             case PRESERVED_COMMENT:
             {
-                if(dict != null) {
-                    throw new DjVuFileException("JB2Image.bad_number");
-                    // G_THROW( ERR_MSG("JB2Image.bad_number") );
-                }
+                throw new DjVuFileException("unsupported record type PRESERVED_COMMENT");
+//                if(dict != null) {
+//                    throw new DjVuFileException("JB2Image.bad_number");
+//                }
                 // JB2Dict &jim=*gjim;
                 // code_comment(jim.comment);
-                break;
+                // break;
             }
             case REQUIRED_DICT_OR_RESET:
             {
+                throw new DjVuFileException("unsupported record type REQUIRED_DICT_OR_RESET");
 //                if (! gotstartrecordp)
 //                {
 //                    // Indicates need for a shape dictionary
@@ -577,7 +583,7 @@ public class JB2CodecDecoder {
 //                }else
 //                    // Reset all numerical contexts to zero
 //                    reset_numcoder();
-                break;
+                // break;
             }
             case END_OF_DATA:
             {
@@ -585,37 +591,32 @@ public class JB2CodecDecoder {
             }
             default:
             {
-                // G_THROW( ERR_MSG("JB2Image.bad_type") );
+                throw new DjVuFileException("Unsupported record type: " + rectype);
             }
         }
         // Post-coding action
         // if (!encoding) // encoding = false
         // {
             // add shape to dictionary
-            switch(rectype)
+        switch(rectype)
+        {
+            case NEW_MARK_LIBRARY_ONLY:
+            case MATCHED_REFINE_LIBRARY_ONLY:
             {
-                case NEW_MARK_LIBRARY_ONLY:
-                case MATCHED_REFINE_LIBRARY_ONLY:
-                {
-                    // xjshp -> shape
-                    // gjim -> dict
-                    if(dict == null) { // shape == null ||
-                        // G_THROW( ERR_MSG("JB2Image.bad_number") );
-                        throw new DjVuFileException("JB2Image.bad_number");
-                    }
-                    // JB2Shape &jshp=*xjshp;
-                    shapeno = dict.add_shape(shape);
-                    dict.add_library(shapeno, shape);
-                    break;
+                if(dict == null) {
+                    throw new DjVuFileException("JB2Image.bad_number");
                 }
+                shapeno = dict.add_shape(shape);
+                dict.add_library(shapeno, shape);
+                break;
             }
-            // make sure everything is compacted
-            // decompaction will occur automatically when needed
-            if (bm != null) {
-                bm.compress();
-            }
-        // }
+        }
 
+        // make sure everything is compacted
+        // decompaction will occur automatically when needed
+        if (bm != null) {
+            bm.compress();
+        }
 
         return rectype;
     }
@@ -780,8 +781,7 @@ public class JB2CodecDecoder {
         bm.init(ysize, xsize, border);
     }
 
-    private void code_bitmap_directly(GBitmap bm)
-    {
+    private void code_bitmap_directly(GBitmap bm) {
         int dw = bm.columns();
         int dy = bm.rows() - 1;
 

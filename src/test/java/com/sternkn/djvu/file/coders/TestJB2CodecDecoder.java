@@ -12,6 +12,32 @@ public class TestJB2CodecDecoder {
     private final ClassLoader classLoader = getClass().getClassLoader();
 
     @Test
+    public void testDecodeImageWithoutDictionary() {
+        JB2Image image = new JB2Image();
+
+        try (InputStream inputStream = classLoader.getResourceAsStream("test_chunks/sample1_Sjbz_9.data")) {
+            JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
+            decoder.decode(image);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(2600, image.getWidth());
+        assertEquals(4200, image.getHeight());
+        assertEquals(1861, image.get_blit_count());
+        assertEquals(120, image.get_shape_count());
+        assertEquals(0, image.get_inherited_shape_count());
+
+        assertEquals(new JB2Blit(1539, 4049, 0), image.get_blit(0));
+        assertEquals(new JB2Blit(1569, 4048, 1), image.get_blit(1));
+        assertEquals(new JB2Blit(1596, 4048, 2), image.get_blit(2));
+        assertEquals(new JB2Blit(1800, 4029, 117), image.get_blit(1858));
+        assertEquals(new JB2Blit(2100, 4029, 118), image.get_blit(1859));
+        assertEquals(new JB2Blit(2400, 4029, 119), image.get_blit(1860));
+    }
+
+    @Test
     public void testDecodeImage() {
         JB2Dict dict = readDictionary("Djbz_4.data");
         JB2Image image = new JB2Image(dict);
