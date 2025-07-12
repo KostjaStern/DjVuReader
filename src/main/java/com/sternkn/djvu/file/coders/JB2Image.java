@@ -67,7 +67,6 @@ public class JB2Image implements Dict {
     }
 
     public void init_library() {
-        // this.dictionary != null ? this.dictionary.get_shape_count() : 0;
         int nshape = get_inherited_shape_count();
 
         shape2lib = new ArrayList<>(nshape);
@@ -84,7 +83,7 @@ public class JB2Image implements Dict {
     }
 
     public JB2Shape get_shape(int shapeno) {
-        int inheritedShapes = get_inherited_shape_count(); // this.dictionary.get_shape_count();
+        int inheritedShapes = get_inherited_shape_count();
 
         JB2Shape shape;
         if(shapeno >= inheritedShapes) {
@@ -111,10 +110,7 @@ public class JB2Image implements Dict {
         int index = shapes.size();
         shapes.add(shape);
 
-        int shapeno = index + get_inherited_shape_count(); // this.dictionary.get_shape_count();
-        // shape2lib.add(shapeno);
-
-        return shapeno;
+        return index + get_inherited_shape_count();
     }
 
     public int add_library(int shapeno, JB2Shape shape) {
@@ -141,13 +137,10 @@ public class JB2Image implements Dict {
 
     public int add_blit(JB2Blit blit) {
         if (blit.getShapeno() >= asUnsignedInt(get_shape_count())) {
-            // G_THROW( ERR_MSG("JB2Image.bad_shape") );
             throw new DjVuFileException("JB2Image.bad_shape");
         }
 
         int index = blits.size();
-        // blits.touch(index);
-        // blits[index] = blit;
         blits.add(blit);
         return index;
     }
@@ -155,5 +148,34 @@ public class JB2Image implements Dict {
     @Override
     public List<Integer> getLib2shape() {
         return lib2shape;
+    }
+
+    public GBitmap get_bitmap() {
+        return this.get_bitmap(1, 1);
+    }
+
+    public GBitmap get_bitmap(int subsample, int align) {
+        if (this.width == 0 || this.height == 0) {
+            throw new DjVuFileException("JB2Image.cant_create");
+        }
+
+        int swidth = (width + subsample - 1) / subsample;
+        int sheight = (height + subsample - 1) / subsample;
+        int border = ((swidth + align - 1) & -align) - swidth;
+
+
+        GBitmap bm = new GBitmap();
+        bm.init(sheight, swidth, border);
+        bm.set_grays(1 + subsample * subsample);
+        for (int blitno = 0; blitno < get_blit_count(); blitno++)
+        {
+           JB2Blit pblit = get_blit(blitno);
+           JB2Shape  pshape = get_shape(pblit.getShapeno());
+            GBitmap pshapeBits = pshape.getBits();
+            if (pshapeBits != null) {
+                bm.blit(pshapeBits, pblit.getLeft(), pblit.getBottom(), subsample);
+            }
+        }
+        return bm;
     }
 }

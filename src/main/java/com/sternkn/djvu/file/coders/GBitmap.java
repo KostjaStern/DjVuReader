@@ -143,4 +143,229 @@ public class GBitmap {
         border = minimum;
         zero_buffer = new int[border + columns + border];
     }
+
+    public void set_grays(int ngrays) {
+        if (ngrays < 2 || ngrays > 256) {
+           throw new DjVuFileException("GBitmap.bad_levels");
+        }
+
+        grays = ngrays;
+//        if (ngrays > 2 && bytes_data == null) {
+//            uncompress();
+//        }
+    }
+
+    void blit(GBitmap bm, int x, int y) {
+        // Check boundaries
+        if ((x >= columns)         ||
+            (y >= rows)            ||
+            (x + bm.columns() < 0) ||
+            (y + bm.rows() < 0) ) {
+            return;
+        }
+
+        // Perform blit
+        // GMonitorLock lock1(monitor());
+        // GMonitorLock lock2(bm->monitor());
+        if (bm.bytes_data != null)
+        {
+//            if (!bytes_data)
+//                uncompress();
+            // Blit from bitmap
+            // const unsigned char *srow = bm->bytes + bm->border;
+            BufferPointer srow = new BufferPointer(bm.bytes_data, bm.border);
+            BufferPointer drow = new BufferPointer(bytes_data, border + y * bytes_per_row + x);
+            // unsigned char *drow = bytes_data + border + y * bytes_per_row + x;
+            for (int sr = 0; sr < bm.rows(); sr++)
+            {
+                if (sr + y >= 0 && sr + y < this.rows)
+                {
+                    int sc = Math.max(0, -x);
+                    int sc1 = Math.min(bm.columns(), this.columns - x);
+                    while (sc < sc1)
+                    {
+                        // drow[sc] += srow[sc];
+                        drow.setValue(sc, drow.getValue(sc) + srow.getValue(sc));
+                        sc += 1;
+                    }
+                }
+
+                srow.shiftPointer(bm.bytes_per_row); // += bm->bytes_per_row;
+                drow.shiftPointer(bytes_per_row); // drow += bytes_per_row;
+            }
+        }
+//        else if (bm.rle)
+//        {
+//            if (!bytes_data)
+//                uncompress();
+//            // Blit from rle
+//            const unsigned char *runs = bm->rle;
+//            unsigned char *drow = bytes_data + border + y*bytes_per_row + x;
+//            int sr = bm->nrows - 1;
+//            drow += sr * bytes_per_row;
+//            int sc = 0;
+//            char p = 0;
+//            while (sr >= 0)
+//            {
+//                const int z = read_run(runs);
+//                if (sc+z > bm->ncolumns)
+//                    G_THROW( ERR_MSG("GBitmap.lost_sync") );
+//                int nc = sc + z;
+//                if (p && sr+y>=0 && sr+y<nrows)
+//                {
+//                    if (sc + x < 0)
+//                        sc = min(-x, nc);
+//                    while (sc < nc && sc + x<ncolumns)
+//                        drow[sc++] += 1;
+//                }
+//                sc = nc;
+//                p = 1 - p;
+//                if (sc >= bm->ncolumns)
+//                {
+//                    p = 0;
+//                    sc = 0;
+//                    drow -= bytes_per_row;
+//                    sr -= 1;
+//                }
+//            }
+//        }
+    }
+
+    public void blit(GBitmap bm, int xh, int yh, int subsample) {
+        // Use code when no subsampling is necessary
+        if (subsample == 1)
+        {
+            blit(bm, xh, yh);
+            return;
+        }
+
+        // Check boundaries
+        if ((xh >= this.columns * subsample) ||
+            (yh >= this.rows * subsample)    ||
+            (xh + bm.columns() < 0)          ||
+            (yh + bm.rows() < 0) ) {
+            return;
+        }
+
+        // Perform subsampling blit
+//        GMonitorLock lock1(monitor());
+//        GMonitorLock lock2(bm->monitor());
+        if (bm.bytes_data != null)
+        {
+//            if (!bytes_data)
+//                uncompress();
+            // Blit from bitmap
+            BitContext dr = new BitContext();
+            BitContext dr1 = new BitContext();
+            BitContext zdc = new BitContext();
+            BitContext zdc1 = new BitContext();
+
+            euclidian_ratio(yh, subsample, dr, dr1);
+            euclidian_ratio(xh, subsample, zdc, zdc1);
+
+            BufferPointer srow = new BufferPointer(bm.bytes_data, bm.border);
+            BufferPointer drow = new BufferPointer(bytes_data, border + dr.getValue() * bytes_per_row);
+            for (int sr = 0; sr < bm.rows(); sr++)
+            {
+                if (dr.getValue() >= 0 && dr.getValue() < this.rows)
+                {
+                    BitContext dc = new BitContext(zdc.getValue());
+                    BitContext dc1 = new BitContext(zdc1.getValue());
+                    for (int sc = 0; sc < bm.columns(); sc++)
+                    {
+                        int dcValue = dc.getValue();
+                        if (dcValue >= 0 && dcValue < this.columns) {
+                            // drow[dc] += srow[sc];
+                            drow.setValue(dcValue, drow.getValue(dcValue) + srow.getValue(sc));
+                        }
+                        dc1.setValue(dc1.getValue() + 1);
+                        if (dc1.getValue() >= subsample)
+                        {
+                            dc1.setValue(0); // = 0;
+                            dc.setValue(dc.getValue() + 1); // dc += 1;
+                        }
+                    }
+                }
+                // next line in source
+                srow.shiftPointer(bm.bytes_per_row); // += bm->bytes_per_row;
+                // next line fraction in destination
+                dr1.setValue(dr1.getValue() + 1);
+                if (dr1.getValue() >= subsample)
+                {
+                    dr1.setValue(0); // = 0;
+                    dr.setValue(dr.getValue() + 1); // dr += 1;
+                    drow.shiftPointer(bytes_per_row);
+                }
+            }
+        }
+/*
+        else if (bm->rle)
+        {
+            if (!bytes_data)
+                uncompress();
+            // Blit from rle
+            int dr, dr1, zdc, zdc1;
+            euclidian_ratio(yh+bm->nrows-1, subsample, dr, dr1);
+            euclidian_ratio(xh, subsample, zdc, zdc1);
+      const unsigned char *runs = bm->rle;
+            unsigned char *drow = bytes_data + border + dr*bytes_per_row;
+            int sr = bm->nrows -1;
+            int sc = 0;
+            char p = 0;
+            int dc = zdc;
+            int dc1 = zdc1;
+            while (sr >= 0)
+            {
+                int z = read_run(runs);
+                if (sc+z > bm->ncolumns)
+                    G_THROW( ERR_MSG("GBitmap.lost_sync") );
+                int nc = sc + z;
+
+                if (dr>=0 && dr<nrows)
+                    while (z>0 && dc<ncolumns)
+                    {
+                        int zd = subsample - dc1;
+                        if (zd > z)
+                            zd = z;
+                        if (p && dc>=0)
+                            drow[dc] += zd;
+                        z -= zd;
+                        dc1 += zd;
+                        if (dc1 >= subsample)
+                        {
+                            dc1 = 0;
+                            dc += 1;
+                        }
+                    }
+                // next fractional row
+                sc = nc;
+                p = 1 - p;
+                if (sc >= bm->ncolumns)
+                {
+                    sc = 0;
+                    dc = zdc;
+                    dc1 = zdc1;
+                    p = 0;
+                    sr -= 1;
+                    if (--dr1 < 0)
+                    {
+                        dr1 = subsample - 1;
+                        dr -= 1;
+                        drow -= bytes_per_row;
+                    }
+                }
+            }
+
+ */
+    }
+
+    private void euclidian_ratio(int a, int b, BitContext q, BitContext r) {
+        q.setValue(a / b);
+        r.setValue(a - b * q.getValue());
+        if (r.getValue() < 0)
+        {
+            q.setValue(q.getValue() - 1); // -= 1;
+            r.setValue(r.getValue() + b); // r += b;
+        }
+    }
 }
