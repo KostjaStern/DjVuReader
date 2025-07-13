@@ -3,6 +3,7 @@ package com.sternkn.djvu.gui;
 import com.sternkn.djvu.file.coders.BufferPointer;
 import com.sternkn.djvu.file.coders.GBitmap;
 import com.sternkn.djvu.file.coders.JB2CodecDecoder;
+import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 
 import javax.imageio.ImageIO;
@@ -78,9 +79,9 @@ public class MainWindow extends Frame {
     }
 
     private static BufferedImage loadDjVuImage() {
-        // File dictionaryFile = new File("./src/test/resources/test_chunks/Djbz_4.data");
-        File imageFile = new File("./src/test/resources/test_chunks/sample1_Sjbz_5.data");
-/*
+        File dictionaryFile = new File("./src/test/resources/test_chunks/Djbz_4.data");
+        File imageFile = new File("./src/test/resources/test_chunks/Sjbz_47.data");
+
         JB2Dict dict = new JB2Dict();
 
         try (InputStream inputStream = new DataInputStream(new FileInputStream(dictionaryFile))) {
@@ -90,17 +91,8 @@ public class MainWindow extends Frame {
         catch (IOException e) {
             throw new RuntimeException(e);
         }
-*/
-//        GBitmap shape = dict.get_shape(1).getBits();
-//        for (int ind = 0; ind < shape.rows(); ind++) {
-//            BufferPointer row = shape.getRow(ind);
-//            for (int col = 0; col < shape.columns(); col++) {
-//                System.out.print(row.getValue(col) == 0 ? " " : "*");
-//            }
-//            System.out.println();
-//        }
 
-        JB2Image image = new JB2Image();
+        JB2Image image = new JB2Image(dict);
 
         try (InputStream inputStream = new DataInputStream(new FileInputStream(imageFile))) {
             JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);

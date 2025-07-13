@@ -186,23 +186,23 @@ public class GBitmap {
             // unsigned char *drow = bytes_data + border + y * bytes_per_row + x;
             for (int sr = 0; sr < bm.rows(); sr++)
             {
-                if (sr + y >= 0 && sr + y < this.rows)
+                if ((sr + y >= 0) && (sr + y < this.rows))
                 {
                     int sc = Math.max(0, -x);
                     int sc1 = Math.min(bm.columns(), this.columns - x);
                     while (sc < sc1)
                     {
-                        // drow[sc] += srow[sc];
-                        drow.setValue(sc, drow.getValue(sc) + srow.getValue(sc));
+                        int newDrowValue = drow.getValue(sc) + srow.getValue(sc);
+                        drow.setValue(sc, newDrowValue); // drow[sc] += srow[sc];
                         sc += 1;
                     }
                 }
 
-                srow.shiftPointer(bm.bytes_per_row); // += bm->bytes_per_row;
-                drow.shiftPointer(bytes_per_row); // drow += bytes_per_row;
+                srow = srow.shiftPointer(bm.bytes_per_row); // += bm->bytes_per_row;
+                drow = drow.shiftPointer(bytes_per_row); // drow += bytes_per_row;
             }
         }
-//        else if (bm.rle)
+//        else if (bm.rle) // for the compressed bitmap
 //        {
 //            if (!bytes_data)
 //                uncompress();

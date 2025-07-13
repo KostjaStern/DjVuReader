@@ -2,26 +2,13 @@ package com.sternkn.djvu.file.coders;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestJB2CodecDecoder {
-
-    private final ClassLoader classLoader = getClass().getClassLoader();
+public class TestJB2CodecDecoder extends TestSupport {
 
     @Test
     public void testDecodeImageWithoutDictionary() {
-        JB2Image image = new JB2Image();
-
-        try (InputStream inputStream = classLoader.getResourceAsStream("test_chunks/sample1_Sjbz_9.data")) {
-            JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
-            decoder.decode(image);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        JB2Image image = readImage("sample1_Sjbz_9.data");
 
         assertEquals(2600, image.getWidth());
         assertEquals(4200, image.getHeight());
@@ -39,16 +26,7 @@ public class TestJB2CodecDecoder {
 
     @Test
     public void testDecodeImage() {
-        JB2Dict dict = readDictionary("Djbz_4.data");
-        JB2Image image = new JB2Image(dict);
-
-        try (InputStream inputStream = classLoader.getResourceAsStream("test_chunks/Sjbz_16.data")) {
-            JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
-            decoder.decode(image);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        JB2Image image = readImage("Sjbz_16.data", "Djbz_4.data");
 
         assertEquals(2832, image.getWidth());
         assertEquals(4539, image.getHeight());
@@ -79,19 +57,5 @@ public class TestJB2CodecDecoder {
         assertEquals(7, dict.get_shape(486).getBits().rows());
         assertEquals(22, dict.get_shape(487).getBits().columns());
         assertEquals(21, dict.get_shape(487).getBits().rows());
-    }
-
-    private JB2Dict readDictionary(String fileName) {
-        JB2Dict dict = new JB2Dict();
-
-        try (InputStream inputStream = classLoader.getResourceAsStream("test_chunks/" + fileName)) {
-            JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
-            decoder.decode(dict);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return dict;
     }
 }
