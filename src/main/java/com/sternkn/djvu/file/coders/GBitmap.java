@@ -38,6 +38,14 @@ public class GBitmap {
         return rows;
     }
 
+    public int border() {
+        return border;
+    }
+
+    public int[] getBytesData() {
+        return bytes_data;
+    }
+
     public int rowsize() {
         return bytes_per_row;
     }
