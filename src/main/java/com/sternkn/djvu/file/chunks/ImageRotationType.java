@@ -15,7 +15,7 @@ public enum ImageRotationType {
         this.value = value;
     }
 
-    public static ImageRotationType getRotationType(byte flag) {
+    public static ImageRotationType getRotationType(int flag) {
         final int flagValue = flag & 0b0000_0111;
         for (ImageRotationType rotationType : ImageRotationType.values()) {
             if (rotationType.value == flagValue) {

@@ -7,6 +7,10 @@ public class TestSupport {
     private final ClassLoader classLoader = getClass().getClassLoader();
     private static final String PATH_CHUNKS = "test_chunks/";
 
+    public InputStream readStream(String fileName) {
+        return classLoader.getResourceAsStream(PATH_CHUNKS + fileName);
+    }
+
     JB2Image readImage(String imageFileName) {
         return readImage(imageFileName, null);
     }
