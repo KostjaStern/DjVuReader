@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Stack;
 
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ public class DjVuFileReader implements Closeable {
     private final long fileSize;
     private DataInputStream inputStream;
     private long rawOffset;
-
     private boolean isEndOfFile;
 
 
@@ -45,9 +45,8 @@ public class DjVuFileReader implements Closeable {
     }
 
     private List<Chunk> readChunks() {
-
         List<Chunk> chunks = new ArrayList<>();
-        long chunkId = 1;
+        long chunkId = 0;
 
         Stack<Chunk> parentChunks = new Stack<>();
         while (!isEndOfFile) {
@@ -65,10 +64,15 @@ public class DjVuFileReader implements Closeable {
     }
 
     private boolean isLastChunk(Chunk chunk) {
+        Objects.requireNonNull(chunk, "chunk can not be null");
+
         return !chunk.isComposite() && chunk.getOffsetEnd() == fileSize;
     }
 
     private void updateParentChunks(Stack<Chunk> parentChunks, Chunk chunk) {
+        Objects.requireNonNull(chunk, "chunk can not be null");
+        Objects.requireNonNull(parentChunks, "parent chunks stack can not be null");
+
         if (chunk.isComposite()) {
             parentChunks.push(chunk);
             return;
@@ -191,46 +195,6 @@ public class DjVuFileReader implements Closeable {
         }
         return result;
     }
-
-    /*
-    public byte readByte() {
-        try {
-            byte result = inputStream.readByte();
-            this.rawOffset += 1;
-            this.isEndOfFile = false;
-            // LOG.debug("Current offset: {}, 1 byte was read", this.position);
-            return result;
-        }
-        catch (EOFException eof) {
-            this.isEndOfFile = true;
-            LOG.debug("readByte: It's end of file.");
-            // throw new DjVuFileException("Byte reading problem (end of file)", eof);
-        }
-        catch (IOException e) {
-            throw new DjVuFileException("Byte reading problem", e);
-        }
-    }
-*/
-
-    /*
-    public short readShort() {
-        try {
-            short result = inputStream.readShort();
-            this.rawOffset += 2;
-            this.isEndOfFile = false;
-            // LOG.debug("Current offset: {}, 2 bytes were read", this.position);
-            return result;
-        }
-        catch (EOFException eof) {
-            this.isEndOfFile = true;
-            LOG.debug("readShort: It's end of file.");
-            // throw new DjVuFileException("Int16 reading problem (end of file)", eof);
-        }
-        catch (IOException e) {
-            throw new DjVuFileException("Int16 reading problem", e);
-        }
-    }
-*/
 
     private int readInt() {
         try {

@@ -3,27 +3,12 @@ package com.sternkn.djvu;
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.DjVuFileReader;
 import com.sternkn.djvu.file.chunks.Chunk;
-import com.sternkn.djvu.file.chunks.ChunkId;
-import com.sternkn.djvu.file.coders.BSByteInputStream;
-import com.sternkn.djvu.file.coders.ZpCodecInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.color.ICC_ColorSpace;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-// import java.io.FileNotFoundException;
-// import java.io.FileOutputStream;
-// import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 // xxd Abert_Mozart_book__1.djvu | less
 // chunkIds = [INFO, CIDa, Djbz, TXTz, FORM, ANTz, BG44, INCL, Sjbz, DIRM]
@@ -70,7 +55,7 @@ public class Main {
             DjVuFile djvuFile = reader.readFile();
             List<Chunk> chunks = djvuFile.getChunks();
             System.out.println("chunks.size() = " + chunks.size());
-
+/*
             Set<ChunkId> chunkIds = chunks.stream().map(Chunk::getChunkId).collect(Collectors.toSet());
             System.out.println("chunkIds = " + chunkIds);
 
@@ -98,28 +83,13 @@ public class Main {
 
                 File chunkFile = new File(chunkId + "_" + chunk.getId() + ".data");
                 try (FileOutputStream outputStream = new FileOutputStream(chunkFile)) {
-
-//                    ByteArrayInputStream data = chunk.getData();
-//                    int version = data.read();
-//                    byte[] int16 = new byte[2];
-//                    data.read(int16);
-//                    int nFiles = int16[0] << 8 | int16[1];
-//
-//                    System.out.println("version = " + version);
-//                    System.out.println("nFiles = " + nFiles);
-//
-//                    byte[] int32 = new byte[4];
-//                    for (int i = 0; i < nFiles; i++) {
-//                        data.read(int32);
-//                    }
-
                     outputStream.write(chunk.getData().readAllBytes());
                 }
                 catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
-
+*/
         }
     }
 }
