@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 public class MainWindow extends Frame {
 
@@ -47,6 +48,7 @@ public class MainWindow extends Frame {
         // this.image = image;
 
         this.setLayout(new BorderLayout());
+        this.add(buildToolBar(), BorderLayout.NORTH);
 
         tree = new JTree();
 
@@ -74,6 +76,38 @@ public class MainWindow extends Frame {
                 System.exit(0); // Exit the application
             }
         });
+    }
+
+    private JToolBar buildToolBar() {
+        JToolBar toolBar = new JToolBar("Still draggable");
+
+        JButton zoomIn = createToolBarButton("zoom-in-32", "previous", "zoom in");
+        JButton zoomOut = createToolBarButton("zoom-out-32", "up", "zoom out");
+
+        toolBar.add(zoomIn);
+        toolBar.add(zoomOut);
+
+        return toolBar;
+    }
+
+    private JButton createToolBarButton(String imageName,
+                                           String actionCommand,
+                                           String altText) {
+        JButton button = new JButton();
+        button.setActionCommand(actionCommand);
+        button.setToolTipText(altText);
+        // button.addActionListener(this);
+
+        final String imageLocation = String.format("/icons/%s.png", imageName);
+        final URL imageURL = this.getClass().getResource(imageLocation);
+        if (imageURL != null) {
+            button.setIcon(new ImageIcon(imageURL, altText));
+        } else {
+            button.setText(altText);
+            LOG.error("Resource not found: {}", imageLocation);
+        }
+
+        return button;
     }
 
     private MenuBar buildMenuBar() {
@@ -115,6 +149,7 @@ public class MainWindow extends Frame {
     private void initTree() {
         DjVuTreeModel model = new DjVuTreeModel(this.djvuFile);
         tree.setModel(model.getTreeModel());
+        model.addMouseListener(tree);
     }
 
     // Custom Canvas class to draw the image
