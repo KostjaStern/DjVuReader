@@ -51,6 +51,7 @@ public class MainWindow extends Frame {
         this.add(buildToolBar(), BorderLayout.NORTH);
 
         tree = new JTree();
+        tree.setVisible(false);
 
         tree.setMinimumSize(new Dimension(100, 100));
 
@@ -150,6 +151,7 @@ public class MainWindow extends Frame {
         DjVuTreeModel model = new DjVuTreeModel(this.djvuFile);
         tree.setModel(model.getTreeModel());
         model.addMouseListener(tree);
+        tree.setVisible(true);
     }
 
     // Custom Canvas class to draw the image

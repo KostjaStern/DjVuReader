@@ -10,6 +10,10 @@ public class ChunkTreeNode {
         this.chunk = chunk;
     }
 
+    public Chunk getChunk() {
+        return chunk;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof ChunkTreeNode other)) {

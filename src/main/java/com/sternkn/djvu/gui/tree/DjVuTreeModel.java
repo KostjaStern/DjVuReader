@@ -12,6 +12,9 @@ import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class DjVuTreeModel {
@@ -45,22 +48,49 @@ public class DjVuTreeModel {
 
     public void addMouseListener(JTree tree) {
         MouseListener mouseListener = new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                int selRow = tree.getRowForLocation(e.getX(), e.getY());
-                TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-
-                LOG.debug("selRow = {}, selPath = {}", selRow, selPath);
-//                if(selRow != -1) {
-//                    if(e.getClickCount() == 1) {
-//                        mySingleClick(selRow, selPath);
-//                    }
-//                    else if(e.getClickCount() == 2) {
-//                        myDoubleClick(selRow, selPath);
-//                    }
-//                }
+            public void mousePressed(MouseEvent event) {
+                if (event.isPopupTrigger()) {
+                    showPopupMenu(tree, event);
+                }
             }
         };
 
         tree.addMouseListener(mouseListener);
+    }
+
+    private void showPopupMenu(JTree tree, MouseEvent event) {
+        TreePath path = tree.getPathForLocation(event.getX(), event.getY());
+        if (path == null) {
+            return;
+        }
+
+        DefaultMutableTreeNode lastNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+        ChunkTreeNode chunkNode = (ChunkTreeNode) lastNode.getUserObject();
+
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem saveChunkData = new JMenuItem("Save chunk data as ...");
+        saveChunkData.addActionListener(e -> saveChunkDataDialog(chunkNode.getChunk(), tree));
+        popupMenu.add(saveChunkData);
+        popupMenu.show(event.getComponent(), event.getX(), event.getY());
+    }
+
+    private void saveChunkDataDialog(Chunk chunk, JTree tree) {
+        LOG.debug("Saving chunk = {} data", chunk);
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save chunk  data as");
+        String fileName = String.format("%s_%s.data", chunk.getChunkId().name(), chunk.getId());
+        fileChooser.setSelectedFile(new File(fileName));
+
+        int userSelection = fileChooser.showSaveDialog(tree);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                outputStream.write(chunk.getData().readAllBytes());
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
