@@ -16,17 +16,70 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class DjVuTreeModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuTreeModel.class);
+    private static final String NL = System.lineSeparator();
 
     private DjVuFile djvuFile;
+    private JScrollPane leftPanel;
+    private JScrollPane rightPanel;
 
-    public DjVuTreeModel(DjVuFile djvuFile) {
+
+    public DjVuTreeModel(DjVuFile djvuFile, JScrollPane leftPanel, JScrollPane rightPanel) {
         this.djvuFile = djvuFile;
+        this.leftPanel = leftPanel;
+        this.rightPanel = rightPanel;
     }
 
-    public DefaultTreeModel getTreeModel() {
+    public void initTree() {
+        JTree tree = new JTree();
+        tree.setVisible(false);
+        tree.setModel(getTreeModel());
+        // tree.setMinimumSize(new Dimension(100, 100));
+
+        addMouseListener(tree);
+        tree.setVisible(true);
+        leftPanel.setViewportView(tree);
+    }
+
+    public void initStatistics() {
+        JTextArea textArea = new JTextArea(40, 60);
+        textArea.setText(getDjVuChunkStatistics());
+        rightPanel.setViewportView(textArea);
+    }
+
+    private String getDjVuChunkStatistics() {
+        Map<String, Long> compositeChunksStat = this.djvuFile.getChunks().stream()
+            .filter(Chunk::isComposite)
+            .map(Chunk::getCompositeChunkId)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        Map<String, Long> dataChunksStat = this.djvuFile.getChunks().stream()
+                .filter(c -> !c.isComposite())
+                .map(c -> c.getChunkId().name())
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("    Composite chunks  ").append(NL);
+        buffer.append("---------------------------------").append(NL);
+        for (Map.Entry<String, Long> entry : compositeChunksStat.entrySet()) {
+            buffer.append(" ").append(entry.getKey()).append(": ").append(entry.getValue()).append(NL);
+        }
+        buffer.append(NL).append(NL);
+        buffer.append("    Data chunks  ").append(NL);
+        buffer.append("---------------------------------").append(NL);
+        for (Map.Entry<String, Long> entry : dataChunksStat.entrySet()) {
+            buffer.append(" ").append(entry.getKey()).append(": ").append(entry.getValue()).append(NL);
+        }
+
+        return buffer.toString();
+    }
+
+    private DefaultTreeModel getTreeModel() {
         List<Chunk> chunks = this.djvuFile.getChunks();
         DefaultMutableTreeNode[] nodes = new DefaultMutableTreeNode[chunks.size()];
 
@@ -46,7 +99,7 @@ public class DjVuTreeModel {
         return new DefaultTreeModel(nodes[0], false);
     }
 
-    public void addMouseListener(JTree tree) {
+    private void addMouseListener(JTree tree) {
         MouseListener mouseListener = new MouseAdapter() {
             public void mousePressed(MouseEvent event) {
                 if (event.isPopupTrigger()) {

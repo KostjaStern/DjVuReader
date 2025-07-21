@@ -75,6 +75,15 @@ public class Chunk {
         return this.secondaryChunkId;
     }
 
+    public String getCompositeChunkId() {
+        if (this.isComposite) {
+            return String.format("%s:%s", this.chunkId.name(), this.secondaryChunkId.name());
+        }
+        else {
+            return this.chunkId.name();
+        }
+    }
+
     public Chunk getParent() {
         return this.parent;
     }

@@ -11,7 +11,6 @@ import com.sternkn.djvu.gui.tree.DjVuTreeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -33,10 +32,9 @@ public class MainWindow extends Frame {
     private static final int[] WHITE = {255, 255, 255, 255}; // Red, Green, Blue, Alpha
     private static final int[] BLACK = {0, 0, 0, 255};
 
-    private BufferedImage image;
     private DjVuFile djvuFile;
-    private JTree tree;
-    private ImageCanvas imageCanvas;
+    private JScrollPane leftPanel;
+    private JScrollPane rightPanel;
 
     /*
        https://docs.oracle.com/javase/tutorial/uiswing/components/tree.html
@@ -45,23 +43,13 @@ public class MainWindow extends Frame {
         this.setTitle("DjVu Viewer");
         this.setMenuBar(buildMenuBar());
 
-        // this.image = image;
-
         this.setLayout(new BorderLayout());
         this.add(buildToolBar(), BorderLayout.NORTH);
 
-        tree = new JTree();
-        tree.setVisible(false);
+        leftPanel  = new JScrollPane();
+        rightPanel = new JScrollPane();
 
-        tree.setMinimumSize(new Dimension(100, 100));
-
-        // Create a custom canvas to draw the image
-        imageCanvas = new ImageCanvas();
-        imageCanvas.setMinimumSize(new Dimension(100, 100));
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                new JScrollPane(tree),
-                new JScrollPane(imageCanvas));
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
 
         this.add(splitPane);
 
@@ -126,8 +114,7 @@ public class MainWindow extends Frame {
 
     private void openFile(ActionEvent event) {
         FileDialog fileDialog = new FileDialog(this, "Select a file to open", FileDialog.LOAD);
-        // fileDialog.setDirectory("C:\\"); // Optional: set initial directory
-        fileDialog.setVisible(true); // Show the dialog
+        fileDialog.setVisible(true);
 
         String filename = fileDialog.getFile();
         String directory = fileDialog.getDirectory();
@@ -144,41 +131,13 @@ public class MainWindow extends Frame {
             djvuFile = reader.readFile();
         }
 
-        initTree();
-    }
-
-    private void initTree() {
-        DjVuTreeModel model = new DjVuTreeModel(this.djvuFile);
-        tree.setModel(model.getTreeModel());
-        model.addMouseListener(tree);
-        tree.setVisible(true);
-    }
-
-    // Custom Canvas class to draw the image
-    private class ImageCanvas extends Canvas {
-        @Override
-        public void paint(Graphics g) {
-            super.paint(g);
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.scale(0.2, 0.2);
-
-            if (image != null) {
-                g.drawImage(image, 40, 10, this); // Draw the image at (0,0)
-            }
-        }
+        DjVuTreeModel model = new DjVuTreeModel(djvuFile, leftPanel,  rightPanel);
+        model.initTree();
+        model.initStatistics();
     }
 
     public static void main(String[] args) {
-        new MainWindow(); // loadDjVuImage()
-    }
-
-    private static BufferedImage getBufferedImage() {
-        String imagePath = "./src/main/resources/gerunds_inf.jpg";
-        try {
-            return ImageIO.read(new File(imagePath));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        new MainWindow();
     }
 
     private static BufferedImage loadDjVuImage() {
