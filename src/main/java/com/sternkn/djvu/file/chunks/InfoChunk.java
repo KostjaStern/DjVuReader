@@ -1,6 +1,8 @@
 package com.sternkn.djvu.file.chunks;
 
 
+import com.sternkn.djvu.file.utils.ByteOrder;
+
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
 
 /*
@@ -48,7 +50,7 @@ public class InfoChunk extends Chunk {
         this.height = read16(data);
         this.minorVersion = data.read();
         this.majorVersion = data.read();
-        this.dpi = read16(data);
+        this.dpi = read16(data, ByteOrder.LITTLE_ENDIAN);
         this.gamma = data.read();
         this.flags = data.read();
 

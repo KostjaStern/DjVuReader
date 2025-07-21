@@ -15,6 +15,10 @@ public final class InputStreamUtils {
     }
 
     public static int read16(InputStream data) {
+        return read16(data, ByteOrder.BIG_ENDIAN);
+    }
+
+    public static int read16(InputStream data, ByteOrder byteOrder) {
         try {
             byte[] int16 = new byte[2];
             validateLength(data.read(int16), int16.length);
@@ -22,7 +26,12 @@ public final class InputStreamUtils {
             int b1 = asUnsignedByte(int16[0]);
             int b2 = asUnsignedByte(int16[1]);
 
-            return (b1 << 8) + b2;
+            if (byteOrder == ByteOrder.BIG_ENDIAN) {
+                return (b1 << 8) + b2;
+            }
+            else {
+                return (b2 << 8) + b1;
+            }
         }
         catch (IOException e) {
             throw new RuntimeException(e);

@@ -32,6 +32,15 @@ public class TestInputStreamUtils {
     }
 
     @Test
+    public void testRead16WithOrder() {
+        // 511 -> 0x01FF
+        assertEquals(511, read16(buildStream(new byte[]{1, -1}), ByteOrder.BIG_ENDIAN));
+
+        // 65281 -> 0xFF01
+        assertEquals(65281, read16(buildStream(new byte[]{1, -1}), ByteOrder.LITTLE_ENDIAN));
+    }
+
+    @Test
     public void testRead16UnexpectedLength() {
         assertThrows(DjVuFileException.class, () -> read16(buildStream(new byte[]{1})));
     }

@@ -45,7 +45,7 @@ public class TestInfoChunk extends TestSupport {
         assertEquals(25, infoChunk.getMinorVersion());
         assertEquals(0, infoChunk.getMajorVersion());
 
-        assertEquals(11265, infoChunk.getDpi());
+        assertEquals(300, infoChunk.getDpi());
         assertEquals(22, infoChunk.getGamma());
 
         assertEquals(ImageRotationType.RIGHT_SIDE_UP, infoChunk.getRotation());
