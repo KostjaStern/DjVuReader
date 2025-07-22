@@ -5,25 +5,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read32;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.readZeroTerminatedString;
+import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.file.utils.StringUtils.padRight;
 
 /*
   8.3.2 Directory Chunk: DIRM
 
   The first contained chunk in a FORM:DJVM composite chunk is the DIRM chunk containing the document directory.
   It contains information the decoder will need to access the component files (see Multipage Documents).
-
-  13 Appendix 4: BZZ coding
-  https://codesearch.isocpp.org/actcd19/main/d/djvulibre/djvulibre_3.5.27.1-10/libdjvu/BSByteStream.cpp
-
-  https://github.com/traycold/djvulibre/blob/master/libdjvu/BSByteStream.cpp
-
-  https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform
  */
 public class DirectoryChunk extends Chunk {
     private static final Logger LOG = LoggerFactory.getLogger(DirectoryChunk.class);
@@ -33,7 +29,6 @@ public class DirectoryChunk extends Chunk {
     private final int nFiles;
 
     private final List<ComponentInfo> components;
-
 
     public DirectoryChunk(Chunk chunk) {
         super(chunk);
@@ -61,6 +56,40 @@ public class DirectoryChunk extends Chunk {
 
     public List<ComponentInfo> getComponents() {
         return components;
+    }
+
+    public String getDataAsText() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(" Version: ").append(version).append(NL);
+        buffer.append(" IsBundled: ").append(isBundled).append(NL);
+        buffer.append(" Number of components: ").append(nFiles).append(NL).append(NL);
+        buffer.append("-----------------------------------------------------------------").append(NL);
+        buffer.append(" ").append(padRight("offset", 15))
+              .append(" ").append(padRight("size", 15))
+              .append(" ").append(padRight("type", 10))
+              .append(" ").append(padRight("id", 30))
+              .append(" ").append(padRight("name", 30))
+              .append(" ").append(padRight("title", 30));
+
+        buffer.append(NL);
+        buffer.append("-----------------------------------------------------------------").append(NL);
+        for (ComponentInfo component : getComponents()) {
+            buffer.append(" ").append(padRight(component.getOffset(), 15))
+                  .append(" ").append(padRight(component.getSize(), 15))
+                  .append(" ").append(padRight(component.getType(), 10))
+                  .append(" ").append(padRight(component.getId(), 30));
+
+            if (component.hasName()) {
+                buffer.append(" ").append(padRight(component.getName(), 30));
+            }
+            if (component.hasTitle()) {
+                buffer.append(" ").append(padRight(component.getTitle(), 30));
+            }
+
+            buffer.append(NL);
+        }
+
+        return buffer.toString();
     }
 
     private void readComponents() {

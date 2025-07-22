@@ -2,6 +2,8 @@ package com.sternkn.djvu.gui.tree;
 
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.file.chunks.DirectoryChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +14,7 @@ import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,9 +23,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.sternkn.djvu.file.utils.StringUtils.NL;
+
 public class DjVuTreeModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuTreeModel.class);
-    private static final String NL = System.lineSeparator();
 
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
@@ -49,6 +53,7 @@ public class DjVuTreeModel {
     public void initStatistics() {
         JTextArea textArea = new JTextArea(40, 60);
         textArea.setText(getDjVuChunkStatistics());
+        textArea.setEditable(false);
         rightPanel.setViewportView(textArea);
     }
 
@@ -105,20 +110,49 @@ public class DjVuTreeModel {
                 if (event.isPopupTrigger()) {
                     showPopupMenu(tree, event);
                 }
+                else {
+                    showChunkInfo(tree, event);
+                }
             }
         };
 
         tree.addMouseListener(mouseListener);
     }
 
-    private void showPopupMenu(JTree tree, MouseEvent event) {
+    private ChunkTreeNode getSelectedNode(JTree tree, MouseEvent event) {
         TreePath path = tree.getPathForLocation(event.getX(), event.getY());
         if (path == null) {
-            return;
+            return null;
         }
 
         DefaultMutableTreeNode lastNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-        ChunkTreeNode chunkNode = (ChunkTreeNode) lastNode.getUserObject();
+        return (ChunkTreeNode) lastNode.getUserObject();
+    }
+
+    private void showChunkInfo(JTree tree, MouseEvent event) {
+        ChunkTreeNode chunkNode = getSelectedNode(tree, event);
+        if (chunkNode == null) {
+            return;
+        }
+
+        Chunk chunk = chunkNode.getChunk();
+        if (chunk.getChunkId() != ChunkId.DIRM) {
+            return;
+        }
+
+        DirectoryChunk dirChunk = new DirectoryChunk(chunk);
+
+        JTextArea textArea = new JTextArea(40, 60);
+        textArea.setText(dirChunk.getDataAsText());
+        textArea.setEditable(false);
+        rightPanel.setViewportView(textArea);
+    }
+
+    private void showPopupMenu(JTree tree, MouseEvent event) {
+        ChunkTreeNode chunkNode = getSelectedNode(tree, event);
+        if (chunkNode == null) {
+            return;
+        }
 
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem saveChunkData = new JMenuItem("Save chunk data as ...");
