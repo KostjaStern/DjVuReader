@@ -4,6 +4,7 @@ import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
+import com.sternkn.djvu.file.chunks.InfoChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,6 @@ import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -136,16 +136,20 @@ public class DjVuTreeModel {
         }
 
         Chunk chunk = chunkNode.getChunk();
-        if (chunk.getChunkId() != ChunkId.DIRM) {
-            return;
-        }
-
-        DirectoryChunk dirChunk = new DirectoryChunk(chunk);
 
         JTextArea textArea = new JTextArea(40, 60);
-        textArea.setText(dirChunk.getDataAsText());
+        textArea.setText(getChunkText(chunk));
         textArea.setEditable(false);
         rightPanel.setViewportView(textArea);
+    }
+
+    private String getChunkText(Chunk chunk) {
+        Chunk wrappedChunk = switch (chunk.getChunkId()) {
+            case ChunkId.DIRM -> new DirectoryChunk(chunk);
+            case ChunkId.INFO -> new InfoChunk(chunk);
+            default -> chunk;
+        };
+        return wrappedChunk.getDataAsText();
     }
 
     private void showPopupMenu(JTree tree, MouseEvent event) {
@@ -173,7 +177,7 @@ public class DjVuTreeModel {
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                outputStream.write(chunk.getData().readAllBytes());
+                outputStream.write(chunk.getData());
             }
             catch (IOException e) {
                 throw new RuntimeException(e);

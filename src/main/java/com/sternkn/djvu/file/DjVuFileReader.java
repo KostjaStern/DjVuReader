@@ -4,7 +4,6 @@ import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -110,12 +109,11 @@ public class DjVuFileReader implements Closeable {
         final int size = this.readInt();
         final long offsetStart = rawOffset;
         final SecondaryChunkId secondaryChunkId = chunkId.isComposite() ? readSecondaryChunkId() : null;
-        ByteArrayInputStream data = null;
+        byte[] data = null;
 
         if (!chunkId.isComposite()) {
-            byte[] buffer = new byte[size];
-            readBytes(buffer);
-            data = new ByteArrayInputStream(buffer);
+            data = new byte[size];
+            readBytes(data);
         }
 
         Chunk parent = parentChunks.empty() ? null : parentChunks.peek();

@@ -4,8 +4,8 @@ import com.sternkn.djvu.file.coders.BSByteInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
@@ -32,14 +32,14 @@ public class DirectoryChunk extends Chunk {
 
     public DirectoryChunk(Chunk chunk) {
         super(chunk);
-
-        int flags = data.read();
+        final ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+        int flags = byteStream.read();
         isBundled = (flags & 0x80) != 0;
         version = flags & 0x7f;
-        nFiles = read16(data);
+        nFiles = read16(byteStream);
         components = IntStream.range(0, nFiles).mapToObj(i -> new ComponentInfo()).toList();
 
-        readComponents();
+        readComponents(byteStream);
     }
 
     public boolean isBundled() {
@@ -58,8 +58,12 @@ public class DirectoryChunk extends Chunk {
         return components;
     }
 
+    @Override
     public String getDataAsText() {
+        String parentData = super.getDataAsText();
+
         StringBuilder buffer = new StringBuilder();
+        buffer.append(parentData);
         buffer.append(" Version: ").append(version).append(NL);
         buffer.append(" IsBundled: ").append(isBundled).append(NL);
         buffer.append(" Number of components: ").append(nFiles).append(NL).append(NL);
@@ -92,14 +96,14 @@ public class DirectoryChunk extends Chunk {
         return buffer.toString();
     }
 
-    private void readComponents() {
+    private void readComponents(ByteArrayInputStream byteStream) {
         if (isBundled) {
             for (int ind = 0; ind < nFiles; ind++) {
-                components.get(ind).setOffset(read32(data));
+                components.get(ind).setOffset(read32(byteStream));
             }
         }
 
-        final BSByteInputStream bzzData = new BSByteInputStream(data);
+        final BSByteInputStream bzzData = new BSByteInputStream(byteStream);
 
         for (int ind = 0; ind < nFiles; ind++) {
             components.get(ind).setSize(read24(bzzData));

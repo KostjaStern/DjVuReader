@@ -3,7 +3,10 @@ package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.utils.ByteOrder;
 
+import java.io.ByteArrayInputStream;
+
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.file.utils.StringUtils.NL;
 
 /*
     As discussed in Single Page Documents, every DjVu image requires an INFO chunk and
@@ -45,14 +48,14 @@ public class InfoChunk extends Chunk {
 
     public InfoChunk(Chunk chunk) {
         super(chunk);
-
-        this.width = read16(data);
-        this.height = read16(data);
-        this.minorVersion = data.read();
-        this.majorVersion = data.read();
-        this.dpi = read16(data, ByteOrder.LITTLE_ENDIAN);
-        this.gamma = data.read();
-        this.flags = data.read();
+        final ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+        this.width = read16(byteStream);
+        this.height = read16(byteStream);
+        this.minorVersion = byteStream.read();
+        this.majorVersion = byteStream.read();
+        this.dpi = read16(byteStream, ByteOrder.LITTLE_ENDIAN);
+        this.gamma = byteStream.read();
+        this.flags = byteStream.read();
 
         this.rotation = ImageRotationType.getRotationType(this.flags);
     }
@@ -86,6 +89,24 @@ public class InfoChunk extends Chunk {
     }
 
     @Override
+    public String getDataAsText() {
+        String parentData = super.getDataAsText();
+
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(parentData);
+
+        buffer.append(" Width: ").append(width).append(NL);
+        buffer.append(" Height: ").append(height).append(NL);
+        buffer.append(" Minor version: ").append(minorVersion).append(NL);
+        buffer.append(" Major version: ").append(majorVersion).append(NL);
+        buffer.append(" DPI: ").append(dpi).append(NL);
+        buffer.append(" Gamma: ").append(gamma).append(NL);
+        buffer.append(" Rotation: ").append(rotation).append(NL);
+
+        return  buffer.toString();
+    }
+
+        @Override
     public String toString() {
         return "InfoChunk{chunkId = " + this.getChunkId()
                     + ", size = " + this.getSize()

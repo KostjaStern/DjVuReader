@@ -5,6 +5,8 @@ import com.sternkn.djvu.file.DjVuFileException;
 
 import java.io.ByteArrayInputStream;
 
+import static com.sternkn.djvu.file.utils.StringUtils.NL;
+
 public class Chunk {
 
     private final long id;
@@ -12,7 +14,7 @@ public class Chunk {
     private final SecondaryChunkId secondaryChunkId;
 
     private final Chunk parent;
-    protected final ByteArrayInputStream data;
+    protected final byte[] data;
 
     /**
      * This is true only for ChunkId.FORM
@@ -104,8 +106,21 @@ public class Chunk {
         return this.size;
     }
 
-    public ByteArrayInputStream getData() {
+    public byte[] getData() {
         return this.data;
+    }
+
+    public String getDataAsText() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(" ChunkId: ").append(chunkId).append(NL);
+        if (isComposite()) {
+            buffer.append(" SecondaryChunkId: ").append(secondaryChunkId).append(NL);
+        }
+        buffer.append(" OffsetStart: ").append(offsetStart).append(NL);
+        buffer.append(" OffsetEnd: ").append(offsetEnd).append(NL);
+        buffer.append(" Size: ").append(size).append(NL);
+
+        return buffer.toString();
     }
 
     public static Builder builder() {
@@ -119,7 +134,7 @@ public class Chunk {
         private Chunk parent;
         private long offsetStart;
         private long size;
-        private ByteArrayInputStream data;
+        private byte[] data;
 
         public Builder() {
         }
@@ -154,7 +169,7 @@ public class Chunk {
             return this;
         }
 
-        public Builder withData(ByteArrayInputStream data) {
+        public Builder withData(byte[] data) {
             this.data = data;
             return this;
         }

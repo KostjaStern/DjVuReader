@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 
 import com.sternkn.djvu.file.coders.TestSupport;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -33,7 +32,7 @@ public class TestInfoChunk extends TestSupport {
     public void testInfoChunk() {
         Chunk chunk = Chunk.builder()
                 .withChunkId(ChunkId.INFO)
-                .withData(new ByteArrayInputStream(buffer))
+                .withData(buffer)
                 .withSize(buffer.length).build();
 
         InfoChunk infoChunk = new InfoChunk(chunk);
