@@ -5,6 +5,7 @@ import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
 import com.sternkn.djvu.file.chunks.InfoChunk;
+import com.sternkn.djvu.file.chunks.NavmChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -24,9 +26,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.file.utils.StringUtils.padRight;
 
 public class DjVuTreeModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuTreeModel.class);
+
+    private static final Font MONOSPACED_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
@@ -52,6 +57,7 @@ public class DjVuTreeModel {
 
     public void initStatistics() {
         JTextArea textArea = new JTextArea(40, 60);
+        textArea.setFont(MONOSPACED_FONT);
         textArea.setText(getDjVuChunkStatistics());
         textArea.setEditable(false);
         rightPanel.setViewportView(textArea);
@@ -72,13 +78,17 @@ public class DjVuTreeModel {
         buffer.append("    Composite chunks  ").append(NL);
         buffer.append("---------------------------------").append(NL);
         for (Map.Entry<String, Long> entry : compositeChunksStat.entrySet()) {
-            buffer.append(" ").append(entry.getKey()).append(": ").append(entry.getValue()).append(NL);
+            buffer.append(" ")
+                  .append(padRight(entry.getKey(), 15))
+                  .append(": ").append(entry.getValue()).append(NL);
         }
         buffer.append(NL).append(NL);
         buffer.append("    Data chunks  ").append(NL);
         buffer.append("---------------------------------").append(NL);
         for (Map.Entry<String, Long> entry : dataChunksStat.entrySet()) {
-            buffer.append(" ").append(entry.getKey()).append(": ").append(entry.getValue()).append(NL);
+            buffer.append(" ")
+                  .append(padRight(entry.getKey(), 15))
+                  .append(": ").append(entry.getValue()).append(NL);
         }
 
         return buffer.toString();
@@ -138,6 +148,7 @@ public class DjVuTreeModel {
         Chunk chunk = chunkNode.getChunk();
 
         JTextArea textArea = new JTextArea(40, 60);
+        textArea.setFont(MONOSPACED_FONT);
         textArea.setText(getChunkText(chunk));
         textArea.setEditable(false);
         rightPanel.setViewportView(textArea);
@@ -147,6 +158,7 @@ public class DjVuTreeModel {
         Chunk wrappedChunk = switch (chunk.getChunkId()) {
             case ChunkId.DIRM -> new DirectoryChunk(chunk);
             case ChunkId.INFO -> new InfoChunk(chunk);
+            case ChunkId.NAVM -> new NavmChunk(chunk);
             default -> chunk;
         };
         return wrappedChunk.getDataAsText();

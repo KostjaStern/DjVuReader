@@ -93,7 +93,7 @@ public class InfoChunk extends Chunk {
         String parentData = super.getDataAsText();
 
         StringBuilder buffer = new StringBuilder();
-        buffer.append(parentData);
+        buffer.append(parentData).append(NL);
 
         buffer.append(" Width: ").append(width).append(NL);
         buffer.append(" Height: ").append(height).append(NL);
