@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read32;
+import static com.sternkn.djvu.file.utils.InputStreamUtils.readString;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.readZeroTerminatedString;
 
 public class TestInputStreamUtils {
@@ -92,6 +93,13 @@ public class TestInputStreamUtils {
     @Test
     public void testRead32UnexpectedLength() {
         assertThrows(DjVuFileException.class, () -> read32(buildStream(new byte[]{1, 2, 3})));
+    }
+
+    @Test
+    public void testReadString() {
+        byte[] data = {72, 101, 108, 108, 111, 32, 119, 111};
+        String string = readString(buildStream(data), 5);
+        assertEquals("Hello", string);
     }
 
     @Test
