@@ -4,6 +4,7 @@ import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
+import com.sternkn.djvu.file.chunks.FGbzChunk;
 import com.sternkn.djvu.file.chunks.InclChunk;
 import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.NavmChunk;
@@ -161,6 +162,7 @@ public class DjVuTreeModel {
             case ChunkId.INFO -> new InfoChunk(chunk);
             case ChunkId.NAVM -> new NavmChunk(chunk);
             case ChunkId.INCL -> new InclChunk(chunk);
+            case ChunkId.FGbz -> new FGbzChunk(chunk);
             default -> chunk;
         };
         return wrappedChunk.getDataAsText();
