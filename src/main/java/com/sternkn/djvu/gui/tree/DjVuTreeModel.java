@@ -65,12 +65,12 @@ public class DjVuTreeModel {
     }
 
     private String getDjVuChunkStatistics() {
-        Map<String, Long> compositeChunksStat = this.djvuFile.getChunks().stream()
+        Map<String, Long> compositeChunksStat = this.djvuFile.chunks().stream()
             .filter(Chunk::isComposite)
             .map(Chunk::getCompositeChunkId)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        Map<String, Long> dataChunksStat = this.djvuFile.getChunks().stream()
+        Map<String, Long> dataChunksStat = this.djvuFile.chunks().stream()
                 .filter(c -> !c.isComposite())
                 .map(c -> c.getChunkId().name())
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
@@ -96,7 +96,7 @@ public class DjVuTreeModel {
     }
 
     private DefaultTreeModel getTreeModel() {
-        List<Chunk> chunks = this.djvuFile.getChunks();
+        List<Chunk> chunks = this.djvuFile.chunks();
         DefaultMutableTreeNode[] nodes = new DefaultMutableTreeNode[chunks.size()];
 
         int index = 0;
