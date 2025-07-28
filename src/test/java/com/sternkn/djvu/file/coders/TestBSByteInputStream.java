@@ -22,7 +22,7 @@ public class TestBSByteInputStream extends TestSupport {
 
     @Test
     public void testReadNullBuffer() {
-        inputStream = readStream("ANTz_137.bzz");
+        inputStream = readStream("ANTz_137.data");
 
         BSByteInputStream bsByteInputStream = new BSByteInputStream(inputStream);
 
@@ -32,7 +32,7 @@ public class TestBSByteInputStream extends TestSupport {
 
     @Test
     public void testReadANTzChunkDecoding() {
-        inputStream = readStream("ANTz_137.bzz");
+        inputStream = readStream("ANTz_137.data");
 
         BSByteInputStream bsByteInputStream = new BSByteInputStream(inputStream);
 
@@ -46,7 +46,7 @@ public class TestBSByteInputStream extends TestSupport {
 
     @Test
     public void testReadBiggerANTzChunkDecoding() {
-        inputStream = readStream("ANTz_293.bzz");
+        inputStream = readStream("ANTz_293.data");
 
         BSByteInputStream bsByteInputStream = new BSByteInputStream(inputStream);
         byte[] buffer = bsByteInputStream.readAllBytes();

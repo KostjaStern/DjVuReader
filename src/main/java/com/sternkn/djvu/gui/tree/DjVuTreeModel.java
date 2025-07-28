@@ -8,6 +8,8 @@ import com.sternkn.djvu.file.chunks.FGbzChunk;
 import com.sternkn.djvu.file.chunks.InclChunk;
 import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.NavmChunk;
+import com.sternkn.djvu.file.chunks.TXTzChunk;
+import com.sternkn.djvu.file.chunks.TextZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -38,7 +41,6 @@ public class DjVuTreeModel {
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
     private JScrollPane rightPanel;
-
 
     public DjVuTreeModel(DjVuFile djvuFile, JScrollPane leftPanel, JScrollPane rightPanel) {
         this.djvuFile = djvuFile;
@@ -116,6 +118,27 @@ public class DjVuTreeModel {
         return new DefaultTreeModel(nodes[0], false);
     }
 
+    private DefaultTreeModel getTreeModelForTextZones(TXTzChunk textChunk) {
+        List<TextZone> textZones  = textChunk.getTextZones();
+        List<DefaultMutableTreeNode> nodes = new ArrayList<>(textChunk.getTextZoneCount());
+
+        for (TextZone zone : textZones) {
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(new TextZoneNode(zone));
+            nodes.add(node);
+            addTextZoneChildren(node, zone.getChildren());
+        }
+
+        return new DefaultTreeModel(nodes.getFirst(), false);
+    }
+
+    private void addTextZoneChildren(DefaultMutableTreeNode parent, List<TextZone> textZones) {
+        for (TextZone textZone : textZones) {
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(new TextZoneNode(textZone));
+            parent.add(node);
+            addTextZoneChildren(node, textZone.getChildren());
+        }
+    }
+
     private void addMouseListener(JTree tree) {
         MouseListener mouseListener = new MouseAdapter() {
             public void mousePressed(MouseEvent event) {
@@ -148,24 +171,39 @@ public class DjVuTreeModel {
         }
 
         Chunk chunk = chunkNode.getChunk();
-
-        JTextArea textArea = new JTextArea(40, 60);
-        textArea.setFont(MONOSPACED_FONT);
-        textArea.setText(getChunkText(chunk));
-        textArea.setEditable(false);
-        rightPanel.setViewportView(textArea);
+        Component component = getChunkComponent(chunk);
+        rightPanel.setViewportView(component);
     }
 
-    private String getChunkText(Chunk chunk) {
-        Chunk wrappedChunk = switch (chunk.getChunkId()) {
+    private Component getChunkComponent(Chunk chunk) {
+
+        Chunk decodedChunk = switch (chunk.getChunkId()) {
             case ChunkId.DIRM -> new DirectoryChunk(chunk);
             case ChunkId.INFO -> new InfoChunk(chunk);
             case ChunkId.NAVM -> new NavmChunk(chunk);
             case ChunkId.INCL -> new InclChunk(chunk);
             case ChunkId.FGbz -> new FGbzChunk(chunk);
+            case ChunkId.TXTz -> new TXTzChunk(chunk);
             default -> chunk;
         };
-        return wrappedChunk.getDataAsText();
+
+        JTextArea textArea = new JTextArea(20, 60);
+        textArea.setFont(MONOSPACED_FONT);
+        textArea.setText(decodedChunk.getDataAsText());
+        textArea.setEditable(false);
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(textArea);
+
+        if (decodedChunk instanceof TXTzChunk textChunk) {
+            DefaultTreeModel treeModel = getTreeModelForTextZones(textChunk);
+
+            JTree tree = new JTree();
+            tree.setModel(treeModel);
+            panel.add(tree);
+        }
+
+        return panel; // wrappedChunk.getDataAsText();
     }
 
     private void showPopupMenu(JTree tree, MouseEvent event) {
