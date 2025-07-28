@@ -45,6 +45,20 @@ public class TestBSByteInputStream extends TestSupport {
     }
 
     @Test
+    public void testReadANTzChunkWithUrlDecoding() {
+        inputStream = readStream("ANTz_10.data");
+
+        BSByteInputStream bsByteInputStream = new BSByteInputStream(inputStream);
+
+        byte[] buffer = bsByteInputStream.readAllBytes();
+
+        String actualData = new String(buffer, StandardCharsets.UTF_8);
+        String expectedData = "(maparea \"http://www.libclassicmusic.ru\" \"\" (rect 117 2314 1275 120 ) (border #0000FF ) ) ";
+
+        assertEquals(expectedData, actualData);
+    }
+
+    @Test
     public void testReadBiggerANTzChunkDecoding() {
         inputStream = readStream("ANTz_293.data");
 
