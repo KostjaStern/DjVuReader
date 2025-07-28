@@ -34,7 +34,9 @@ public class TextZoneNode {
         buffer.append(textZone.getType().name());
         buffer.append(":");
         buffer.append(textZone.getRect());
-        buffer.append(" [textLength = ");
+        buffer.append(" [textStart = ");
+        buffer.append(textZone.getTextStart());
+        buffer.append(", textLength = ");
         buffer.append(textZone.getTextLength());
         buffer.append("]");
 

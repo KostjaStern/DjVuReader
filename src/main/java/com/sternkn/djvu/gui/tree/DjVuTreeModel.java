@@ -191,19 +191,24 @@ public class DjVuTreeModel {
         textArea.setFont(MONOSPACED_FONT);
         textArea.setText(decodedChunk.getDataAsText());
         textArea.setEditable(false);
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(textArea);
 
-        if (decodedChunk instanceof TXTzChunk textChunk) {
-            DefaultTreeModel treeModel = getTreeModelForTextZones(textChunk);
-
-            JTree tree = new JTree();
-            tree.setModel(treeModel);
-            panel.add(tree);
+        if (!(decodedChunk instanceof TXTzChunk textChunk)) {
+            return textArea;
         }
 
-        return panel; // wrappedChunk.getDataAsText();
+        JPanel panel = new JPanel();
+        panel.add(textArea);
+
+        GridLayout chunkInfoLayout = new GridLayout(2,1);
+        panel.setLayout(chunkInfoLayout);
+
+        DefaultTreeModel treeModel = getTreeModelForTextZones(textChunk);
+
+        JTree tree = new JTree();
+        tree.setModel(treeModel);
+        panel.add(tree);
+
+        return panel;
     }
 
     private void showPopupMenu(JTree tree, MouseEvent event) {

@@ -12,8 +12,10 @@ import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
 
 public class TextZone {
 
-    private final TextZoneType type;
+    private static final int OFFSET = 0x8000;
+
     private final int zoneId;
+    private final TextZoneType type;
     private GRect rect;
     private int textStart;
     private int textLength;
@@ -69,14 +71,14 @@ public class TextZone {
         this.children = children;
     }
 
-    public int decode(InputStream inputStream, int maxtext, int zoneId, TextZone parent, TextZone prev) {
+    int decode(InputStream inputStream, int maxtext, int zoneId, TextZone parent, TextZone prev) {
 
-        int x = read16(inputStream) - 0x8000;
-        int y = read16(inputStream) - 0x8000;
-        int width = read16(inputStream) - 0x8000;
-        int height = read16(inputStream) - 0x8000;
+        int x = read16(inputStream) - OFFSET;
+        int y = read16(inputStream) - OFFSET;
+        int width = read16(inputStream) - OFFSET;
+        int height = read16(inputStream) - OFFSET;
 
-        int txtStart =  read16(inputStream) - 0x8000;
+        int txtStart =  read16(inputStream) - OFFSET;
         int txtLength = read24(inputStream);
 
         if (prev != null) {
