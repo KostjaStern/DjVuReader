@@ -89,6 +89,16 @@ public final class InputStreamUtils {
         }
     }
 
+    public static String readString(InputStream data) {
+        try {
+            byte[] buffer = data.readAllBytes();
+            return new String(buffer, StandardCharsets.UTF_8);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String readZeroTerminatedString(InputStream data) {
         try {
             int b = data.read();

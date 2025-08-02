@@ -15,4 +15,8 @@ public final class NumberUtils {
     public static int asUnsignedByte(byte value) {
         return value & 0xFF;
     }
+
+    public static int hexToInt(String hex) {
+        return Integer.parseInt(hex, 16);
+    }
 }
