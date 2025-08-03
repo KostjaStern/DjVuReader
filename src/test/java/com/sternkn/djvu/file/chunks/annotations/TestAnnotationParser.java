@@ -72,6 +72,39 @@ public class TestAnnotationParser {
     }
 
     @Test
+    public void testGetInitialZoomWithZoomType() {
+        AnnotationParser parser = new AnnotationParser("(mode bw ) (zoom page )(align center top )");
+        InitialZoom zoom = parser.getInitialZoom();
+
+        assertEquals(ZoomType.PAGE, zoom.getZoomType());
+        assertNull(zoom.getZoomFactor());
+    }
+
+    @Test
+    public void testGetInitialZoomWithZoomFactor() {
+        AnnotationParser parser = new AnnotationParser("(mode bw ) (zoom d23 )(align center top )");
+        InitialZoom zoom = parser.getInitialZoom();
+
+        assertNull(zoom.getZoomType());
+        assertEquals(23, zoom.getZoomFactor());
+    }
+
+    @Test
+    public void testGetInvalidInitialZoom() {
+        AnnotationParser parser = new AnnotationParser(" (zoom d2333 )sss");
+
+        Exception exception = assertThrows(InvalidAnnotationException.class, parser::getInitialZoom);
+        assertEquals("Invalid initial zoom annotation value: d2333", exception.getMessage());
+    }
+
+    @Test
+    public void testGetNullInitialZoom() {
+        AnnotationParser parser = new AnnotationParser("(mode bw )");
+
+        assertNull(parser.getInitialZoom());
+    }
+
+    @Test
     public void testParseColorValidCase() {
         Color color = AnnotationParser.parseColor("#112fAB");
 

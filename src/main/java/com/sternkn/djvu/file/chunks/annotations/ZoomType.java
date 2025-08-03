@@ -4,5 +4,14 @@ public enum ZoomType {
     STRETCH,
     ONE2ONE,
     WIDTH,
-    PAGE
+    PAGE;
+
+    public static ZoomType of(String value) {
+        for (ZoomType zoom : ZoomType.values()) {
+            if (zoom.name().equalsIgnoreCase(value)) {
+                return zoom;
+            }
+        }
+        return null;
+    }
 }

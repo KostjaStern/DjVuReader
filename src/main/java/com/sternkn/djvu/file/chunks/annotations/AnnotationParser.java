@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Stack;
 
 import static com.sternkn.djvu.file.utils.NumberUtils.hexToInt;
@@ -17,6 +16,7 @@ public class AnnotationParser {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationParser.class);
 
     private static final String COLOR_PATTERN = "^#[0-9a-fA-F]{6}$";
+    private static final String ZOOM_FACTOR_PATTERN = "^d\\d{1,3}$";
 
     private static final String NODE_START = "(";
     private static final String NODE_END = ")";
@@ -30,16 +30,16 @@ public class AnnotationParser {
     }
 
     public BackgroundColor getBackgroundColor() {
-        final String bgToken = RecordType.BACKGROUND_COLOR.getToken();
-        Optional<Node> bgNode = nodes.stream()
-            .filter(n -> !n.getArguments().isEmpty())
-            .filter(n -> bgToken.equals(n.getArguments().getFirst()))
-            .findFirst();
-        if (bgNode.isEmpty()) {
+        List<Node> bgNodes = findAnnotationNodes(RecordType.BACKGROUND_COLOR);
+        if (bgNodes.isEmpty()) {
             return null;
         }
 
-        Node node = bgNode.get();
+        if (bgNodes.size() > 1) {
+            LOG.warn("We have several background color annotations. We will take the first one into account.");
+        }
+
+        Node node = bgNodes.getFirst();
 
         if (node.getArguments().size() == 1) {
             throw new InvalidAnnotationException("Invalid background color annotation (without color)");
@@ -50,6 +50,45 @@ public class AnnotationParser {
         }
 
         return new BackgroundColor(parseColor(node.getArguments().get(1)));
+    }
+
+    public InitialZoom getInitialZoom() {
+        List<Node> zoomNodes = findAnnotationNodes(RecordType.INITIAL_ZOOM);
+        if (zoomNodes.isEmpty()) {
+            return null;
+        }
+
+        if (zoomNodes.size() > 1) {
+            LOG.warn("We have several initial zoom annotations. We will take the first one into account.");
+        }
+
+        Node node = zoomNodes.getFirst();
+
+        if (node.getArguments().size() == 1) {
+            throw new InvalidAnnotationException("Invalid initial zoom annotation (without zoom value)");
+        }
+
+        if (node.getArguments().size() > 2) {
+            LOG.warn("It looks like an initial zoom annotation has invalid or unsupported format");
+        }
+
+        final String zoomValue = node.getArguments().get(1);
+        final ZoomType zoomType = ZoomType.of(zoomValue);
+        final Integer zoomFactor = parseZoomFactor(zoomValue);
+
+        if (zoomType == null && zoomFactor == null) {
+            throw new InvalidAnnotationException("Invalid initial zoom annotation value: " + zoomValue);
+        }
+
+        return new InitialZoom(zoomType, zoomFactor);
+    }
+
+    private List<Node> findAnnotationNodes(RecordType recordType) {
+        final String bgToken = recordType.getToken();
+        return nodes.stream()
+                .filter(n -> !n.getArguments().isEmpty())
+                .filter(n -> bgToken.equals(n.getArguments().getFirst()))
+                .toList();
     }
 
     static List<Node> parse(String text) {
@@ -159,5 +198,15 @@ public class AnnotationParser {
         final String blue = text.substring(5, 7);
 
         return new Color(hexToInt(blue), hexToInt(green), hexToInt(red));
+    }
+
+    static Integer parseZoomFactor(String text) {
+        if (text == null
+                || text.isBlank()
+                || !text.matches(ZOOM_FACTOR_PATTERN)) {
+            return null;
+        }
+
+        return Integer.parseInt(text.substring(1));
     }
 }
