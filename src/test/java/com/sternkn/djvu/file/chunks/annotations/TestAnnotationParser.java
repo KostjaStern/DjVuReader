@@ -7,6 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestAnnotationParser {
@@ -15,15 +16,59 @@ public class TestAnnotationParser {
         q 
         (maparea "http://www.test.com/" "It \\"is a link" (rect 543 2859 408 183 ) (xor ) )
         (maparea (url "http://test.com/" "_blank") "This is an oval" (oval 1068 2853 429 195 ) (xor ))
-        (background #FFDDFF ) (zoom page ) (mode bw ) (align center default )
+        (background #FFDDEE ) (zoom page ) (mode bw ) (align center top )
         (maparea "#+1" "Here is a text box"(text 1635 2775 423 216 )(pushpin ) (backclr #FFFF80 ) (border #000000 ) )
         (maparea "" "Arrow" (line 591 3207 1512 3138 ) (arrow ) (none ) )
         """;
 
     @Test
     public void testParse() {
-        List<Node> nodes = AnnotationParser.parse(ANNOTATION_SRC);
+        final String text =
+        """
+            q 
+            (maparea "http://www.test.com/" "It \\"is a link" (rect 543 2859 408 183 ) (xor ) )
+            (align center top ) www         
+        """;
+
+        List<Node> nodes = AnnotationParser.parse(text);
         assertNotNull(nodes);
+
+        List<Node> expectedNodes = List.of(
+            new Node(
+                List.of("maparea", "\"http://www.test.com/\"", "\"It \\\"is a link\""),
+                List.of(
+                    new Node(List.of("rect", "543", "2859", "408", "183")),
+                    new Node(List.of("xor"))
+                )
+            ),
+            new Node(List.of("align", "center", "top"))
+        );
+        assertEquals(expectedNodes, nodes);
+    }
+
+    @Test
+    public void testGetBackgroundColor() {
+        AnnotationParser parser = new AnnotationParser(ANNOTATION_SRC);
+        BackgroundColor bgColor = parser.getBackgroundColor();
+
+        Color expectedColor = new Color(238, 221, 255);
+        assertEquals(expectedColor, bgColor.getColor());
+    }
+
+    @Test
+    public void testGetInvalidBackgroundColor() {
+        AnnotationParser parser = new AnnotationParser("aa (background) ww");
+
+        Exception exception = assertThrows(InvalidAnnotationException.class, parser::getBackgroundColor);
+        assertEquals("Invalid background color annotation (without color)", exception.getMessage());
+    }
+
+    @Test
+    public void testGetNullBackgroundColor() {
+        AnnotationParser parser = new AnnotationParser("(mode bw ) (align center top )");
+        BackgroundColor bgColor = parser.getBackgroundColor();
+
+        assertNull(bgColor);
     }
 
     @Test

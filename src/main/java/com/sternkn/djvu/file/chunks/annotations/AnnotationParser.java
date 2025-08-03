@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Stack;
-// import java.util.Stack;
 
 import static com.sternkn.djvu.file.utils.NumberUtils.hexToInt;
 import static com.sternkn.djvu.file.utils.StringUtils.getChar;
@@ -29,12 +29,34 @@ public class AnnotationParser {
         nodes = parse(text);
     }
 
+    public BackgroundColor getBackgroundColor() {
+        final String bgToken = RecordType.BACKGROUND_COLOR.getToken();
+        Optional<Node> bgNode = nodes.stream()
+            .filter(n -> !n.getArguments().isEmpty())
+            .filter(n -> bgToken.equals(n.getArguments().getFirst()))
+            .findFirst();
+        if (bgNode.isEmpty()) {
+            return null;
+        }
+
+        Node node = bgNode.get();
+
+        if (node.getArguments().size() == 1) {
+            throw new InvalidAnnotationException("Invalid background color annotation (without color)");
+        }
+
+        if (node.getArguments().size() > 2) {
+            LOG.warn("It looks like a background color annotation has invalid or unsupported format");
+        }
+
+        return new BackgroundColor(parseColor(node.getArguments().get(1)));
+    }
+
     static List<Node> parse(String text) {
         if (text == null || text.isBlank()) {
             return List.of();
         }
 
-        final String src = text; // toUTF16(text)
         List<Node> result = new ArrayList<>();
         int index = 0;
         Stack<Node> nodes = new Stack<>();
@@ -42,8 +64,8 @@ public class AnnotationParser {
         boolean isTextToken = false;
         boolean isPrevBackslash = false;
 
-        while (index < src.length()) {
-            String ch = getChar(src, index);
+        while (index < text.length()) {
+            String ch = getChar(text, index);
             index++;
             String stringToken = tocken.toString();
 
@@ -76,7 +98,6 @@ public class AnnotationParser {
                     if (nodes.empty()) {
                         result.add(node);
                     }
-
                 }
                 tocken = new StringBuilder();
                 continue;
@@ -121,12 +142,9 @@ public class AnnotationParser {
         return result;
     }
 
-//    private final int blue;
-//    private final int green;
-//    private final int red;
-//    public Color(int blue, int green, int red) {
-
-        // #RRGGBB
+    /**
+     *   text - coded color in this format: #RRGGBB
+     */
     static Color parseColor(String text) {
         if (text == null || text.isBlank()) {
             throw new InvalidAnnotationException("Text can not be null or blank");
