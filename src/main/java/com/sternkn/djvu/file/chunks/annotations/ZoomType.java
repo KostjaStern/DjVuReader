@@ -7,7 +7,7 @@ public enum ZoomType {
     PAGE;
 
     public static ZoomType of(String value) {
-        for (ZoomType zoom : ZoomType.values()) {
+        for (ZoomType zoom : values()) {
             if (zoom.name().equalsIgnoreCase(value)) {
                 return zoom;
             }

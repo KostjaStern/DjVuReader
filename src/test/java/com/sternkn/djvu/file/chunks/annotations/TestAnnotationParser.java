@@ -105,6 +105,77 @@ public class TestAnnotationParser {
     }
 
     @Test
+    public void testGetInitialDisplayLevel() {
+        AnnotationParser parser = new AnnotationParser(" (zoom page ) (mode bw )(align center top )");
+        InitialDisplayLevel displayLevel = parser.getInitialDisplayLevel();
+
+        assertEquals(ModeType.BW, displayLevel.getModeType());
+    }
+
+    @Test
+    public void testGetInvalidInitialDisplayLevel() {
+        AnnotationParser parser = new AnnotationParser(" (mode d2333 )sss");
+
+        Exception exception = assertThrows(InvalidAnnotationException.class, parser::getInitialDisplayLevel);
+        assertEquals("Invalid initial display level annotation mode value: d2333", exception.getMessage());
+    }
+
+    @Test
+    public void testGetNullInitialDisplayLevel() {
+        AnnotationParser parser = new AnnotationParser(" (zoom page ) (align center top )");
+
+        assertNull(parser.getInitialDisplayLevel());
+    }
+
+    @Test
+    public void testGetAlignment() {
+        AnnotationParser parser = new AnnotationParser(" (zoom page ) (mode bw )(align center top )");
+        Alignment alignment = parser.getAlignment();
+
+        assertEquals(AlignmentType.CENTER, alignment.getHorizontal());
+        assertEquals(AlignmentType.TOP, alignment.getVertical());
+    }
+
+    @Test
+    public void testGetNullAlignment() {
+        AnnotationParser parser = new AnnotationParser(" (zoom page ) (mode bw )");
+
+        assertNull(parser.getAlignment());
+    }
+
+    @Test
+    public void testGetInvalidHorizontalAlignment() {
+        AnnotationParser parser = new AnnotationParser(" (mode bw )(align center111 top )sss");
+
+        Exception exception = assertThrows(InvalidAnnotationException.class, parser::getAlignment);
+        assertEquals("Invalid alignment annotation horizontal type: center111", exception.getMessage());
+    }
+
+    @Test
+    public void testGetInvalidHorizontalValueAlignment() {
+        AnnotationParser parser = new AnnotationParser(" (mode bw )(align top top )sss");
+
+        Exception exception = assertThrows(InvalidAnnotationException.class, parser::getAlignment);
+        assertEquals("Invalid horizontal value: TOP", exception.getMessage());
+    }
+
+    @Test
+    public void testGetInvalidVerticalAlignment() {
+        AnnotationParser parser = new AnnotationParser(" (mode bw )(align center toS )sss");
+
+        Exception exception = assertThrows(InvalidAnnotationException.class, parser::getAlignment);
+        assertEquals("Invalid alignment annotation vertical type: toS", exception.getMessage());
+    }
+
+    @Test
+    public void testGetInvalidVerticalValueAlignment() {
+        AnnotationParser parser = new AnnotationParser(" (mode bw )(align left right )sss");
+
+        Exception exception = assertThrows(InvalidAnnotationException.class, parser::getAlignment);
+        assertEquals("Invalid vertical value: RIGHT", exception.getMessage());
+    }
+
+    @Test
     public void testParseColorValidCase() {
         Color color = AnnotationParser.parseColor("#112fAB");
 

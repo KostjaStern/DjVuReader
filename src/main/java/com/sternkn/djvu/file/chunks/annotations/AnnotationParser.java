@@ -83,6 +83,72 @@ public class AnnotationParser {
         return new InitialZoom(zoomType, zoomFactor);
     }
 
+    public InitialDisplayLevel  getInitialDisplayLevel() {
+        List<Node> displayNodes = findAnnotationNodes(RecordType.INITIAL_DISPLAY_LEVEL);
+        if (displayNodes.isEmpty()) {
+            return null;
+        }
+
+        if (displayNodes.size() > 1) {
+            LOG.warn("We have several initial display level annotations. We will take the first one into account.");
+        }
+
+        Node node = displayNodes.getFirst();
+
+        if (node.getArguments().size() == 1) {
+            throw new InvalidAnnotationException("Invalid initial display level annotation (without mode value)");
+        }
+
+        if (node.getArguments().size() > 2) {
+            LOG.warn("It looks like an initial display level annotation has invalid or unsupported format");
+        }
+
+        final String modeValue = node.getArguments().get(1);
+        final ModeType modeType = ModeType.of(modeValue);
+
+        if (modeType == null) {
+            throw new InvalidAnnotationException("Invalid initial display level annotation mode value: " + modeValue);
+        }
+
+        return new InitialDisplayLevel(modeType);
+    }
+
+    public Alignment getAlignment() {
+        List<Node> alignmentNodes = findAnnotationNodes(RecordType.ALIGNMENT);
+        if (alignmentNodes.isEmpty()) {
+            return null;
+        }
+
+        if (alignmentNodes.size() > 1) {
+            LOG.warn("We have several alignment annotations. We will take the first one into account.");
+        }
+
+        Node node = alignmentNodes.getFirst();
+
+        if (node.getArguments().size() < 3) {
+            throw new InvalidAnnotationException("Invalid alignment annotation (without horzalign and/or vertalign)");
+        }
+
+        if (node.getArguments().size() > 3) {
+            LOG.warn("It looks like an alignment annotation has invalid or unsupported format");
+        }
+
+        final String horzalignValue = node.getArguments().get(1);
+        final String vertalignValue = node.getArguments().get(2);
+
+        final AlignmentType horzType = AlignmentType.of(horzalignValue);
+        final AlignmentType vertType = AlignmentType.of(vertalignValue);
+
+        if (horzType == null) {
+            throw new InvalidAnnotationException("Invalid alignment annotation horizontal type: " + horzalignValue);
+        }
+        if (vertType == null) {
+            throw new InvalidAnnotationException("Invalid alignment annotation vertical type: " + vertalignValue);
+        }
+
+        return new Alignment(horzType, vertType);
+    }
+
     private List<Node> findAnnotationNodes(RecordType recordType) {
         final String bgToken = recordType.getToken();
         return nodes.stream()

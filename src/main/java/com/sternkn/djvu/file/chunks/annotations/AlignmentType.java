@@ -5,5 +5,14 @@ public enum AlignmentType {
     CENTER,
     RIGHT,
     TOP,
-    BOTTOM
+    BOTTOM;
+
+    public static AlignmentType of(String value) {
+        for (AlignmentType type : values()) {
+            if (type.name().equalsIgnoreCase(value)) {
+                return type;
+            }
+        }
+        return null;
+    }
 }

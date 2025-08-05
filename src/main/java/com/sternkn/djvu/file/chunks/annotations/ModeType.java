@@ -5,4 +5,13 @@ public enum ModeType {
     BW,
     FORE,
     BLACK;
+
+    public static ModeType of(String value) {
+        for (ModeType modeType : values()) {
+            if (modeType.name().equalsIgnoreCase(value)) {
+                return modeType;
+            }
+        }
+        return null;
+    }
 }
