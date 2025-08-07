@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import static com.sternkn.djvu.file.utils.NumberUtils.hexToInt;
 import static com.sternkn.djvu.file.utils.StringUtils.getChar;
@@ -149,7 +150,65 @@ public class AnnotationParser {
         return new Alignment(horzType, vertType);
     }
 
+    public List<MapArea> getMapAreas() {
+        List<Node> mapAreaNodes = findAnnotationNodes(RecordType.MAP_AREA);
+        return mapAreaNodes.stream().map(this::parseMapArea).toList();
+    }
+
+    private MapArea parseMapArea(Node node) {
+
+        MapUrl url = parseMapUrl(node);
+        int nodeArgSize = node.getArguments().size();
+        String comment;
+
+        if (url.isObject()) {
+            comment = nodeArgSize > 1 ? node.getArguments().get(1) : null;
+        }
+        else {
+            comment = nodeArgSize > 2 ? node.getArguments().get(2) : null;
+        }
+
+        Area area = parseArea(node);
+
+        return new MapArea(url, comment, area);
+    }
+
+    private MapUrl parseMapUrl(Node node) {
+        List<Node> urlNodes = findAnnotationNodes(node.getChildren(), RecordType.URL);
+        if (urlNodes.size() > 1) {
+            LOG.warn("It looks like an invalid map area annotation. We have several ({}) url objects", urlNodes.size());
+        }
+
+        if (urlNodes.isEmpty()) {
+            if (node.getArguments().size() < 2) {
+                throw new InvalidAnnotationException("Invalid map area annotation (without url value)");
+            }
+            final String url = node.getArguments().get(1);
+            return new MapUrl(url, null, false);
+        }
+
+        final Node urlNode = urlNodes.getFirst();
+
+        int urlNodeArgumentsSize = urlNode.getArguments().size();
+        if (urlNodeArgumentsSize < 2) {
+            throw new InvalidAnnotationException("Invalid map area annotation (invalid url object)");
+        }
+
+        final String url = urlNode.getArguments().get(1);
+        final String target = urlNodeArgumentsSize == 2 ? null : urlNode.getArguments().get(2);
+        return new MapUrl(url, target, true);
+    }
+
+
+    private Area parseArea(Node node) {
+        return null;
+    }
+
     private List<Node> findAnnotationNodes(RecordType recordType) {
+        return findAnnotationNodes(nodes, recordType);
+    }
+
+    private List<Node> findAnnotationNodes(List<Node> nodes, RecordType recordType) {
         final String bgToken = recordType.getToken();
         return nodes.stream()
                 .filter(n -> !n.getArguments().isEmpty())
