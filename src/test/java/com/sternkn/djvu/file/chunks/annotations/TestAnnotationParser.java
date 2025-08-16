@@ -47,19 +47,93 @@ public class TestAnnotationParser {
     }
 
     @Test
-    public void testGetMapAreas() {
-        AnnotationParser parser = new AnnotationParser(ANNOTATION_SRC);
+    public void testGetMapAreasWithRectangle() {
+        AnnotationParser parser = new AnnotationParser(
+            "www (maparea \"http://www.test.com/\" \"It \\\"is a link\" (rect 543 2859 408 183 ) (xor ) )");
         List<MapArea> mapAreas = parser.getMapAreas();
 
-        assertEquals(4, mapAreas.size());
+        assertEquals(1, mapAreas.size());
 
         assertEquals(new MapArea(
-                new MapUrl("\"http://www.test.com/\"", null, false),
-                "\"It \\\"is a link\"",
+                new MapUrl("http://www.test.com/", null, false),
+                "It \\\"is a link",
                 new Rectangle(543, 2859, 408, 183)
                         .setOpacity(50)
                         .setBorder(new Border().setXor(true))
-        ), mapAreas.get(0));
+        ), mapAreas.getFirst());
+    }
+
+    @Test
+    public void testGetMapAreasWithOval() {
+        AnnotationParser parser = new AnnotationParser(
+            "www (maparea (url \"http://test.com/\" \"_blank\") \"This is an oval\" (oval 1068 2853 429 195 ) (xor ))");
+        List<MapArea> mapAreas = parser.getMapAreas();
+
+        assertEquals(1, mapAreas.size());
+
+        assertEquals(new MapArea(
+            new MapUrl("http://test.com/", "_blank", true),
+            "This is an oval",
+            new Oval(1068, 2853, 429, 195)
+                .setBorder(new Border().setXor(true))
+        ), mapAreas.getFirst());
+    }
+
+    @Test
+    public void testGetMapAreasWithText() {
+        AnnotationParser parser = new AnnotationParser(
+            "www (maparea \"#+1\" \"Here is a text box\"(text 1635 2775 423 216 )(pushpin ) (backclr #FFFF80 ) (border #000000 ) )");
+        List<MapArea> mapAreas = parser.getMapAreas();
+
+        assertEquals(1, mapAreas.size());
+
+        assertEquals(new MapArea(
+            new MapUrl("#+1", null, false),
+            "Here is a text box",
+            new Text(1635, 2775, 423, 216)
+                .setPushPin(true)
+                .setBackgroundColor(new Color(128, 255, 255))
+                .setBorder(new Border().setColor(Color.BLACK))
+        ), mapAreas.getFirst());
+    }
+
+    @Test
+    public void testGetMapAreasWithLine() {
+        AnnotationParser parser = new AnnotationParser(
+            "www (maparea \"\" \"Arrow\" (line 591 3207 1512 3138 ) (arrow ) (none ) )");
+        List<MapArea> mapAreas = parser.getMapAreas();
+
+        assertEquals(1, mapAreas.size());
+
+        assertEquals(new MapArea(
+            new MapUrl("", null, false),
+            "Arrow",
+            new Line(new Point(591, 3207), new Point(1512, 3138))
+                .setHasArrow(true)
+                .setWidth(1)
+                .setColor(Color.BLACK)
+                .setBorder(new Border().setNone(true))
+        ), mapAreas.getFirst());
+    }
+
+    @Test
+    public void testGetMapAreasWithPolygon() {
+        AnnotationParser parser = new AnnotationParser(
+        "(maparea \"#23\" \"Polygon area\" (poly 59 32 151 313 523 623 400 364) (border_avis)(border #203040))");
+        List<MapArea> mapAreas = parser.getMapAreas();
+
+        assertEquals(1, mapAreas.size());
+
+        assertEquals(new MapArea(
+            new MapUrl("#23", null, false),
+            "Polygon area",
+            new Polygon(List.of(new Point(59, 32),
+                                new Point(151, 313),
+                                new Point(523, 623),
+                                new Point(400, 364)))
+                .setBorderAlwaysVisible(true)
+                .setBorder(new Border().setColor(new Color(64, 48, 32)))
+        ), mapAreas.getFirst());
     }
 
     @Test

@@ -3,6 +3,8 @@ package com.sternkn.djvu.file.chunks;
 import java.util.Objects;
 
 public class Color {
+    public static final Color BLACK = new Color(0, 0, 0);
+
     private static final int RMUL = 5;
     private static final int GMUL = 9;
     private static final int BMUL = 2;

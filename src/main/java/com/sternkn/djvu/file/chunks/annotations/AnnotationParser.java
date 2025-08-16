@@ -143,15 +143,23 @@ public class AnnotationParser {
         String comment;
 
         if (url.isObject()) {
-            comment = nodeArgSize > 1 ? node.getArguments().get(1) : null;
+            comment = nodeArgSize > 1 ? parseStringValue(node.getArguments().get(1)) : null;
         }
         else {
-            comment = nodeArgSize > 2 ? node.getArguments().get(2) : null;
+            comment = nodeArgSize > 2 ? parseStringValue(node.getArguments().get(2)) : null;
         }
 
         Area area = Area.parseArea(node);
 
         return new MapArea(url, comment, area);
+    }
+
+    private String parseStringValue(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+
+        return value.substring(1, value.length() - 1);
     }
 
     private MapUrl parseMapUrl(Node node) {
@@ -164,7 +172,7 @@ public class AnnotationParser {
             if (node.getArguments().size() < 2) {
                 throw new InvalidAnnotationException("Invalid map area annotation (without url value)");
             }
-            final String url = node.getArguments().get(1);
+            final String url = parseStringValue(node.getArguments().get(1));
             return new MapUrl(url, null, false);
         }
 
@@ -175,8 +183,8 @@ public class AnnotationParser {
             throw new InvalidAnnotationException("Invalid map area annotation (invalid url object)");
         }
 
-        final String url = urlNode.getArguments().get(1);
-        final String target = urlNodeArgumentsSize == 2 ? null : urlNode.getArguments().get(2);
+        final String url = parseStringValue(urlNode.getArguments().get(1));
+        final String target = urlNodeArgumentsSize == 2 ? null : parseStringValue(urlNode.getArguments().get(2));
         return new MapUrl(url, target, true);
     }
 

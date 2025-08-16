@@ -4,6 +4,7 @@ import com.sternkn.djvu.file.chunks.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -101,7 +102,7 @@ public abstract class Area {
         final int x1 = toInt(line.getArguments().get(3));
         final int y1 = toInt(line.getArguments().get(4));
 
-        final Color lineColor = parseColorNode(node.getChildren(), TagType.LINE_COLOR);
+        final Color lineColor = parseColorNode(node.getChildren(), TagType.LINE_COLOR, Color.BLACK);
         final int width = parseIntNode(node, TagType.WIDTH, WIDTH_VALIDATOR, 1);
 
         return new Line(new Point(x0, y0), new Point(x1, y1))
@@ -127,11 +128,11 @@ public abstract class Area {
         }
 
         final int pointSize = (argSize - 1) / 2;
-        final Point[] points = new Point[pointSize];
+        final List<Point> points = new ArrayList<>(pointSize);
         for (int ind = 0; ind < pointSize; ind++) {
             final int x = toInt(polygon.getArguments().get(2 * ind + 1));
             final int y = toInt(polygon.getArguments().get(2 * ind + 2));
-            points[ind] = new Point(x, y);
+            points.add(new Point(x, y));
         }
 
         return new Polygon(points)

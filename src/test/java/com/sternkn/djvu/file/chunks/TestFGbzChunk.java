@@ -32,7 +32,7 @@ public class TestFGbzChunk extends TestSupport {
 
         assertEquals(0, fgbzChunk.getVersion());
         assertEquals(1, fgbzChunk.getPaletteSize());
-        assertEquals(List.of(new Color(0, 0, 0)), fgbzChunk.getColors());
+        assertEquals(List.of(Color.BLACK), fgbzChunk.getColors());
 
         assertEquals(2159, fgbzChunk.getDataSize());
         assertEquals(2159, fgbzChunk.getIndexes().size());

@@ -1,14 +1,14 @@
 package com.sternkn.djvu.file.chunks.annotations;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class Polygon extends Area {
 
-    private final Point[] points;
+    private final List<Point> points;
     private boolean isBorderAlwaysVisible;
 
-    public Polygon(Point[] points) {
+    public Polygon(List<Point> points) {
         super(AreaType.POLYGON);
         this.points = points;
     }
@@ -22,11 +22,11 @@ public class Polygon extends Area {
     }
 
     public int getPointsCount() {
-        return points.length;
+        return points.size();
     }
 
     public Point getPoint(int index) {
-        return points[index];
+        return points.get(index);
     }
 
     @Override
@@ -37,12 +37,12 @@ public class Polygon extends Area {
 
         return type == other.getType()
                 && Objects.equals(this.border, other.border)
-                && Arrays.equals(this.points, other.points)
+                && Objects.equals(this.points, other.points)
                 && isBorderAlwaysVisible == other.isBorderAlwaysVisible;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, border, Arrays.hashCode(points), isBorderAlwaysVisible);
+        return Objects.hash(type, border, points, isBorderAlwaysVisible);
     }
 }

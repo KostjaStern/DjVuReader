@@ -65,12 +65,14 @@ public class ParserUtils {
      * @param nodes - nodes for search
      * @param tagType - one of the following types: BACK_COLOR, BACKGROUND_COLOR, BORDER, HIGHLIGHT,
      *                     LINE_COLOR, TEXT_COLOR
+     * @param defaultColor - default color
+     *
      * @return color
      */
-    public static Color parseColorNode(List<Node> nodes, TagType tagType) {
+    public static Color parseColorNode(List<Node> nodes, TagType tagType, Color defaultColor) {
         List<Node> nds = findNodes(nodes, tagType);
         if (nds.isEmpty()) {
-            return null;
+            return defaultColor;
         }
 
         if (nds.size() > 1) {
@@ -85,6 +87,10 @@ public class ParserUtils {
 
         String textColor = node.getArguments().get(1);
         return parseColor(textColor);
+    }
+
+    public static Color parseColorNode(List<Node> nodes, TagType tagType) {
+        return parseColorNode(nodes, tagType, null);
     }
 
     /**
