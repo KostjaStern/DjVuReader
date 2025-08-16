@@ -2,15 +2,19 @@ package com.sternkn.djvu.file.chunks.annotations;
 
 import com.sternkn.djvu.file.chunks.Color;
 
+import java.util.Objects;
+
 public class Line extends Area {
-    private final Point[] points;
+    private final Point startPoint;
+    private final Point endPoint;
     private boolean hasArrow;
     private int width;
     private Color lineColor;
 
-    public Line(Point[] points) {
+    public Line(Point startPoint,  Point endPoint) {
         super(AreaType.LINE);
-        this.points = points;
+        this.startPoint = startPoint;
+        this.endPoint = endPoint;
     }
 
     public Line setHasArrow(boolean hasArrow) {
@@ -37,17 +41,31 @@ public class Line extends Area {
         return lineColor;
     }
 
-    public Line setBorder(Border border) {
-        this.border = border;
-        return this;
+    public Point getStartPoint() {
+        return this.startPoint;
     }
 
-    public int getPointsCount() {
-        return points.length;
+    public Point getEndPoint() {
+        return this.endPoint;
     }
 
-    public Point getPoint(int index) {
-        return points[index];
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Line other)) {
+            return false;
+        }
+
+        return type == other.getType()
+                && Objects.equals(this.border, other.border)
+                && Objects.equals(this.startPoint, other.startPoint)
+                && Objects.equals(this.endPoint, other.endPoint)
+                && hasArrow  == other.hasArrow
+                && width == other.width
+                && Objects.equals(this.lineColor, other.lineColor);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, border, startPoint,  endPoint, hasArrow, width, lineColor);
+    }
 }

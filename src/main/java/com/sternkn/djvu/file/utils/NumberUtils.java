@@ -19,4 +19,8 @@ public final class NumberUtils {
     public static int hexToInt(String hex) {
         return Integer.parseInt(hex, 16);
     }
+
+    public static int toInt(String value) {
+        return Integer.parseInt(value);
+    }
 }

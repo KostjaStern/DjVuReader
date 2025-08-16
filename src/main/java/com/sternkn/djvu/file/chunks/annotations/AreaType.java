@@ -15,11 +15,25 @@ public enum AreaType {
     }
 
     public static AreaType fromToken(String token) {
-        for (AreaType type : AreaType.values()) {
+        for (AreaType type : values()) {
             if (type.token.equals(token)) {
                 return type;
             }
         }
+        return null;
+    }
+
+    public static AreaType fromToken(Node node) {
+        for (Node child : node.getChildren()) {
+            if (child.getArguments().isEmpty()) {
+                continue;
+            }
+            AreaType type = fromToken(child.getArguments().getFirst());
+            if (type != null) {
+                return type;
+            }
+        }
+
         return null;
     }
 }

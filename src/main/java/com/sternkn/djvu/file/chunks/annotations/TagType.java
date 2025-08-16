@@ -1,6 +1,6 @@
 package com.sternkn.djvu.file.chunks.annotations;
 
-public enum RecordType {
+public enum TagType {
 
     BACKGROUND_COLOR("background"),
     INITIAL_ZOOM("zoom"),
@@ -23,6 +23,8 @@ public enum RecordType {
     BORDER("border"),
     SHADOW_IN("shadow_in"),
     SHADOW_OUT("shadow_out"),
+    SHADOW_EIN("shadow_ein"),
+    SHADOW_EOUT("shadow_eout"),
 
     BORDER_AVIS("border_avis"),
 
@@ -38,12 +40,12 @@ public enum RecordType {
 
     private final String token;
 
-    RecordType(String token) {
+    TagType(String token) {
         this.token = token;
     }
 
-    public static RecordType fromToken(String token) {
-        for (RecordType type : RecordType.values()) {
+    public static TagType fromToken(String token) {
+        for (TagType type : TagType.values()) {
             if (type.token.equals(token)) {
                 return type;
             }

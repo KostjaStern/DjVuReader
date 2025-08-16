@@ -1,6 +1,8 @@
 package com.sternkn.djvu.file.chunks.annotations;
 
 
+import java.util.Objects;
+
 /**
  * 8.3.4.2 Maparea (overprinted annotations)
  *
@@ -40,5 +42,22 @@ public class MapArea extends Annotation {
 
     public Area getArea() {
         return area;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof MapArea other)) {
+            return false;
+        }
+
+        return type == other.getType()
+                && Objects.equals(this.url, other.url)
+                && Objects.equals(this.comment, other.comment)
+                && Objects.equals(this.area, other.area);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, url, comment, area);
     }
 }

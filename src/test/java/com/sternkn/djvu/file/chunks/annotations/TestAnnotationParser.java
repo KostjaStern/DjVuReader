@@ -47,6 +47,22 @@ public class TestAnnotationParser {
     }
 
     @Test
+    public void testGetMapAreas() {
+        AnnotationParser parser = new AnnotationParser(ANNOTATION_SRC);
+        List<MapArea> mapAreas = parser.getMapAreas();
+
+        assertEquals(4, mapAreas.size());
+
+        assertEquals(new MapArea(
+                new MapUrl("\"http://www.test.com/\"", null, false),
+                "\"It \\\"is a link\"",
+                new Rectangle(543, 2859, 408, 183)
+                        .setOpacity(50)
+                        .setBorder(new Border().setXor(true))
+        ), mapAreas.get(0));
+    }
+
+    @Test
     public void testGetBackgroundColor() {
         AnnotationParser parser = new AnnotationParser(ANNOTATION_SRC);
         BackgroundColor bgColor = parser.getBackgroundColor();
@@ -60,7 +76,7 @@ public class TestAnnotationParser {
         AnnotationParser parser = new AnnotationParser("aa (background) ww");
 
         Exception exception = assertThrows(InvalidAnnotationException.class, parser::getBackgroundColor);
-        assertEquals("Invalid background color annotation (without color)", exception.getMessage());
+        assertEquals("Node BACKGROUND_COLOR must have at least one argument", exception.getMessage());
     }
 
     @Test
@@ -173,30 +189,5 @@ public class TestAnnotationParser {
 
         Exception exception = assertThrows(InvalidAnnotationException.class, parser::getAlignment);
         assertEquals("Invalid vertical value: RIGHT", exception.getMessage());
-    }
-
-    @Test
-    public void testParseColorValidCase() {
-        Color color = AnnotationParser.parseColor("#112fAB");
-
-        assertEquals(17, color.getRed());
-        assertEquals(47, color.getGreen());
-        assertEquals(171, color.getBlue());
-    }
-
-    @Test
-    public void testParseColorInvalidColorFormat() {
-        Exception exception = assertThrows(InvalidAnnotationException.class,
-                () -> AnnotationParser.parseColor("#112fAG"));
-
-        assertEquals("Invalid color value: #112fAG", exception.getMessage());
-    }
-
-    @Test
-    public void testParseColorTextIsNull() {
-        Exception exception = assertThrows(InvalidAnnotationException.class,
-                () -> AnnotationParser.parseColor(null));
-
-        assertEquals("Text can not be null or blank", exception.getMessage());
     }
 }

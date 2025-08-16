@@ -7,16 +7,15 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
-import static com.sternkn.djvu.file.utils.NumberUtils.hexToInt;
+import static com.sternkn.djvu.file.chunks.annotations.ParserUtils.findNodes;
+import static com.sternkn.djvu.file.chunks.annotations.ParserUtils.parseColorNode;
 import static com.sternkn.djvu.file.utils.StringUtils.getChar;
 
 public class AnnotationParser {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationParser.class);
 
-    private static final String COLOR_PATTERN = "^#[0-9a-fA-F]{6}$";
     private static final String ZOOM_FACTOR_PATTERN = "^d\\d{1,3}$";
 
     private static final String NODE_START = "(";
@@ -31,30 +30,12 @@ public class AnnotationParser {
     }
 
     public BackgroundColor getBackgroundColor() {
-        List<Node> bgNodes = findAnnotationNodes(RecordType.BACKGROUND_COLOR);
-        if (bgNodes.isEmpty()) {
-            return null;
-        }
-
-        if (bgNodes.size() > 1) {
-            LOG.warn("We have several background color annotations. We will take the first one into account.");
-        }
-
-        Node node = bgNodes.getFirst();
-
-        if (node.getArguments().size() == 1) {
-            throw new InvalidAnnotationException("Invalid background color annotation (without color)");
-        }
-
-        if (node.getArguments().size() > 2) {
-            LOG.warn("It looks like a background color annotation has invalid or unsupported format");
-        }
-
-        return new BackgroundColor(parseColor(node.getArguments().get(1)));
+        Color color = parseColorNode(nodes, TagType.BACKGROUND_COLOR);
+        return color == null ? null : new BackgroundColor(color);
     }
 
     public InitialZoom getInitialZoom() {
-        List<Node> zoomNodes = findAnnotationNodes(RecordType.INITIAL_ZOOM);
+        List<Node> zoomNodes = findAnnotationNodes(TagType.INITIAL_ZOOM);
         if (zoomNodes.isEmpty()) {
             return null;
         }
@@ -85,7 +66,7 @@ public class AnnotationParser {
     }
 
     public InitialDisplayLevel  getInitialDisplayLevel() {
-        List<Node> displayNodes = findAnnotationNodes(RecordType.INITIAL_DISPLAY_LEVEL);
+        List<Node> displayNodes = findAnnotationNodes(TagType.INITIAL_DISPLAY_LEVEL);
         if (displayNodes.isEmpty()) {
             return null;
         }
@@ -115,7 +96,7 @@ public class AnnotationParser {
     }
 
     public Alignment getAlignment() {
-        List<Node> alignmentNodes = findAnnotationNodes(RecordType.ALIGNMENT);
+        List<Node> alignmentNodes = findAnnotationNodes(TagType.ALIGNMENT);
         if (alignmentNodes.isEmpty()) {
             return null;
         }
@@ -151,7 +132,7 @@ public class AnnotationParser {
     }
 
     public List<MapArea> getMapAreas() {
-        List<Node> mapAreaNodes = findAnnotationNodes(RecordType.MAP_AREA);
+        List<Node> mapAreaNodes = findAnnotationNodes(TagType.MAP_AREA);
         return mapAreaNodes.stream().map(this::parseMapArea).toList();
     }
 
@@ -168,13 +149,13 @@ public class AnnotationParser {
             comment = nodeArgSize > 2 ? node.getArguments().get(2) : null;
         }
 
-        Area area = parseArea(node);
+        Area area = Area.parseArea(node);
 
         return new MapArea(url, comment, area);
     }
 
     private MapUrl parseMapUrl(Node node) {
-        List<Node> urlNodes = findAnnotationNodes(node.getChildren(), RecordType.URL);
+        List<Node> urlNodes = findNodes(node.getChildren(), TagType.URL);
         if (urlNodes.size() > 1) {
             LOG.warn("It looks like an invalid map area annotation. We have several ({}) url objects", urlNodes.size());
         }
@@ -200,20 +181,8 @@ public class AnnotationParser {
     }
 
 
-    private Area parseArea(Node node) {
-        return null;
-    }
-
-    private List<Node> findAnnotationNodes(RecordType recordType) {
-        return findAnnotationNodes(nodes, recordType);
-    }
-
-    private List<Node> findAnnotationNodes(List<Node> nodes, RecordType recordType) {
-        final String bgToken = recordType.getToken();
-        return nodes.stream()
-                .filter(n -> !n.getArguments().isEmpty())
-                .filter(n -> bgToken.equals(n.getArguments().getFirst()))
-                .toList();
+    private List<Node> findAnnotationNodes(TagType recordType) {
+        return findNodes(nodes, recordType);
     }
 
     static List<Node> parse(String text) {
@@ -304,25 +273,6 @@ public class AnnotationParser {
         }
 
         return result;
-    }
-
-    /**
-     *   text - coded color in this format: #RRGGBB
-     */
-    static Color parseColor(String text) {
-        if (text == null || text.isBlank()) {
-            throw new InvalidAnnotationException("Text can not be null or blank");
-        }
-
-        if (!text.matches(COLOR_PATTERN)) {
-            throw new InvalidAnnotationException("Invalid color value: " + text);
-        }
-
-        final String red = text.substring(1, 3);
-        final String green = text.substring(3, 5);
-        final String blue = text.substring(5, 7);
-
-        return new Color(hexToInt(blue), hexToInt(green), hexToInt(red));
     }
 
     static Integer parseZoomFactor(String text) {

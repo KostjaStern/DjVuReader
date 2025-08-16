@@ -2,6 +2,8 @@ package com.sternkn.djvu.file.chunks.annotations;
 
 import com.sternkn.djvu.file.chunks.Color;
 
+import java.util.Objects;
+
 public class Rectangle extends Area {
     private final int xmin;
     private final int ymin;
@@ -10,7 +12,7 @@ public class Rectangle extends Area {
 
     private boolean isBorderAlwaysVisible;
     private Color highlightedColor;
-    private int opacity; // 0-100, default of 50
+    private int opacity;
 
     public Rectangle(int xmin, int ymin, int width, int height) {
         super(AreaType.RECTANGLE);
@@ -29,10 +31,6 @@ public class Rectangle extends Area {
         return this;
     }
 
-    public Rectangle setBorder(Border border) {
-        this.border = border;
-        return this;
-    }
     public Rectangle setOpacity(int opacity) {
         this.opacity = opacity;
         return this;
@@ -64,5 +62,27 @@ public class Rectangle extends Area {
 
     public Color getHighlightedColor() {
         return highlightedColor;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Rectangle other)) {
+            return false;
+        }
+
+        return type == other.getType()
+                && Objects.equals(this.border, other.border)
+                && this.xmin == other.xmin
+                && this.ymin == other.ymin
+                && this.width == other.width
+                && this.height == other.height
+                && isBorderAlwaysVisible == other.isBorderAlwaysVisible
+                && Objects.equals(this.highlightedColor, other.highlightedColor)
+                && this.opacity == other.opacity;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, border, xmin, ymin, width, height, isBorderAlwaysVisible, highlightedColor, opacity);
     }
 }
