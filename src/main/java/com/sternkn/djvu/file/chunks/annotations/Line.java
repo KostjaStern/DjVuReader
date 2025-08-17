@@ -68,4 +68,10 @@ public class Line extends Area {
     public int hashCode() {
         return Objects.hash(type, border, startPoint,  endPoint, hasArrow, width, lineColor);
     }
+
+    @Override
+    public String toString() {
+        return String.format("{type: %s, startPoint: %s, endPoint: %s, hasArrow: %s, width: %s, lineColor: %s, border: %s}",
+            type,  startPoint,  endPoint, hasArrow, width, lineColor, border);
+    }
 }

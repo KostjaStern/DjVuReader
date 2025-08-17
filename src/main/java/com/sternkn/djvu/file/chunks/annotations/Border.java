@@ -91,4 +91,10 @@ public class Border {
     public int hashCode() {
         return Objects.hash(none, xor, color, shadowIn,  shadowOut, shadowEIn, shadowEOut);
     }
+
+    @Override
+    public String toString() {
+        return String.format("{color: %s, xor: %s, none: %s, shadowIn: %s, shadowOut: %s, shadowEIn: %s, shadowEOut: %s}",
+                color,  xor, none, shadowIn, shadowOut, shadowEIn, shadowEOut);
+    }
 }

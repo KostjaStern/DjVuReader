@@ -53,7 +53,7 @@ public class Main {
         try (DjVuFileReader reader = new DjVuFileReader(file)) {
 
             DjVuFile djvuFile = reader.readFile();
-            List<Chunk> chunks = djvuFile.chunks();
+            List<Chunk> chunks = djvuFile.getChunks();
             System.out.println("chunks.size() = " + chunks.size());
 /*
             Set<ChunkId> chunkIds = chunks.stream().map(Chunk::getChunkId).collect(Collectors.toSet());

@@ -23,4 +23,9 @@ public class InitialZoom extends Annotation {
     public Integer getZoomFactor() {
         return zoomFactor;
     }
+
+    @Override
+    public String toString() {
+        return String.format("{zoomType: %s, zoomFactor: %s}", zoomType,  zoomFactor);
+    }
 }

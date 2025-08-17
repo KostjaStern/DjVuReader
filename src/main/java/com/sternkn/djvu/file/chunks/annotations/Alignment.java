@@ -33,4 +33,9 @@ public class Alignment extends Annotation {
     public AlignmentType getVertical() {
         return vertical;
     }
+
+    @Override
+    public String toString() {
+        return String.format("{horizontal: %s, vertical: %s}", horizontal, vertical);
+    }
 }

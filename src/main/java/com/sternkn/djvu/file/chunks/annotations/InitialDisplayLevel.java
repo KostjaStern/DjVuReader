@@ -16,4 +16,9 @@ public class InitialDisplayLevel extends Annotation {
     public ModeType getModeType() {
         return modeType;
     }
+
+    @Override
+    public String toString() {
+        return String.format("{modeType: %s}", modeType);
+    }
 }

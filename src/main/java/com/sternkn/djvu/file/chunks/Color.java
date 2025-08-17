@@ -57,6 +57,6 @@ public class Color {
 
     @Override
     public String toString() {
-        return String.format("Color{blue: %s, green: %s, red: %s, alpha: %s}", blue, green, red, alpha);
+        return String.format("{blue: %s, green: %s, red: %s, alpha: %s}", blue, green, red, alpha);
     }
 }

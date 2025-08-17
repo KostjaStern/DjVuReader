@@ -62,4 +62,10 @@ public class Oval extends Area {
     public int hashCode() {
         return Objects.hash(type, border, xmin,  ymin, width, height, isBorderAlwaysVisible);
     }
+
+    @Override
+    public String toString() {
+        return String.format("{type: %s, xmin: %s, ymin: %s, width: %s, height: %s, isBorderAlwaysVisible: %s, border: %s}",
+                type,  xmin,  ymin, width, height, isBorderAlwaysVisible, border);
+    }
 }

@@ -19,4 +19,9 @@ public class BackgroundColor extends Annotation {
     public Color getColor() {
         return color;
     }
+
+    @Override
+    public String toString() {
+        return String.format("{color: %s}", color);
+    }
 }

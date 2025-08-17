@@ -4,6 +4,8 @@ import com.sternkn.djvu.file.chunks.Color;
 
 import java.util.Objects;
 
+import static com.sternkn.djvu.file.utils.StringUtils.NL;
+
 public class Text extends Area {
     private final int xmin;
     private final int ymin;
@@ -82,5 +84,20 @@ public class Text extends Area {
     @Override
     public int hashCode() {
         return Objects.hash(type, border, xmin, ymin, width, height, backgroundColor, textColor, pushPin);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append("{type: ").append(type)
+              .append(", xmin: ").append(xmin)
+              .append(", ymin: ").append(ymin)
+              .append(", width: ").append(width)
+              .append(", height: ").append(height).append(",").append(NL)
+              .append(" backgroundColor: ").append(backgroundColor)
+              .append(", textColor: ").append(textColor)
+              .append(", pushPin: ").append(pushPin)
+              .append(", border: ").append(border).append("}");
+        return buffer.toString();
     }
 }

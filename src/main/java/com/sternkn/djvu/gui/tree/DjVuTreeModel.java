@@ -1,6 +1,7 @@
 package com.sternkn.djvu.gui.tree;
 
 import com.sternkn.djvu.file.DjVuFile;
+import com.sternkn.djvu.file.chunks.AnnotationChunk;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
@@ -68,12 +69,12 @@ public class DjVuTreeModel {
     }
 
     private String getDjVuChunkStatistics() {
-        Map<String, Long> compositeChunksStat = this.djvuFile.chunks().stream()
+        Map<String, Long> compositeChunksStat = this.djvuFile.getChunks().stream()
             .filter(Chunk::isComposite)
             .map(Chunk::getCompositeChunkId)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        Map<String, Long> dataChunksStat = this.djvuFile.chunks().stream()
+        Map<String, Long> dataChunksStat = this.djvuFile.getChunks().stream()
                 .filter(c -> !c.isComposite())
                 .map(c -> c.getChunkId().name())
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
@@ -99,7 +100,7 @@ public class DjVuTreeModel {
     }
 
     private DefaultTreeModel getTreeModel() {
-        List<Chunk> chunks = this.djvuFile.chunks();
+        List<Chunk> chunks = this.djvuFile.getChunks();
         DefaultMutableTreeNode[] nodes = new DefaultMutableTreeNode[chunks.size()];
 
         int index = 0;
@@ -184,6 +185,7 @@ public class DjVuTreeModel {
             case ChunkId.INCL -> new InclChunk(chunk);
             case ChunkId.FGbz -> new FGbzChunk(chunk);
             case ChunkId.TXTz -> new TXTzChunk(chunk);
+            case ChunkId.ANTz, ChunkId.ANTa -> new AnnotationChunk(chunk);
             default -> chunk;
         };
 

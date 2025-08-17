@@ -188,7 +188,6 @@ public class AnnotationParser {
         return new MapUrl(url, target, true);
     }
 
-
     private List<Node> findAnnotationNodes(TagType recordType) {
         return findNodes(nodes, recordType);
     }

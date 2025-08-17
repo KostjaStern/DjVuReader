@@ -60,4 +60,9 @@ public class MapArea extends Annotation {
     public int hashCode() {
         return Objects.hash(type, url, comment, area);
     }
+
+    @Override
+    public String toString() {
+        return String.format("{url: %s, comment: %s, area: %s}", url,  comment, area);
+    }
 }
