@@ -82,8 +82,7 @@ public class JB2CodecDecoder {
     private int short_list_pos;
 
     private boolean refinementp;
-
-
+    
     private BitContext[] getInitialBitContext(int size) {
         BitContext[] arr = new BitContext[size];
         for (int i = 0; i < size; i++) {
@@ -92,42 +91,6 @@ public class JB2CodecDecoder {
         return arr;
     }
 
-    /*
-    JB2Dict::JB2Codec::JB2Codec(const bool xencoding)
-  : encoding(xencoding),
-    cur_ncell(0),
-    gbitcells(bitcells,CELLCHUNK+CELLEXTRA),
-    gleftcell(leftcell,CELLCHUNK+CELLEXTRA),
-    grightcell(rightcell,CELLCHUNK+CELLEXTRA),
-    refinementp(false),
-    gotstartrecordp(0),
-    dist_comment_byte(0),
-    dist_comment_length(0),
-    dist_record_type(0),
-    dist_match_index(0),
-    dist_refinement_flag(0),
-    abs_loc_x(0),
-    abs_loc_y(0),
-    abs_size_x(0),
-    abs_size_y(0),
-    image_size_dist(0),
-    inherited_shape_count_dist(0),
-    offset_type_dist(0),
-    rel_loc_x_current(0),
-    rel_loc_x_last(0),
-    rel_loc_y_current(0),
-    rel_loc_y_last(0),
-    rel_size_x(0),
-    rel_size_y(0)
-{
-  memset(bitdist, 0, sizeof(bitdist));
-  memset(cbitdist, 0, sizeof(cbitdist));
-  // Initialize numcoder
-  bitcells[0] = 0; // dummy cell
-  leftcell[0] = rightcell[0] = 0;
-  cur_ncell = 1;
-}
-     */
     public JB2CodecDecoder(InputStream inputStream) {
         this.zpDecoder = new ZpCodecInputStream(inputStream);
 

@@ -11,6 +11,11 @@ import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.TXTzChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
+import com.sternkn.djvu.file.coders.BufferPointer;
+import com.sternkn.djvu.file.coders.GBitmap;
+import com.sternkn.djvu.file.coders.JB2CodecDecoder;
+import com.sternkn.djvu.file.coders.JB2Dict;
+import com.sternkn.djvu.file.coders.JB2Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +27,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,6 +45,8 @@ import static com.sternkn.djvu.file.utils.StringUtils.padRight;
 public class DjVuTreeModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuTreeModel.class);
 
+    private static final int[] WHITE = {255, 255, 255, 255}; // Red, Green, Blue, Alpha
+    private static final int[] BLACK = {0, 0, 0, 255};
     private static final Font MONOSPACED_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
     private DjVuFile djvuFile;
@@ -177,6 +187,9 @@ public class DjVuTreeModel {
     }
 
     private Component getChunkComponent(Chunk chunk) {
+        if (chunk.getChunkId() == ChunkId.Sjbz) {
+            return getBitonalImageComponent(chunk);
+        }
 
         Chunk decodedChunk = switch (chunk.getChunkId()) {
             case ChunkId.DIRM -> new DirectoryChunk(chunk);
@@ -211,6 +224,84 @@ public class DjVuTreeModel {
         panel.add(tree);
 
         return panel;
+    }
+
+    private Component getBitonalImageComponent(Chunk chunk) {
+        Chunk sharedShape = this.djvuFile.findSharedShapeChunk(chunk);
+        JB2Dict dict = null;
+        if (sharedShape != null) {
+            dict = new JB2Dict();
+            JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(sharedShape.getData()));
+            decoder.decode(dict);
+        }
+
+        JB2Image image = new JB2Image(dict);
+        JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(chunk.getData()));
+        decoder.decode(image);
+
+        GBitmap bitmap = image.get_bitmap();
+
+        int height = bitmap.rows();
+        int width = bitmap.columns();
+        LOG.debug("bitmap: border = {}, height = {}, width = {}", bitmap.border(), height,  width);
+
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        WritableRaster raster = img.getRaster();
+
+        for (int rowId = 0; rowId < bitmap.rows(); rowId++) {
+            BufferPointer row = bitmap.getRow(rowId);
+            for (int colId = 0; colId < bitmap.columns(); colId++) {
+                int[] color = row.getValue(colId) == 0 ? WHITE : BLACK;
+                raster.setPixel(colId, bitmap.rows() - rowId - 1, color);
+            }
+        }
+
+        JTextArea textArea = new JTextArea(3, 60);
+        textArea.setFont(MONOSPACED_FONT);
+        textArea.setText(String.format(
+        """
+         Bitmap:
+           border = %s
+           height = %s
+           width = %s
+        """
+        , bitmap.border(), height,  width));
+        textArea.setEditable(false);
+
+        JScrollPane topPanel  = new JScrollPane();
+        topPanel.setViewportView(textArea);
+
+        JScrollPane bottomPanel = new JScrollPane();
+        ImageCanvas imageCanvas = new ImageCanvas(img);
+        bottomPanel.setViewportView(imageCanvas);
+        imageCanvas.setVisible(true);
+
+        JSplitPane panel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, bottomPanel);
+
+        // JPanel panel = new JPanel();
+        // GridLayout chunkInfoLayout = new GridLayout(2,1);
+        // panel.setLayout(chunkInfoLayout);
+
+        return panel;
+    }
+
+    private static class ImageCanvas extends Canvas {
+        BufferedImage image;
+
+        public ImageCanvas(BufferedImage image) {
+            this.image = image;
+        }
+
+        @Override
+        public void paint(Graphics g) {
+            super.paint(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.scale(0.2, 0.2);
+
+            if (image != null) {
+                g.drawImage(image, 40, 10, this); // Draw the image at (0,0)
+            }
+        }
     }
 
     private void showPopupMenu(JTree tree, MouseEvent event) {
