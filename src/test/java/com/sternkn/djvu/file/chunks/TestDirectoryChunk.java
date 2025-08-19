@@ -88,11 +88,55 @@ public class TestDirectoryChunk extends TestSupport {
                 components.get(290));
     }
 
+    @Test
+    public void testDirectoryChunkWithSharedAnnotation() throws IOException {
+        inputStream = readStream("DIRM_with_shared_annotation.data");
+        byte[] buffer = inputStream.readAllBytes();
+
+        Chunk chunk = Chunk.builder()
+                .withChunkId(ChunkId.DIRM)
+                .withData(buffer)
+                .withSize(buffer.length).build();
+
+        DirectoryChunk directoryChunk = new DirectoryChunk(chunk);
+
+        assertEquals(1, directoryChunk.getVersion());
+        assertTrue(directoryChunk.isBundled());
+        assertEquals(387, directoryChunk.getNumberOfComponents());
+
+        List<ComponentInfo> components = directoryChunk.getComponents();
+
+        assertEquals(387, components.size());
+
+        assertEquals(createComponent(6304, 876, 3, "shared_anno.iff"),
+                components.get(0));
+        assertEquals(createComponent(7180, 61333, 65, "nb0001.djvu", "C1"),
+                components.get(1));
+        assertEquals(createComponent(68514, 14866, 65, "nb0002.djvu", "1"),
+                components.get(2));
+
+        assertEquals(createComponent(39526846, 82481, 65, "nb0384.djvu", "383"),
+                components.get(384));
+        assertEquals(createComponent(39609328, 127400, 65, "nb0385.djvu", "384"),
+                components.get(385));
+        assertEquals(createComponent(39736728, 124369, 65, "nb0386.djvu", "C2"),
+                components.get(386));
+    }
+
     private ComponentInfo createComponent(long offset, int size, int flag, String id) {
         return new ComponentInfo()
                 .setOffset(offset)
                 .setSize(size)
                 .setFlag(flag)
                 .setId(id);
+    }
+
+    private ComponentInfo createComponent(long offset, int size, int flag, String id, String title) {
+        return new ComponentInfo()
+                .setOffset(offset)
+                .setSize(size)
+                .setFlag(flag)
+                .setId(id)
+                .setTitle(title);
     }
 }

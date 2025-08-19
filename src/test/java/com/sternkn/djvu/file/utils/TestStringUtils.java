@@ -15,4 +15,9 @@ public class TestStringUtils {
     public void testPadLeft() {
         assertEquals("        12", StringUtils.padLeft(12, 10));
     }
+
+    @Test
+    public void testRepeatString() {
+        assertEquals("----------", StringUtils.repeatString("-", 10));
+    }
 }

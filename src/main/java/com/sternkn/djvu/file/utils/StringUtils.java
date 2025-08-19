@@ -9,10 +9,14 @@ public class StringUtils {
         return String.format("%-" + n + "s", data);
     }
 
+    public static String repeatString(String str, int n) {
+        return str.repeat(n);
+    }
+
     public static String padLeft(Object data, int n) {
         return String.format("%" + n + "s", data);
     }
-
+    
     /**
      *
      * @param text - UTF-8 string

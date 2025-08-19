@@ -1,5 +1,6 @@
 package com.sternkn.djvu.file.chunks;
 
+import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.coders.BSByteInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.readZeroTerminatedString;
 import static com.sternkn.djvu.file.utils.StringUtils.NL;
 import static com.sternkn.djvu.file.utils.StringUtils.padRight;
+import static com.sternkn.djvu.file.utils.StringUtils.repeatString;
 
 /*
   8.3.2 Directory Chunk: DIRM
@@ -23,6 +25,9 @@ import static com.sternkn.djvu.file.utils.StringUtils.padRight;
  */
 public class DirectoryChunk extends Chunk {
     private static final Logger LOG = LoggerFactory.getLogger(DirectoryChunk.class);
+
+    private static final int COLUMN_15 = 15;
+    private static final int COLUMN_30 = 30;
 
     private final boolean isBundled;
     private final int version;
@@ -40,6 +45,16 @@ public class DirectoryChunk extends Chunk {
         components = IntStream.range(0, nFiles).mapToObj(i -> new ComponentInfo()).toList();
 
         readComponents(byteStream);
+
+        validateComponents();
+    }
+
+    private void validateComponents() {
+        long sharedAnnotationsCount = components.stream()
+            .filter(c -> c.getType() == ComponentType.SHARED_ANNO).count();
+        if (sharedAnnotationsCount > 1) {
+            throw new DjVuFileException("Directory chunk can not have more than one SHARED_ANNO component");
+        }
     }
 
     public boolean isBundled() {
@@ -61,33 +76,34 @@ public class DirectoryChunk extends Chunk {
     @Override
     public String getDataAsText() {
         String parentData = super.getDataAsText();
+        String tableLine = repeatString("-", 3 * (COLUMN_15 + COLUMN_30));
 
         StringBuilder buffer = new StringBuilder();
         buffer.append(parentData);
         buffer.append(" Version: ").append(version).append(NL);
         buffer.append(" IsBundled: ").append(isBundled).append(NL);
         buffer.append(" Number of components: ").append(nFiles).append(NL).append(NL);
-        buffer.append("-----------------------------------------------------------------").append(NL);
-        buffer.append(" ").append(padRight("offset", 15))
-              .append(" ").append(padRight("size", 15))
-              .append(" ").append(padRight("type", 10))
-              .append(" ").append(padRight("id", 30))
-              .append(" ").append(padRight("name", 30))
-              .append(" ").append(padRight("title", 30));
+        buffer.append(tableLine).append(NL);
+        buffer.append(" ").append(padRight("offset", COLUMN_15))
+              .append(" ").append(padRight("size", COLUMN_15))
+              .append(" ").append(padRight("type", COLUMN_15))
+              .append(" ").append(padRight("id", COLUMN_30))
+              .append(" ").append(padRight("name", COLUMN_30))
+              .append(" ").append(padRight("title", COLUMN_30));
 
         buffer.append(NL);
-        buffer.append("-----------------------------------------------------------------").append(NL);
+        buffer.append(tableLine).append(NL);
         for (ComponentInfo component : getComponents()) {
-            buffer.append(" ").append(padRight(component.getOffset(), 15))
-                  .append(" ").append(padRight(component.getSize(), 15))
-                  .append(" ").append(padRight(component.getType(), 10))
-                  .append(" ").append(padRight(component.getId(), 30));
+            buffer.append(" ").append(padRight(component.getOffset(), COLUMN_15))
+                  .append(" ").append(padRight(component.getSize(), COLUMN_15))
+                  .append(" ").append(padRight(component.getType(), COLUMN_15))
+                  .append(" ").append(padRight(component.getId(), COLUMN_30));
 
             if (component.hasName()) {
-                buffer.append(" ").append(padRight(component.getName(), 30));
+                buffer.append(" ").append(padRight(component.getName(), COLUMN_30));
             }
             if (component.hasTitle()) {
-                buffer.append(" ").append(padRight(component.getTitle(), 30));
+                buffer.append(" ").append(padRight(component.getTitle(), COLUMN_30));
             }
 
             buffer.append(NL);
