@@ -1,11 +1,8 @@
 package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.coders.TestSupport;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,22 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDirectoryChunk extends TestSupport {
 
-    private InputStream inputStream;
-
-    @AfterEach
-    public void tearDown() throws IOException {
-        inputStream.close();
-    }
-
     @Test
-    public void testDirectoryChunkDecoding() throws IOException {
-        inputStream = readStream("DIRM_1.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.DIRM)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testDirectoryChunkDecoding() {
+        Chunk chunk = readChunk("DIRM_1.data", ChunkId.DIRM);
 
         DirectoryChunk directoryChunk = new DirectoryChunk(chunk);
 
@@ -54,14 +38,8 @@ public class TestDirectoryChunk extends TestSupport {
     }
 
     @Test
-    public void testOneMoreDirectoryChunkDecoding() throws IOException {
-        inputStream = readStream("DIRM_2.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.DIRM)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testOneMoreDirectoryChunkDecoding() {
+        Chunk chunk = readChunk("DIRM_2.data", ChunkId.DIRM);
 
         DirectoryChunk directoryChunk = new DirectoryChunk(chunk);
 
@@ -89,14 +67,8 @@ public class TestDirectoryChunk extends TestSupport {
     }
 
     @Test
-    public void testDirectoryChunkWithSharedAnnotation() throws IOException {
-        inputStream = readStream("DIRM_with_shared_annotation.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.DIRM)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testDirectoryChunkWithSharedAnnotation() {
+        Chunk chunk = readChunk("DIRM_with_shared_annotation.data", ChunkId.DIRM);
 
         DirectoryChunk directoryChunk = new DirectoryChunk(chunk);
 

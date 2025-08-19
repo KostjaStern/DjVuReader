@@ -1,39 +1,16 @@
 package com.sternkn.djvu.file.chunks;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 
 import com.sternkn.djvu.file.coders.TestSupport;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestInfoChunk extends TestSupport {
 
-    private InputStream inputStream;
-    private byte[] buffer;
-
-    @BeforeEach
-    public void setUp() throws IOException {
-        inputStream = readStream("INFO_6.data");
-        buffer = inputStream.readAllBytes();
-    }
-
-    @AfterEach
-    public void tearDown() throws IOException {
-        inputStream.close();
-        buffer = null;
-    }
-
     @Test
     public void testInfoChunk() {
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.INFO)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+        Chunk chunk = readChunk("INFO_6.data", ChunkId.INFO);
 
         InfoChunk infoChunk = new InfoChunk(chunk);
 

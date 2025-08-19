@@ -1,5 +1,8 @@
 package com.sternkn.djvu.file.coders;
 
+import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.ChunkId;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -9,6 +12,30 @@ public class TestSupport {
 
     public InputStream readStream(String fileName) {
         return classLoader.getResourceAsStream(PATH_CHUNKS + fileName);
+    }
+
+    public byte[] readByteBuffer(String fileName) {
+        try (InputStream inputStream = classLoader.getResourceAsStream(PATH_CHUNKS + fileName)) {
+            return inputStream != null ? inputStream.readAllBytes() : new byte[0];
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Chunk readChunk(String fileName, ChunkId chunkId) {
+        return readChunk(fileName, chunkId, null, 0L);
+    }
+
+    public Chunk readChunk(String fileName, ChunkId chunkId, Chunk parent, Long offsetStart) {
+        byte[] buffer = readByteBuffer(fileName);
+
+        return Chunk.builder()
+                .withChunkId(chunkId)
+                .withData(buffer)
+                .withParent(parent)
+                .withOffsetStart(offsetStart)
+                .withSize(buffer.length).build();
     }
 
     JB2Image readImage(String imageFileName) {

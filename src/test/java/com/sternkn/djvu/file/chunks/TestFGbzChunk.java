@@ -1,32 +1,17 @@
 package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.coders.TestSupport;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestFGbzChunk extends TestSupport {
-    private InputStream inputStream;
-
-    @AfterEach
-    public void tearDown() throws IOException {
-        inputStream.close();
-    }
 
     @Test
-    public void testForegroundColorJB2ChunkDecoding() throws IOException {
-        inputStream = readStream("FGbz_1749.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.FGbz)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testForegroundColorJB2ChunkDecoding() {
+        Chunk chunk = readChunk("FGbz_1749.data", ChunkId.FGbz);
 
         FGbzChunk fgbzChunk = new FGbzChunk(chunk);
 

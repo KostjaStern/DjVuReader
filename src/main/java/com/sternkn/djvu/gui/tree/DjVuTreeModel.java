@@ -260,12 +260,13 @@ public class DjVuTreeModel {
         textArea.setFont(MONOSPACED_FONT);
         textArea.setText(String.format(
         """
+         %s
          Bitmap:
            border = %s
            height = %s
            width = %s
         """
-        , bitmap.border(), height,  width));
+        , chunk.getDataAsText(), bitmap.border(), height,  width));
         textArea.setEditable(false);
 
         JScrollPane topPanel  = new JScrollPane();

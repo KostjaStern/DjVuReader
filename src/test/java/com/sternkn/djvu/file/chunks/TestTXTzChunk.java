@@ -1,31 +1,15 @@
 package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.coders.TestSupport;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestTXTzChunk extends TestSupport {
-    private InputStream inputStream;
-
-    @AfterEach
-    public void tearDown() throws IOException {
-        inputStream.close();
-    }
 
     @Test
-    public void testTextChunkDecoding() throws IOException {
-        inputStream = readStream("TXTz_10.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.TXTz)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testTextChunkDecoding() {
+        Chunk chunk = readChunk("TXTz_10.data", ChunkId.TXTz);
 
         TXTzChunk textChunk = new TXTzChunk(chunk);
         assertEquals(ChunkId.TXTz, textChunk.getChunkId());
@@ -64,14 +48,8 @@ public class TestTXTzChunk extends TestSupport {
     }
 
     @Test
-    public void testOneMoreTextChunkDecoding() throws IOException {
-        inputStream = readStream("TXTz_69.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.TXTz)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testOneMoreTextChunkDecoding() {
+        Chunk chunk = readChunk("TXTz_69.data", ChunkId.TXTz);
 
         TXTzChunk textChunk = new TXTzChunk(chunk);
         assertEquals(ChunkId.TXTz, textChunk.getChunkId());
@@ -115,14 +93,8 @@ public class TestTXTzChunk extends TestSupport {
     }
 
     @Test
-    public void testTextChunkWithCharacterZoneDecoding() throws IOException {
-        inputStream = readStream("TXTz_33.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.TXTz)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testTextChunkWithCharacterZoneDecoding() {
+        Chunk chunk = readChunk("TXTz_33.data", ChunkId.TXTz);
 
         TXTzChunk textChunk = new TXTzChunk(chunk);
         assertEquals(ChunkId.TXTz, textChunk.getChunkId());

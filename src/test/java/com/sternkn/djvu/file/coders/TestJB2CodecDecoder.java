@@ -25,6 +25,28 @@ public class TestJB2CodecDecoder extends TestSupport {
     }
 
     @Test
+    public void testDecodeImageWithSharedAnnotation() {
+        JB2Image image = readImage("Sjbz_with_record_type_6.data");
+
+        assertEquals(1871, image.getWidth());
+        assertEquals(2633, image.getHeight());
+        assertEquals(0, image.get_blit_count());
+        assertEquals(0, image.get_shape_count());
+        assertEquals(0, image.get_inherited_shape_count());
+    }
+
+    @Test
+    public void testDecodeImageWithSharedAnnotation2() {
+        JB2Image image = readImage("Sjbz_with_record_type_6_2.data");
+
+        assertEquals(1871, image.getWidth());
+        assertEquals(2638, image.getHeight());
+        assertEquals(1259, image.get_blit_count());
+        assertEquals(351, image.get_shape_count());
+        assertEquals(0, image.get_inherited_shape_count());
+    }
+
+    @Test
     public void testDecodeImage() {
         JB2Image image = readImage("Sjbz_16.data", "Djbz_4.data");
 

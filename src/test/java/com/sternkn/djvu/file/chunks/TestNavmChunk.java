@@ -1,33 +1,17 @@
 package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.coders.TestSupport;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
 public class TestNavmChunk extends TestSupport {
-    private InputStream inputStream;
-
-    @AfterEach
-    public void tearDown() throws IOException {
-        inputStream.close();
-    }
 
     @Test
-    public void testNavmChunkDecoding() throws IOException {
-        inputStream = readStream("NAVM_2.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.NAVM)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testNavmChunkDecoding() {
+        Chunk chunk = readChunk("NAVM_2.data", ChunkId.NAVM);
 
         NavmChunk navChunk = new NavmChunk(chunk);
         assertEquals(ChunkId.NAVM, navChunk.getChunkId());
@@ -51,14 +35,8 @@ public class TestNavmChunk extends TestSupport {
     }
 
     @Test
-    public void testNavmChunkDecodingWithChildBookmarks() throws IOException {
-        inputStream = readStream("NAVM_1.data");
-        byte[] buffer = inputStream.readAllBytes();
-
-        Chunk chunk = Chunk.builder()
-                .withChunkId(ChunkId.NAVM)
-                .withData(buffer)
-                .withSize(buffer.length).build();
+    public void testNavmChunkDecodingWithChildBookmarks() {
+        Chunk chunk = readChunk("NAVM_1.data", ChunkId.NAVM);
 
         NavmChunk navChunk = new NavmChunk(chunk);
         assertEquals(ChunkId.NAVM, navChunk.getChunkId());
