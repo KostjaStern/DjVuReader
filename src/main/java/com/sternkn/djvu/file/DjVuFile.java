@@ -10,7 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 public class DjVuFile {
@@ -64,40 +65,30 @@ public class DjVuFile {
             throw new IllegalArgumentException("Chunk id " + chunk.getChunkId() + " is not a JB2 bitonal data chunk");
         }
 
-        final String sharedComponentID = getSharedComponentID(chunk);
-        if (sharedComponentID == null) {
+        final List<String> sharedComponentIDs = getSharedComponentIDs(chunk);
+        if (sharedComponentIDs.isEmpty()) {
             LOG.debug("No shared component ID found for chunk - {}", chunk);
             return null;
         }
 
-        Long offset = directoryChunk.getComponents().stream()
-            .filter(c -> Objects.equals(c.getId(),  sharedComponentID))
-            .map(ComponentInfo::getOffset).findFirst().orElse(null);
+        List<ComponentInfo> components = directoryChunk.getComponents().stream()
+            .filter(c -> sharedComponentIDs.contains(c.getId()))
+            .filter(c -> c.getType() == ComponentType.INCLUDED)
+            .toList();
 
-        ComponentInfo component = directoryChunk.getComponents().stream()
-                .filter(c -> Objects.equals(c.getId(),  sharedComponentID))
-                .findFirst().orElse(null);
-
-        if (component == null) {
-            LOG.warn("We can not find component for shared component ID: {}", sharedComponentID);
+        if (components.isEmpty()) {
+            LOG.warn("We can not find component for shared component IDs: {}", sharedComponentIDs);
             return null;
         }
 
-        if (component.getType() == ComponentType.SHARED_ANNO) {
-            LOG.debug("The shared component ID - {} has type {}", sharedComponentID,  component.getType());
-            return null;
-        }
-
-        if (offset == null) {
-            throw new DjVuFileException("We can not find directory record for shared component ID " + sharedComponentID);
-        }
-
-        Long chunkOffset = offset + OFFSET_ALIGNMENT;
+        Set<Long> offsets = components.stream()
+            .map(c -> c.getOffset() + OFFSET_ALIGNMENT)
+            .collect(Collectors.toSet());
 
         final Chunk sharedShapeChunk = this.chunks.stream()
-                .filter(c -> Objects.equals(c.getOffsetStart(),  chunkOffset)
-                                    && c.getChunkId() == ChunkId.Djbz)
-                .findFirst().orElse(null);
+            .filter(c -> c.getChunkId() == ChunkId.Djbz)
+            .filter(c -> offsets.contains(c.getOffsetStart()))
+            .findFirst().orElse(null);
 
         if (sharedShapeChunk == null) {
             LOG.debug("No shared shape chunk found for chunk - {}", chunk);
@@ -106,14 +97,13 @@ public class DjVuFile {
         return sharedShapeChunk;
     }
 
-    private String getSharedComponentID(Chunk chunk) {
+    private List<String> getSharedComponentIDs(Chunk chunk) {
         Chunk parent = chunk.getParent();
         return this.chunks.stream()
                 .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
                 .filter(c -> c.getChunkId() == ChunkId.INCL)
-                .findFirst()
                 .map(InclChunk::new)
                 .map(InclChunk::getSharedComponentID)
-                .orElse(null);
+                .toList();
     }
 }

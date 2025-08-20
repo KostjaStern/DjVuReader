@@ -46,6 +46,29 @@ public class TestDjVuFile extends TestSupport {
     }
 
     @Test
+    public void testFindSharedShapeChunkForMultipleInclCase() {
+        Chunk root = createChunk(ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
+        Chunk dir = readChunk("DIRM_mult_INCL_case.data", ChunkId.DIRM, root, 24L);
+
+        Chunk formWrapper = createChunk(ChunkId.FORM, SecondaryChunkId.DJVI, root, 1718L);
+
+        Chunk form1 = createChunk(ChunkId.FORM, SecondaryChunkId.DJVI, formWrapper, 108144L);
+
+        Chunk dict = createChunk(ChunkId.Djbz, null, form1, 108156L);
+
+        Chunk form2 = createChunk(ChunkId.FORM, SecondaryChunkId.DJVU, formWrapper, 185416L);
+        Chunk link1 = readChunk("INCL_mult_INCL_case_1.data", ChunkId.INCL, form2, 185446L);
+        Chunk link2 = readChunk("INCL_mult_INCL_case_2.data", ChunkId.INCL, form2, 185470L);
+        Chunk page1 = createChunk(ChunkId.Sjbz, null, form2, 185492L);
+
+        List<Chunk> chunks = List.of(root,  dir, formWrapper, form1, dict, form2, link1, link2, page1);
+        DjVuFile file = new DjVuFile(MagicHeader.AT_T, chunks, 5000000L);
+
+        Chunk chunk = file.findSharedShapeChunk(page1);
+        assertEquals(dict,  chunk);
+    }
+
+    @Test
     public void testNotFoundSharedShapeChunk() {
         Chunk root = createChunk(ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
         Chunk dir = readChunk("DIRM_with_shared_annotation.data", ChunkId.DIRM, root, 24L);
