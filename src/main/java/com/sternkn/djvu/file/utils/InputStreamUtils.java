@@ -14,6 +14,15 @@ public final class InputStreamUtils {
     private InputStreamUtils() {
     }
 
+    public static int read8(InputStream data) {
+        try {
+            return data.read();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static int read16(InputStream data) {
         return read16(data, ByteOrder.BIG_ENDIAN);
     }

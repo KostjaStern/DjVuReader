@@ -136,10 +136,18 @@ public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
      */
     @Override
     public int decoder() {
+        return decoder(0x8000 + (this.a >> 1));
+    }
+
+    @Override
+    public int IWdecoder() {
+        return decoder(0x8000 + ((this.a + this.a + this.a) >> 3));
+    }
+
+    public int decoder(long zzz) {
         final int bit;
         final SymbolType symbolType;
-        long z = 0x8000 + (this.a >> 1);
-        // dumpState(z, null);
+        long z = zzz;
 
         if (z > this.c) {
             symbolType = SymbolType.LPS;

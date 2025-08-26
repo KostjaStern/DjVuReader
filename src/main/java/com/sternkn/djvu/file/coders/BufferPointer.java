@@ -5,6 +5,11 @@ public class BufferPointer {
     private int[] buffer;
     private int pointer;
 
+    public BufferPointer(int[] buffer) {
+        this.buffer = buffer;
+        this.pointer = 0;
+    }
+
     public BufferPointer(int[] buffer, int pointer) {
         this.buffer = buffer;
         this.pointer = pointer;
@@ -12,6 +17,10 @@ public class BufferPointer {
 
     public int getValue(int offset) {
         return buffer[pointer + offset];
+    }
+
+    public int getCurrentValue() {
+        return buffer[pointer];
     }
 
     public void setValue(int offset, int value) {

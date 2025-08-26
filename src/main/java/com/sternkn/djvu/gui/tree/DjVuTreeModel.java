@@ -226,6 +226,10 @@ public class DjVuTreeModel {
         return panel;
     }
 
+    /*
+        https://habr.com/ru/articles/331618/ - Smoothing images with Peron and Malik's anisotropic diffusion filter
+        Methods of Bitonal Image Conversion for Modern and Classic Documents
+     */
     private Component getBitonalImageComponent(Chunk chunk) {
         Chunk sharedShape = this.djvuFile.findSharedShapeChunk(chunk);
         JB2Dict dict = null;
