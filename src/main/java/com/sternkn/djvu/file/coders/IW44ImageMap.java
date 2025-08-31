@@ -2,6 +2,7 @@ package com.sternkn.djvu.file.coders;
 
 
 import com.sternkn.djvu.file.DjVuFileException;
+import com.sternkn.djvu.file.chunks.Color;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,8 @@ import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedInt;
 public class IW44ImageMap {
 
     private static final int IWALLOCSIZE = 4080;
+    private static final int IW_SHIFT = 6;
+    private static final int IW_ROUND = (1 << (IW_SHIFT - 1));
 
     // geometry
     int iw;
@@ -79,6 +82,357 @@ public class IW44ImageMap {
         top += n;
         return buffer;
     }
+
+    // void image(signed char *img8, int rowsize, int pixsep=1, int fast=0);
+    public void image(GPixmap ppm, ColorName colorName, int fast)
+    {
+        // Allocate reconstruction buffer
+        int[] data16;
+        int sz = bw * bh;
+        if ((sz / bw) != bh) { // multiplication overflow
+            throw new DjVuFileException("IW44Image: image size exceeds maximum (corrupted file?)");
+        }
+
+        // GPBuffer<short> gdata16(data16,sz);
+        // BufferPointer data16 = new BufferPointer(new int[sz]);
+        data16 = new int[sz];
+
+        // Copy coefficients
+        int i;
+        BufferPointer p = new BufferPointer(data16);
+        int block_ind = 0;
+        IW44ImageBlock block = null;
+        for (i = 0; i < bh; i += 32)
+        {
+            for (int j = 0; j < bw; j += 32)
+            {
+                block = blocks[block_ind];
+                // short liftblock[1024];
+                // transfer into IW44Image::Block (apply zigzag and scaling)
+                // void  write_liftblock(short *coeff, int bmin=0, int bmax=64) const;
+                int[] liftblock = block.write_liftblock(0, 64);
+
+                block_ind++;
+                // block = blocks[block_ind];
+                // transfer into coefficient matrix at (p+j)
+                BufferPointer pp = p.shiftPointer(j); // new BufferPointer(p, j);
+                BufferPointer pl = new BufferPointer(liftblock);
+                for (int ii = 0; ii < 32; ii++, pp = pp.shiftPointer(bw), pl = pl.shiftPointer(32)) {
+                    // memcpy(( void*)pp, ( void*)pl, 32 * sizeof( short));
+                    for (int ind = 0; ind < 32; ind++) {
+                        pp.setValue(ind, pl.getValue(ind));
+                    }
+                }
+            }
+            // next row of blocks
+            p = p.shiftPointer(32 * bw);
+        }
+
+        // Reconstruction
+        if (fast != 0)
+        {
+            backward(data16, iw, ih, bw, 32, 2);
+            p = new BufferPointer(data16);
+            for (i = 0; i < bh; i += 2, p = p.shiftPointer(bw)) {
+                for (int jj = 0; jj < bw; jj += 2, p = p.shiftPointer(2)) {
+                    p.setValue(1, p.getCurrentValue());
+                    p.setValue(bw + 1, p.getValue(1));
+                    p.setValue(bw, p.getValue(bw + 1));
+                }
+            }
+        }
+        else
+        {
+            backward(data16, iw, ih, bw, 32, 1);
+        }
+
+        // Copy result into image
+        p = new BufferPointer(data16);
+        ArrayPointer<PixelColor> row = new ArrayPointer<>(ppm.getPixels());
+        for (i = 0; i < ih; i++)
+        {
+            ArrayPointer<PixelColor> pix = row;
+            for (int j = 0; j < iw; j += 1, pix = pix.shiftPointer(1)) // pixsep
+            {
+                int x = (p.getValue(j) + IW_ROUND) >> IW_SHIFT;
+                if (x < -128) {
+                    x = -128;
+                } else if (x > 127) {
+                    x = 127;
+                }
+
+                PixelColor pixel = pix.getCurrentValue();
+                if (pixel == null) {
+                    pixel = new PixelColor();
+                    pix.setValue(0, pixel);
+                }
+                pixel.setColor(colorName, x);
+            }
+            row.shift(ppm.getRows());
+            p.shift(bw);
+        }
+    }
+
+    void backward(int[] p, int w, int h, int rowsize, int begin, int end) {
+        for (int scale = begin >> 1; scale >= end; scale >>= 1) {
+            filter_bv(p, w, h, rowsize, scale);
+            filter_bh(p, w, h, rowsize, scale);
+        }
+    }
+
+    static void filter_bv(int[] p, int w, int h, int rowsize, int scale) {
+        int y = 0;
+        int s = scale * rowsize;
+        int s3 = s + s + s;
+        h = ((h - 1) / scale) + 1;
+        BufferPointer pp = new BufferPointer(p);
+
+        while (y-3 < h)
+        {
+            // 1-Lifting
+            {
+                BufferPointer q = new BufferPointer(pp);
+                BufferPointer e = q.shiftPointer(w); // q+w
+                if (y >= 3 && y + 3 < h)
+                {
+                    // Generic case
+// #ifdef MMX
+//                    if (scale==1 && MMXControl::mmxflag>0)
+//                        mmx_bv_1(q, e, s, s3);
+// #endif
+                    while (q.isPointerLess(e))
+                    {
+                        int a = q.getValue(-s) + q.getValue(s); // (int)q[-s] + (int)q[s]
+                        int b = q.getValue(-s3) + q.getValue(s3); // (int)q[-s3] + (int)q[s3]
+                        int qShift = (((a << 3) + a - b + 16) >> 5);
+                        q = q.shiftPointer(scale - qShift);
+                        // q += scale;
+                    }
+                }
+                else if (y < h)
+                {
+                    // Special cases
+                    BufferPointer q1 = (y + 1 < h ? q.shiftPointer(s) : null);
+                    BufferPointer q3 = (y + 3 < h ? q.shiftPointer(s3) : null);
+                    if (y >= 3)
+                    {
+                        while (q.isPointerLess(e)) // q<e
+                        {
+                            int a = q.getValue(-s) + (q1 != null ? q1.getCurrentValue() : 0); // (int)q[-s] + (q1 ? (int)(*q1) : 0)
+                            int b = q.getValue(-s3) + (q3 != null ? q3.getCurrentValue() : 0); // (int)q[-s3] + (q3 ? (int)(*q3) : 0)
+                            int qShift = (((a << 3) + a - b + 16) >> 5);
+                            // *q -= (((a<<3)+a-b+16)>>5);
+                            q = q.shiftPointer(scale - qShift);
+                            if (q1 != null) {
+                                q1 = q1.shiftPointer(scale);
+                            }
+                            if (q3 != null) {
+                                q3 = q3.shiftPointer(scale);
+                            }
+                        }
+                    }
+                    else if (y >= 1)
+                    {
+                        while (q.isPointerLess(e)) // q<e
+                        {
+                            int a = q.getValue(-s) + (q1 != null ? q1.getCurrentValue() : 0); // (int)q[-s] + (q1 ? (int)(*q1) : 0)
+                            int b = (q3 != null ? q3.getCurrentValue() : 0);
+                            int qShift = (((a << 3) + a - b + 16) >> 5);
+                            q = q.shiftPointer(scale - qShift);
+                            // q += scale;
+                            if (q1 != null) {
+                                q1 = q1.shiftPointer(scale);
+                            }
+                            if (q3 != null) {
+                                q3 = q3.shiftPointer(scale);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        while (q.isPointerLess(e)) // q<e
+                        {
+                            int a = (q1 != null ? q1.getCurrentValue() : 0);
+                            int b = (q3 != null ? q3.getCurrentValue() : 0);
+                            int qShift = (((a << 3) + a - b + 16) >> 5);
+                            q = q.shiftPointer(scale - qShift);
+                            if (q1 != null) {
+                                q1 = q1.shiftPointer(scale);
+                            }
+                            if (q3 != null) {
+                                q3 = q3.shiftPointer(scale);
+                            }
+                        }
+                    }
+                }
+            }
+            // 2-Interpolation
+            {
+                BufferPointer q = pp.shiftPointer(-s3);
+                BufferPointer e = q.shiftPointer(w);
+                if (y >= 6 && y < h)
+                {
+                    // Generic case
+// #ifdef MMX
+//                     if (scale==1 && MMXControl::mmxflag>0)
+//                         mmx_bv_2(q, e, s, s3);
+// #endif
+                    while (q.isPointerLess(e)) // q<e
+                    {
+                        int a = q.getValue(-s) + q.getValue(s); // (int)q[-s] + (int)q[s]
+                        int b = q.getValue(-s3) + q.getValue(s3); // (int)q[-s3] + (int)q[s3]
+                        int qShift = (((a << 3) + a - b + 8) >> 4);
+                        // *q += (((a<<3)+a-b+8)>>4);
+                        // q += scale;
+                        q = q.shiftPointer(scale - qShift);
+                    }
+                }
+                else if (y >= 3)
+                {
+                    // Special cases
+                    BufferPointer q1 = (y - 2 < h ? q.shiftPointer(s) : q.shiftPointer(-s));
+                    while (q.isPointerLess(e))
+                    {
+                        int a = q.getValue(-s) + q1.getCurrentValue();
+                        // *q += ((a+1)>>1);
+                        q = q.shiftPointer(scale + ((a + 1) >> 1));
+                        q1 = q1.shiftPointer(scale);
+                    }
+                }
+            }
+            y += 2;
+            pp.shift(s + s);
+        }
+    }
+
+    static void filter_bh(int[] p, int w, int h, int rowsize, int scale) {
+        int y = 0;
+        int s = scale;
+        int s3 = s+s+s;
+        rowsize *= scale;
+        BufferPointer pp = new BufferPointer(p);
+        while (y < h)
+        {
+            BufferPointer q = new BufferPointer(pp);
+            BufferPointer e = new BufferPointer(p, w);
+            int a0 = 0;
+            int a1 = 0;
+            int a2 = 0;
+            int a3 = 0;
+            int b0 = 0;
+            int b1 = 0;
+            int b2 = 0;
+            int b3 = 0;
+            if (q.isPointerLess(e)) // q<e
+            {
+                // Special case:  x=0
+                if (q.shiftPointer(s).isPointerLess(e)) { // q+s < e
+                    a2 = q.getValue(s);
+                }
+                if (q.shiftPointer(s3).isPointerLess(e)) { // q+s3 < e
+                    a3 = q.getValue(s3);
+                }
+                int shift = ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+                b2 = q.getCurrentValue() - shift;
+                b3 = q.getCurrentValue() - shift;
+
+                q.setValue(0, b3);
+                q.shift(s + s);
+            }
+            if (q.isPointerLess(e)) //  q<e
+            {
+                // Special case:  x=2
+                a0 = a1;
+                a1 = a2;
+                a2 = a3;
+                if (q.shiftPointer(s3).isPointerLess(e)) { // q+s3 < e
+                    a3 = q.getValue(s3);
+                }
+                int shift = ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+                b3 = q.getCurrentValue() - shift;
+                q.setValue(0, b3);
+                q.shift(s + s);
+            }
+            if (q.isPointerLess(e))
+            {
+                // Special case:  x=4
+                b1 = b2;
+                b2 = b3;
+                a0 = a1;
+                a1 = a2;
+                a2 = a3;
+                if (q.shiftPointer(s3).isPointerLess(e)) { // q+s3 < e
+                    a3 = q.getValue(s3);
+                }
+                int shift = ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+                b3 = q.getCurrentValue() - shift;
+                q.setValue(0, b3);
+                // q[-s3] = q[-s3] + ((b1+b2+1)>>1);
+                q.setValue(-s3, q.getValue(-s3) + ((b1 + b2 + 1) >> 1));
+                q.shift(s + s);
+            }
+            while (q.shiftPointer(s3).isPointerLess(e)) // q+s3 < e
+            {
+                // Generic case
+                a0 = a1;
+                a1 = a2;
+                a2 = a3;
+                a3 = q.getValue(s3);
+                b0 = b1;
+                b1 = b2;
+                b2 = b3;
+
+                int shift1 = ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+                b3 = q.getCurrentValue() - shift1;
+                q.setValue(0, b3);
+
+                int shift2 = ((((b1 + b2) << 3) + (b1 + b2) - b0 - b3 + 8) >> 4);
+                q.setValue(-s3, q.getValue(-s3) + shift2);
+                q.shift(s + s);
+            }
+            while (q.isPointerLess(e))
+            {
+                // Special case:  w-3 <= x < w
+                a0 = a1;
+                a1 = a2;
+                a2 = a3;
+                a3 = 0;
+                b0 = b1;
+                b1 = b2;
+                b2 = b3;
+
+                int shift1 = ((((a1 + a2) << 3) + (a1 + a2) - a0 - a3 + 16) >> 5);
+                b3 = q.getCurrentValue() - shift1;
+                q.setValue(0, b3);
+
+                int shift2 = ((((b1 + b2) << 3) + (b1 + b2) - b0 - b3 + 8) >> 4);
+                q.setValue(-s3, q.getValue(-s3) + shift2);
+                q.shift(s + s);
+            }
+            while (q.shiftPointer(-s3).isPointerLess(e)) // q-s3 < e
+            {
+                // Special case  w <= x < w+3
+                b0 = b1;
+                b1 = b2;
+                b2 = b3;
+                if (!(q.shiftPointer(-s3).isPointerLess(pp))) { // q-s3 >= p
+                    // q[-s3] = q[-s3] + ((b1 + b2 + 1) >> 1);
+                    q.setValue(-s3, q.getValue(-s3) + ((b1 + b2 + 1) >> 1));
+                }
+                q.shift(s + s);
+            }
+            y += scale;
+            pp.shift(rowsize);
+        }
+    }
+
+
+
+//    void IW44Image::Transform::filter_begin(int w, int h)
+//    {
+//        if (MMXControl::mmxflag < 0)
+//            MMXControl::enable_mmx();
+//    }
 
 
 //    struct IW44Image::Alloc // DJVU_CLASS

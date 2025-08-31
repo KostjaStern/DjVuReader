@@ -2,8 +2,13 @@ package com.sternkn.djvu.file.coders;
 
 public class BufferPointer {
 
-    private int[] buffer;
+    private final int[] buffer;
     private int pointer;
+
+    public BufferPointer(BufferPointer bufferPointer) {
+        this.buffer = bufferPointer.buffer;
+        this.pointer = bufferPointer.pointer;
+    }
 
     public BufferPointer(int[] buffer) {
         this.buffer = buffer;
@@ -30,6 +35,10 @@ public class BufferPointer {
     public BufferPointer shiftPointer(int offset) {
         int newPointer = pointer + offset;
         return new BufferPointer(buffer, newPointer);
+    }
+
+    public void shift(int offset) {
+        pointer += offset;
     }
 
     public boolean isCurrentValueZero() {

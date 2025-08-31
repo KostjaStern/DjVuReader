@@ -42,17 +42,95 @@ public class IW44Image {
         return ymap != null ? ymap.ih : 0;
     }
 
+    public GPixmap get_pixmap() {
+        // Check presence of data
+        if (ymap == null) {
+            return null;
+        }
+
+        // Allocate pixmap
+        int w = ymap.iw;
+        int h = ymap.ih;
+        GPixmap ppm = new GPixmap(h, w);
+
+        // Perform wavelet reconstruction
+        //    signed char *ptr = (signed char*) (*ppm)[0];
+        //    int rowsep = ppm->rowsize() * sizeof(GPixel);
+        //    int pixsep = sizeof(GPixel);
+        //    ymap->image(ptr, rowsep, pixsep);
+        ymap.image(ppm, ColorName.RED, 0);
+
+        if (crmap != null && cbmap != null && crcb_delay >= 0)
+        {
+            cbmap.image(ppm, ColorName.GREEN, crcb_half);
+            crmap.image(ppm, ColorName.BLUE, crcb_half);
+        }
+        // Convert image data to RGB
+        if (crmap != null && cbmap != null && crcb_delay >= 0)
+        {
+            YCbCr_to_RGB(ppm, w, h);
+        }
+//        else
+//        {
+//            for (int i = 0; i < h; i++)
+//            {
+//                // GPixel *pixrow = (*ppm)[i];
+//                ArrayPointer<PixelColor> pixrow = new ArrayPointer<>(ppm.getPixels(), i * ppm.getColumns());
+//                for (int j = 0; j < w; j++, pixrow++) {
+//                    pixrow -> b = pixrow -> g = pixrow -> r
+//                            = 127 - (int) (((signed char*)pixrow)[0]);
+//                }
+//            }
+//        }
+        // Return
+        return ppm;
+    }
+
+    /* Converts YCbCr to RGB. */
+    void YCbCr_to_RGB(GPixmap ppm, int w, int h)
+    {
+        ArrayPointer<PixelColor> p = new ArrayPointer<>(ppm.getPixels());
+        for (int i = 0; i < h; i++, p = p.shiftPointer(ppm.getRows()))
+        {
+            // GPixel *q = p;
+            for (int j = 0; j < w; j++)
+            {
+                PixelColor q = p.getValue(j);
+                int y = q.getRed(); // ((signed char*)q)[0];
+                int b = q.getGreen(); // (signed char*)q)[1];
+                int r = q.getBlue(); // (signed char*)q)[2];
+                // This is the Pigeon transform
+                int t1 = b >> 2 ;
+                int t2 = r + (r >> 1);
+                int t3 = y + 128 - t1;
+                int tr = y + 128 + t2;
+                int tg = t3 - (t2 >> 1);
+                int tb = t3 + (b << 1);
+                q.setColor(ColorName.RED, Math.max(0, Math.min(255, tr)));
+                q.setColor(ColorName.GREEN, Math.max(0, Math.min(255, tg)));
+                q.setColor(ColorName.BLUE, Math.max(0, Math.min(255, tb)));
+            }
+        }
+    }
+
+
+    public void close_codec() {
+        ycodec = null;
+        cbcodec = null;
+        crcodec = null;
+        cslice = 0;
+        cbytes = 0;
+        cserial = 0;
+    }
+
     public int decode_chunk(byte[] data) {
         this.inputStream = new ByteArrayInputStream(data);
 
         // Open
-        // if (! ycodec)
-        // {
+        if (ycodec == null) {
             cslice = 0;
             cserial = 0;
-            // delete ymap;
-            // ymap = 0;
-        // }
+        }
 
         PrimaryHeader primary =  new PrimaryHeader();
         primary.decode(inputStream);
@@ -119,7 +197,6 @@ public class IW44Image {
     }
 
 
-
     public static class PrimaryHeader {
         int serial;
         int slices;
@@ -160,6 +237,4 @@ public class IW44Image {
             }
         }
     }
-
-
 }
