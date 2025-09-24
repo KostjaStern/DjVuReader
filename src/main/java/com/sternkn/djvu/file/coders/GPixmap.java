@@ -28,6 +28,14 @@ public class GPixmap {
         return pixels;
     }
 
+    /*
+         x - 0 ... columns - 1
+         y - 0 ... rows - 1
+    */
+    public PixelColor getPixel(int x, int y) {
+        return pixels[y * columns + x];
+    }
+
     public int getRows() {
         return rows;
     }

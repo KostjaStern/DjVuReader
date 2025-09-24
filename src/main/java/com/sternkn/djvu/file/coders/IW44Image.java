@@ -54,21 +54,18 @@ public class IW44Image {
         GPixmap ppm = new GPixmap(h, w);
 
         // Perform wavelet reconstruction
-        //    signed char *ptr = (signed char*) (*ppm)[0];
-        //    int rowsep = ppm->rowsize() * sizeof(GPixel);
-        //    int pixsep = sizeof(GPixel);
-        //    ymap->image(ptr, rowsep, pixsep);
-        ymap.image(ppm, ColorName.RED, 0);
+        ymap.image(ppm, ColorName.BLUE, 0);
 
         if (crmap != null && cbmap != null && crcb_delay >= 0)
         {
             cbmap.image(ppm, ColorName.GREEN, crcb_half);
-            crmap.image(ppm, ColorName.BLUE, crcb_half);
+            crmap.image(ppm, ColorName.RED, crcb_half);
         }
+
         // Convert image data to RGB
         if (crmap != null && cbmap != null && crcb_delay >= 0)
         {
-            YCbCr_to_RGB(ppm, w, h);
+            YCbCr_to_RGB(ppm);
         }
 //        else
 //        {
@@ -82,35 +79,33 @@ public class IW44Image {
 //                }
 //            }
 //        }
-        // Return
+
         return ppm;
     }
 
     /* Converts YCbCr to RGB. */
-    void YCbCr_to_RGB(GPixmap ppm, int w, int h)
-    {
-        ArrayPointer<PixelColor> p = new ArrayPointer<>(ppm.getPixels());
-        for (int i = 0; i < h; i++, p = p.shiftPointer(ppm.getRows()))
-        {
-            // GPixel *q = p;
-            for (int j = 0; j < w; j++)
-            {
-                PixelColor q = p.getValue(j);
-                int y = q.getRed(); // ((signed char*)q)[0];
-                int b = q.getGreen(); // (signed char*)q)[1];
-                int r = q.getBlue(); // (signed char*)q)[2];
-                // This is the Pigeon transform
-                int t1 = b >> 2 ;
-                int t2 = r + (r >> 1);
-                int t3 = y + 128 - t1;
-                int tr = y + 128 + t2;
-                int tg = t3 - (t2 >> 1);
-                int tb = t3 + (b << 1);
-                q.setColor(ColorName.RED, Math.max(0, Math.min(255, tr)));
-                q.setColor(ColorName.GREEN, Math.max(0, Math.min(255, tg)));
-                q.setColor(ColorName.BLUE, Math.max(0, Math.min(255, tb)));
-            }
+    void YCbCr_to_RGB(GPixmap ppm) {
+        for (PixelColor pixelColor : ppm.getPixels()) {
+            YCbCr_to_RGB(pixelColor);
         }
+    }
+
+    void YCbCr_to_RGB(PixelColor pixelColor) {
+        int y = pixelColor.getBlue();
+        int b = pixelColor.getGreen();
+        int r = pixelColor.getRed();
+
+        // This is the Pigeon transform
+        int t1 = b >> 2 ;
+        int t2 = r + (r >> 1);
+        int t3 = y + 128 - t1;
+        int tr = y + 128 + t2;
+        int tg = t3 - (t2 >> 1);
+        int tb = t3 + (b << 1);
+
+        pixelColor.setColor(ColorName.RED, Math.max(0, Math.min(255, tr)));
+        pixelColor.setColor(ColorName.GREEN, Math.max(0, Math.min(255, tg)));
+        pixelColor.setColor(ColorName.BLUE, Math.max(0, Math.min(255, tb)));
     }
 
 

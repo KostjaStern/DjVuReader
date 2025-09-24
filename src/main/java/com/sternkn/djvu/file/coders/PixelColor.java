@@ -1,5 +1,7 @@
 package com.sternkn.djvu.file.coders;
 
+import java.util.Objects;
+
 public class PixelColor {
 
     private int blue;
@@ -7,6 +9,12 @@ public class PixelColor {
     private int red;
 
     public PixelColor() {
+    }
+
+    public PixelColor(int blue, int green, int red) {
+        this.blue = blue;
+        this.green = green;
+        this.red = red;
     }
 
     public void setColor(ColorName colorName, int value) {
@@ -30,5 +38,26 @@ public class PixelColor {
     }
     public int getRed() {
         return red;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(blue, green, red);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (! (obj instanceof PixelColor color)) {
+            return false;
+        }
+
+        return color.getBlue() == blue &&
+                color.getGreen() == green &&
+                color.getRed() == red;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("{blue: %s, green: %s, red: %s}", blue, green, red);
     }
 }

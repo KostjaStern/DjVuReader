@@ -28,6 +28,10 @@ public class BufferPointer {
         return buffer[pointer];
     }
 
+    public void setCurrentValue(int value) {
+        buffer[pointer] = value;
+    }
+
     public void setValue(int offset, int value) {
         buffer[pointer + offset] = value;
     }
