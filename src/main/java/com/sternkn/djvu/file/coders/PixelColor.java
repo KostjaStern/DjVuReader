@@ -30,6 +30,13 @@ public class PixelColor {
         }
     }
 
+    /*
+        {Red, Green, Blue, Alpha}
+     */
+    public int[] getColor() {
+        return new int[]{red, green, blue, 255};
+    }
+
     public int getBlue() {
         return blue;
     }

@@ -2,6 +2,9 @@ package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.DjVuFileException;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
 
 public class GPixmap {
@@ -36,11 +39,36 @@ public class GPixmap {
         return pixels[y * columns + x];
     }
 
+    public void setPixel(int x, int y, PixelColor pixel) {
+        pixels[y * columns + x] = pixel;
+    }
+
     public int getRows() {
         return rows;
     }
 
     public int getColumns() {
         return columns;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(rows, columns, Arrays.hashCode(pixels));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (! (obj instanceof GPixmap pixmap)) {
+            return false;
+        }
+
+        return pixmap.getRows() == rows &&
+                pixmap.getColumns() == columns &&
+                Arrays.equals(pixmap.getPixels(), pixels);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("GPixmap{rows: %s, columns: %s}", rows, columns);
     }
 }

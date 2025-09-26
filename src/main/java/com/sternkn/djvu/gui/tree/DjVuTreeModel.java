@@ -13,9 +13,12 @@ import com.sternkn.djvu.file.chunks.TXTzChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.file.coders.BufferPointer;
 import com.sternkn.djvu.file.coders.GBitmap;
+import com.sternkn.djvu.file.coders.GPixmap;
+import com.sternkn.djvu.file.coders.IW44Image;
 import com.sternkn.djvu.file.coders.JB2CodecDecoder;
 import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
+import com.sternkn.djvu.file.coders.PixelColor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,6 +194,10 @@ public class DjVuTreeModel {
             return getBitonalImageComponent(chunk);
         }
 
+        if (chunk.getChunkId() == ChunkId.BG44) {
+            return getBackgroudImageComponent(chunk);
+        }
+
         Chunk decodedChunk = switch (chunk.getChunkId()) {
             case ChunkId.DIRM -> new DirectoryChunk(chunk);
             case ChunkId.INFO -> new InfoChunk(chunk);
@@ -222,6 +229,58 @@ public class DjVuTreeModel {
         JTree tree = new JTree();
         tree.setModel(treeModel);
         panel.add(tree);
+
+        return panel;
+    }
+
+    private Component getBackgroudImageComponent(Chunk chunk) {
+        List<Chunk> chunks = this.djvuFile.getAllImageChunks(chunk);
+
+        IW44Image image = new IW44Image();
+        chunks.forEach(ch -> image.decode_chunk(ch.getData()));
+        image.close_codec();
+
+        GPixmap pixmap = image.get_pixmap();
+
+        int height = pixmap.getRows();
+        int width = pixmap.getColumns();
+        LOG.debug("IW44 bitmap: height = {}, width = {}", height,  width);
+
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        WritableRaster raster = img.getRaster();
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                PixelColor pixel = pixmap.getPixel(x, y);
+                raster.setPixel(x, height - y - 1, pixel.getColor());
+            }
+        }
+
+        JTextArea textArea = new JTextArea(3, 60);
+        textArea.setFont(MONOSPACED_FONT);
+        textArea.setText(String.format(
+                """
+                 %s
+                 Bitmap:
+                   height = %s
+                   width = %s
+                """
+                , chunk.getDataAsText(), height,  width));
+        textArea.setEditable(false);
+
+        JScrollPane topPanel  = new JScrollPane();
+        topPanel.setViewportView(textArea);
+
+        JScrollPane bottomPanel = new JScrollPane();
+        ImageCanvas imageCanvas = new ImageCanvas(img);
+        bottomPanel.setViewportView(imageCanvas);
+        imageCanvas.setVisible(true);
+
+        JSplitPane panel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, bottomPanel);
+
+        // JPanel panel = new JPanel();
+        // GridLayout chunkInfoLayout = new GridLayout(2,1);
+        // panel.setLayout(chunkInfoLayout);
 
         return panel;
     }

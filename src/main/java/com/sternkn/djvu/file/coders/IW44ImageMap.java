@@ -253,7 +253,7 @@ public class IW44ImageMap {
                         int b = q.getValue(-s3) + q.getValue(s3);
                         int qShift = (((a << 3) + a - b + 8) >> 4);
 
-                        q.setCurrentValue(q.getCurrentValue() - qShift);
+                        q.setCurrentValue(q.getCurrentValue() + qShift);
                         q = q.shiftPointer(scale);
                     }
                 }

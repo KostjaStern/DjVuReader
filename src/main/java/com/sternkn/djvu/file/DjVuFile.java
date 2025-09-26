@@ -54,6 +54,14 @@ public class DjVuFile {
                 .orElse(null);
     }
 
+    public List<Chunk> getAllImageChunks(Chunk chunk) {
+        Chunk parent = chunk.getParent();
+        return this.chunks.stream()
+            .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
+            .filter(c -> c.getChunkId() == chunk.getChunkId())
+            .toList();
+    }
+
     /**
      *
      * @param chunk - Sjbz chunk

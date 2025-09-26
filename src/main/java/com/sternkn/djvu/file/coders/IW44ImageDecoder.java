@@ -216,7 +216,7 @@ public class IW44ImageDecoder {
                 bbstate |= NEW_COEFF;
             }
 
-            LOG.debug("bbstate[bit = {}, band = {}] = {}", bit, band, bbstate);
+            // LOG.debug("bbstate[bit = {}, band = {}] = {}", bit, band, bbstate);
         }
 
         // code bucket bits
@@ -255,8 +255,8 @@ public class IW44ImageDecoder {
                         this.bucketState[buckno] |= NEW_COEFF;
                     }
 
-                    LOG.debug("bucketstate[bit = {}, band = {}, buck = {}] = {}",
-                            bit, band, buckno, this.bucketState[buckno]);
+//                    LOG.debug("bucketstate[bit = {}, band = {}, buck = {}] = {}",
+//                            bit, band, buckno, this.bucketState[buckno]);
                 }
             }
         }
@@ -345,11 +345,10 @@ public class IW44ImageDecoder {
                             else if (gotcha > 0) {
                                 gotcha -= 1;
                             }
-// #endif
-// #ifdef TRACE
-                            LOG.debug("coeffstate[bit = {}, band = {}, buck = {}, c = {}] = {}",
-                                    bit, band, buckno, i, cstate.getValue(i));
-// #endif
+
+//                            LOG.debug("coeffstate[bit = {}, band = {}, buck = {}, c = {}] = {}",
+//                                    bit, band, buckno, i, cstate.getValue(i));
+
                         }
                     }
                 }
