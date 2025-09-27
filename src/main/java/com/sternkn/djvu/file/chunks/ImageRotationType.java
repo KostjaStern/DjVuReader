@@ -1,12 +1,10 @@
 package com.sternkn.djvu.file.chunks;
 
-import com.sternkn.djvu.file.DjVuFileException;
-
 public enum ImageRotationType {
 
-    RIGHT_SIDE_UP(1),         // 0°
+    NO_ROTATION(1),          // 0°
     COUNTER_CLOCKWISE_90(6),
-    UPSIDE_DOWN(2),           // 180°
+    UPSIDE_DOWN(2),          // 180°
     CLOCKWISE_90(5);
 
     private final int value;
@@ -16,13 +14,17 @@ public enum ImageRotationType {
     }
 
     public static ImageRotationType getRotationType(int flag) {
-        final int flagValue = flag & 0b0000_0111;
-        for (ImageRotationType rotationType : ImageRotationType.values()) {
-            if (rotationType.value == flagValue) {
-                return rotationType;
-            }
-        }
+        final int flagValue = flag & 0x7;
 
-        throw new DjVuFileException(String.format("Illegal flag %s in INFO chunk", flag));
+        return switch (flagValue) {
+            case 6 -> COUNTER_CLOCKWISE_90;
+            case 2 -> UPSIDE_DOWN;
+            case 5 -> CLOCKWISE_90;
+            default -> NO_ROTATION;
+        };
+    }
+
+    public int getValue() {
+        return value;
     }
 }

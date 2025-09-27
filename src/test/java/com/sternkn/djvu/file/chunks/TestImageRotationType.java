@@ -1,10 +1,8 @@
 package com.sternkn.djvu.file.chunks;
 
-import com.sternkn.djvu.file.DjVuFileException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 public class TestImageRotationType {
@@ -18,10 +16,7 @@ public class TestImageRotationType {
     }
 
     @Test
-    public void testGetRotationTypeInvalidFlag() {
-        final byte flag = 0b0111_0011;
-        Exception exception = assertThrows(DjVuFileException.class, () -> ImageRotationType.getRotationType(flag));
-
-        assertEquals("Illegal flag " + flag + " in INFO chunk", exception.getMessage());
+    public void testGetRotationTypeForUnknownFlag() {
+        assertEquals(ImageRotationType.NO_ROTATION, ImageRotationType.getRotationType(0));
     }
 }
