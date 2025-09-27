@@ -9,18 +9,18 @@ import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
 
 public class GPixmap {
 
-    private final int rows;
-    private final int columns;
+    private final int height;
+    private final int width;
     private final PixelColor[] pixels;
 
-    public GPixmap(int nrows, int ncolumns) {
-        this.rows = nrows;
-        this.columns = ncolumns;
-        int np = rows * columns;
+    public GPixmap(int h, int w) {
+        height = h;
+        width = w;
+        int np = height * width;
 
-        if (rows != asUnsignedShort(rows) ||
-            columns != asUnsignedShort(columns) ||
-            (rows > 0 && np/rows != columns) ) {
+        if (height != asUnsignedShort(height) ||
+            width != asUnsignedShort(width) ||
+            (height > 0 && np/height != width) ) {
             throw new DjVuFileException("GPixmap: image size exceeds maximum (corrupted file?)");
         }
 
@@ -32,28 +32,28 @@ public class GPixmap {
     }
 
     /*
-         x - 0 ... columns - 1
-         y - 0 ... rows - 1
+         x - 0 ... width - 1
+         y - 0 ... height - 1
     */
     public PixelColor getPixel(int x, int y) {
-        return pixels[y * columns + x];
+        return pixels[y * width + x];
     }
 
     public void setPixel(int x, int y, PixelColor pixel) {
-        pixels[y * columns + x] = pixel;
+        pixels[y * width + x] = pixel;
     }
 
-    public int getRows() {
-        return rows;
+    public int getHeight() {
+        return height;
     }
 
-    public int getColumns() {
-        return columns;
+    public int getWidth() {
+        return width;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(rows, columns, Arrays.hashCode(pixels));
+        return Objects.hash(height, width, Arrays.hashCode(pixels));
     }
 
     @Override
@@ -62,13 +62,13 @@ public class GPixmap {
             return false;
         }
 
-        return pixmap.getRows() == rows &&
-                pixmap.getColumns() == columns &&
+        return pixmap.getHeight() == height &&
+                pixmap.getWidth() == width &&
                 Arrays.equals(pixmap.getPixels(), pixels);
     }
 
     @Override
     public String toString() {
-        return String.format("GPixmap{rows: %s, columns: %s}", rows, columns);
+        return String.format("GPixmap{height: %s, width: %s}", height, width);
     }
 }

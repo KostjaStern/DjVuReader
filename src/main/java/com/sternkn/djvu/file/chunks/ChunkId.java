@@ -27,10 +27,10 @@ public enum ChunkId {
     /* BZZ compressed JB2 bitonal data used to store mask. */
     Sjbz,
 
-    /* IW44 data used to store background */
+    /* IW44 data used to store background (color or grayscale) */
     BG44,
 
-    /* IW44 data used to store foreground */
+    /* IW44 data used to store foreground (color or grayscale) */
     FG44,
 
     /* IW44 data used to store color image */
@@ -39,7 +39,7 @@ public enum ChunkId {
     /* IW44 data used to store grayscale image */
     BM44,
 
-    /* IW44 data used to store embedded thumbnail images */
+    /* IW44 data used to store embedded thumbnail images (color or grayscale) */
     TH44,
 
     /* JB2 data required to remove a watermark */

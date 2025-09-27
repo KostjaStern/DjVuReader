@@ -5,17 +5,6 @@ package com.sternkn.djvu.file.coders;
  */
 public class IW44ImageBlock {
 
-    //---------------------------------------------------------------
-// Zig zag location in a 1024 liftblock.
-// These numbers have been generated with the following program:
-//
-// int x=0, y=0;
-// for (int i=0; i<5; i++) {
-//   x = (x<<1) | (n&1);  n >>= 1;
-//   y = (y<<1) | (n&1);  n >>= 1;
-// }
-
-
     private static final int[] ZIG_ZAG_LOC = { // 1024
         0,  16, 512, 528,   8,  24, 520, 536, 256, 272, 768, 784, 264, 280, 776, 792,
                 4,  20, 516, 532,  12,  28, 524, 540, 260, 276, 772, 788, 268, 284, 780, 796,
@@ -83,37 +72,10 @@ public class IW44ImageBlock {
                 231, 247, 743, 759, 239, 255, 751, 767, 487, 503, 999,1015, 495, 511,1007,1023, // 1023
     };
 
-/*
-    // creating
-    Block(void);
-    // accessing scaled coefficients
-    short get(int n) const;
-    void  set(int n, int val, IW44Image::Map *map);
-    // converting from liftblock
-    void  read_liftblock(const short *coeff, IW44Image::Map *map);
-    void  write_liftblock(short *coeff, int bmin=0, int bmax=64) const;
-    // sparse array access
-  const short* data(int n) const;
-    short* data(int n, IW44Image::Map *map);
-    void   zero(int n);
-    // sparse representation
-    private:
-    short **pdata[4];
-*/
-
-// https://medium.com/@AlexanderObregon/understanding-multi-dimensional-arrays-in-java-7ead0c3937dd
-//    int[][] jaggedArray = new int[3][];
-//    jaggedArray[0] = new int[2];  // First row has 2 columns
-//    jaggedArray[1] = new int[3];  // Second row has 3 columns
-//    jaggedArray[2] = new int[1];  // Third row has 1 column
-
     private BufferPointer[][] pdata;
 
     public IW44ImageBlock() {
         pdata = new BufferPointer[4][];
-//        for (int i = 0; i < 4; i++) {
-//            pdata[i] = 0;
-//        }
     }
 
     public BufferPointer data(int n) {
@@ -126,7 +88,7 @@ public class IW44ImageBlock {
 
     public BufferPointer data(int n, IW44ImageMap map) {
         if (pdata[n >> 4] == null) {
-            pdata[n >> 4] = new BufferPointer[16];  // map.allocp(16);
+            pdata[n >> 4] = new BufferPointer[16];
         }
 
         if (pdata[n >> 4][n & 15] == null) {
@@ -136,9 +98,7 @@ public class IW44ImageBlock {
         return pdata[n >> 4][n & 15];
     }
 
-    // void  write_liftblock(short *coeff, int bmin=0, int bmax=64)
-    public int[] write_liftblock(int bmin, int bmax) // short *coeff,
-    {
+    public int[] write_liftblock(int bmin, int bmax) {
         int n = bmin << 4;
         int[] coeff = new int[1024];
 
@@ -149,7 +109,7 @@ public class IW44ImageBlock {
             }
             else {
                 for (int n2 = 0; n2 < 16; n2++, n++) {
-                    coeff[ZIG_ZAG_LOC[n]] = d.getValue(n2); // [n2];
+                    coeff[ZIG_ZAG_LOC[n]] = d.getValue(n2);
                 }
             }
         }
@@ -157,11 +117,4 @@ public class IW44ImageBlock {
         return coeff;
     }
 
-
-    public static void main(String[] args) {
-        System.out.println("Hello ... ");
-
-        int val = (2 * 2 * 2 * 2 * 2) >> 4;
-        System.out.println("val = " + val);
-    }
 }

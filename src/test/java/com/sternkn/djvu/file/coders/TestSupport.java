@@ -3,12 +3,44 @@ package com.sternkn.djvu.file.coders;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 public class TestSupport {
-    private final ClassLoader classLoader = getClass().getClassLoader();
     private static final String PATH_CHUNKS = "test_chunks/";
+    private static final String PATH_IMAGES = "test_images/";
+
+    private final ClassLoader classLoader = getClass().getClassLoader();
+
+
+    public GPixmap readPixmap(String fileName) {
+        try (InputStream inputStream = classLoader.getResourceAsStream(PATH_IMAGES + fileName)) {
+            BufferedImage image = ImageIO.read(Objects.requireNonNull(inputStream));
+            final int width = image.getWidth();
+            final int height = image.getHeight();
+            GPixmap pixmap = new GPixmap(height, width);
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int argb = image.getRGB(x, y);
+
+                    final int red   = (argb >> 16) & 0xFF;
+                    final int green = (argb >> 8)  & 0xFF;
+                    final int blue  = argb         & 0xFF;
+                    PixelColor color = new PixelColor(blue, green, red);
+                    pixmap.setPixel(x, y, color);
+                }
+            }
+
+            return pixmap;
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public InputStream readStream(String fileName) {
         return classLoader.getResourceAsStream(PATH_CHUNKS + fileName);

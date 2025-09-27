@@ -242,8 +242,8 @@ public class DjVuTreeModel {
 
         GPixmap pixmap = image.get_pixmap();
 
-        int height = pixmap.getRows();
-        int width = pixmap.getColumns();
+        int height = pixmap.getHeight();
+        int width = pixmap.getWidth();
         LOG.debug("IW44 bitmap: height = {}, width = {}", height,  width);
 
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);

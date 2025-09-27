@@ -145,7 +145,7 @@ public class IW44ImageMap {
                 }
                 pixel.setColor(colorName, x);
             }
-            row.shift(ppm.getColumns());
+            row.shift(ppm.getWidth());
             p.shift(bw);
         }
     }
