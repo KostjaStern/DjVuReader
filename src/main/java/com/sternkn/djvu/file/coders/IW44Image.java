@@ -13,7 +13,6 @@ public class IW44Image {
 
     private int cslice;
     private int cserial;
-    private int cbytes;
 
     private int crcb_delay;
     private int crcb_half;
@@ -113,9 +112,6 @@ public class IW44Image {
         ycodec = null;
         cbcodec = null;
         crcodec = null;
-        cslice = 0;
-        cbytes = 0;
-        cserial = 0;
     }
 
     public int decode_chunk(byte[] data) {
@@ -193,7 +189,15 @@ public class IW44Image {
 
 
     public static class PrimaryHeader {
+        /*
+            Serial number. A one-octet unsigned integer. The serial number of the first chunk of a
+            given chunk type is 0. Successive chunks are assigned consecutive serial numbers.
+         */
         int serial;
+
+        /*
+            Number of slices. A one-octet unsigned integer. The number of slices coded in the chunk.
+         */
         int slices;
 
         void decode(InputStream inputStream) {
@@ -203,7 +207,24 @@ public class IW44Image {
     }
 
     public static class SecondaryHeader {
+
+        /*
+           Major version number and color type. One octet containing two values, present only if
+           the serial number is 0.
+
+           The least significant seven bits designate the major version number of the standard being implemented
+           by the decoder. For this version of the standard, the major version number is 1.
+
+           The most significant bit is the color type bit. The color type bit is 0 if the chunk describes three
+           color components. The color type bit is 1 if the chunk describes one color component.
+         */
         int major;
+
+        /*
+           Minor version number. A one-octet unsigned integer, present only if the serial umber is 0.
+           This octet designates the minor version number of the standard being implemented by the
+           decoder. For this version of the standard, the minor version number is 2.
+         */
         int minor;
 
         void decode(InputStream inputStream) {

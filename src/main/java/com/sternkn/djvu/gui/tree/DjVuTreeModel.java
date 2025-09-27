@@ -194,7 +194,7 @@ public class DjVuTreeModel {
             return getBitonalImageComponent(chunk);
         }
 
-        if (chunk.getChunkId() == ChunkId.BG44) {
+        if (chunk.getChunkId().isIW44Chunk()) {
             return getBackgroudImageComponent(chunk);
         }
 
