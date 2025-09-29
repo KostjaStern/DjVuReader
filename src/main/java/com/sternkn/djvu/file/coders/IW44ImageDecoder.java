@@ -36,24 +36,13 @@ public class IW44ImageDecoder {
             0x080000, 0x040000, 0x040000, 0x080000
     };
 
-    private static final int IW_BORDER = 3;
-    private static final int IW_SHIFT  = 6;
-    private static final int IW_ROUND  = (1 << (IW_SHIFT - 1));
-
-    private static final int ZERO_COEFF = 1;
-    private static final int ACTIVE_COEFF = 2;
-    private static final int NEW_COEFF = 4;
-    private static final int UNK_COEFF = 8;
-
-//    enum CoefficientState {
-//        ZERO,    // = 1 this coeff never hits this bit
-//        ACTIVE,  // = 2 this coeff is already active
-//        NEW,     // = 4 this coeff is becoming active
-//        UNK      // = 8 this coeff may become active
-//    };
+    private static final int ZERO_COEFF = 1;   // this coeff never hits this bit
+    private static final int ACTIVE_COEFF = 2; // this coeff is already active
+    private static final int NEW_COEFF = 4;    // this coeff is becoming active
+    private static final int UNK_COEFF = 8;    // this coeff may become active
 
     // Data
-    private IW44ImageMap map;                  // working map
+    private IW44ImageMap map; // working map
 
     private int curband;      // current band
     private int curbit;       // current bitplane
@@ -71,7 +60,6 @@ public class IW44ImageDecoder {
     private BitContext ctxMant;
     private BitContext ctxRoot;
 
-    // IW44Image::Codec::Codec(IW44Image::Map &xmap) : map(xmap), curband(0), curbit(1)
     public IW44ImageDecoder(IW44ImageMap map) {
         this.coeffState = new int[256];
         this.bucketState = new int[16];
@@ -83,7 +71,7 @@ public class IW44ImageDecoder {
         quant_hi = new int[10];
         quant_lo = new int[16];
 
-// Initialize quantification
+        // Initialize quantification
         int j;
         int ind = 0;
         int offset = 0;
@@ -136,7 +124,6 @@ public class IW44ImageDecoder {
         ctxRoot = new BitContext();
     }
 
-
     public int code_slice(ZPCodecDecoder zpDecoder) {
         // Check that code_slice can still run
         if (curbit < 0) {
@@ -144,20 +131,19 @@ public class IW44ImageDecoder {
         }
 
         // Perform coding
-        if (!is_null_slice(curbit, curband)) {
+        if (!is_null_slice(curband)) {
             for (int blockno = 0; blockno < map.nb; blockno++)
             {
                 int fbucket = BAND_BUCKETS[curband].start();
                 int nbucket = BAND_BUCKETS[curband].size();
-                decode_buckets(zpDecoder, curbit, curband, map.getBlock(blockno), fbucket, nbucket);
+                decode_buckets(zpDecoder, curband, map.getBlock(blockno), fbucket, nbucket);
             }
         }
 
         return finish_code_slice();
     }
 
-    private int finish_code_slice()
-    {
+    private int finish_code_slice() {
         // Reduce quantization threshold
         quant_hi[curband] = quant_hi[curband] >> 1;
         if (curband == 0) {
@@ -167,11 +153,11 @@ public class IW44ImageDecoder {
         }
 
         // Proceed to the next slice
-        if (++curband >= BAND_BUCKETS.length) // (int)(sizeof(bandbuckets)/sizeof(bandbuckets[0]))
+        if (++curband >= BAND_BUCKETS.length)
         {
             curband = 0;
             curbit += 1;
-            if (quant_hi[BAND_BUCKETS.length - 1] == 0) { // (sizeof(bandbuckets)/sizeof(bandbuckets[0]))
+            if (quant_hi[BAND_BUCKETS.length - 1] == 0) {
                 // All quantization thresholds are null
                 curbit = -1;
                 return 0;
@@ -180,7 +166,7 @@ public class IW44ImageDecoder {
         return 1;
     }
 
-    private boolean is_null_slice(int bit, int band) {
+    private boolean is_null_slice(int band) {
         if (band == 0)
         {
             boolean is_null = true;
@@ -201,7 +187,7 @@ public class IW44ImageDecoder {
         }
     }
 
-    private void decode_buckets(ZPCodecDecoder zp, int bit, int band,
+    private void decode_buckets(ZPCodecDecoder zp, int band,
                                 IW44ImageBlock blk, int fbucket, int nbucket) {
         // compute state of all coefficients in all buckets
         int bbstate = decode_prepare(fbucket, nbucket, blk);
@@ -265,7 +251,7 @@ public class IW44ImageDecoder {
         {
             int thres = quant_hi[band];
             BufferPointer cstate = new BufferPointer(this.coeffState);
-            for (int buckno = 0; buckno < nbucket; buckno++, cstate = cstate.shiftPointer(16)) //  cstate+=16
+            for (int buckno = 0; buckno < nbucket; buckno++, cstate = cstate.shiftPointer(16))
                 if ((this.bucketState[buckno] & NEW_COEFF) != 0)
                 {
                     int i;
@@ -289,7 +275,7 @@ public class IW44ImageDecoder {
                             }
                         }
                     }
-// #ifndef NOCTX_EXPECT
+
                     int gotcha = 0;
                     final int maxgotcha = 7;
                     for (i = 0; i < 16; i++) {
@@ -297,7 +283,7 @@ public class IW44ImageDecoder {
                             gotcha += 1;
                         }
                     }
-// #endif
+
                     for (i = 0; i < 16; i++)
                     {
                         if ((cstate.getValue(i) & UNK_COEFF) != 0)
@@ -308,19 +294,17 @@ public class IW44ImageDecoder {
                             }
                             // prepare context
                             int ctx = 0;
-// #ifndef NOCTX_EXPECT
                             if (gotcha >= maxgotcha) {
                                 ctx = maxgotcha;
                             }
                             else {
                                 ctx = gotcha;
                             }
-// #endif
-// #ifndef NOCTX_ACTIVE
+
                             if ((this.bucketState[buckno] & ACTIVE_COEFF) != 0) {
                                 ctx |= 8;
                             }
-// #endif
+
                             // code difference bit
                             if (zp.decoder( ctxStart[ctx] ) != 0)
                             {
@@ -330,15 +314,13 @@ public class IW44ImageDecoder {
                                 int halfthres = thres >> 1;
                                 int coeff = thres + halfthres - (halfthres >> 2);
                                 if (zp.IWdecoder() != 0) {
-                                    // pcoeff[i] = -coeff;
                                     pcoeff.setValue(i, -coeff);
                                 }
                                 else {
-                                    // pcoeff[i] = coeff;
                                     pcoeff.setValue(i, coeff);
                                 }
                             }
-// #ifndef NOCTX_EXPECT
+
                             if ((cstate.getValue(i) & NEW_COEFF) != 0) {
                                 gotcha = 0;
                             }
@@ -358,9 +340,9 @@ public class IW44ImageDecoder {
         if ((bbstate & ACTIVE_COEFF) != 0)
         {
             int thres = quant_hi[band];
-            BufferPointer cstate = new BufferPointer(this.coeffState); // coeffstate
-            for (int buckno = 0; buckno < nbucket; buckno++, cstate = cstate.shiftPointer(16)) // cstate+=16
-                if ((this.bucketState[buckno] & ACTIVE_COEFF) != 0) // bucketstate[buckno] & ACTIVE
+            BufferPointer cstate = new BufferPointer(this.coeffState);
+            for (int buckno = 0; buckno < nbucket; buckno++, cstate = cstate.shiftPointer(16))
+                if ((this.bucketState[buckno] & ACTIVE_COEFF) != 0)
                 {
                     BufferPointer pcoeff = blk.data(fbucket + buckno);
                     for (int i = 0; i < 16; i++)
@@ -407,28 +389,18 @@ public class IW44ImageDecoder {
         }
     }
 
-
-    /*
-    enum CoefficientState {
-        ZERO,    // = 1 this coeff never hits this bit
-        ACTIVE,  // = 2 this coeff is already active
-        NEW,     // = 4 this coeff is becoming active
-        UNK      // = 8 this coeff may become active
-    };
-     */
     private int decode_prepare(int fbucket, int nbucket, IW44ImageBlock blk) {
         int bbstate = 0;
-        BufferPointer cstate = new BufferPointer(this.coeffState, 0); // coeffstate
-        // int cstate = 0;
+        BufferPointer cstate = new BufferPointer(this.coeffState, 0);
+
         if (fbucket != 0) {
             // Band other than zero
-            for (int buckno = 0; buckno < nbucket; buckno++, cstate = cstate.shiftPointer(16) ) // cstate+=16
+            for (int buckno = 0; buckno < nbucket; buckno++, cstate = cstate.shiftPointer(16) )
             {
                 int bstatetmp = 0;
                 BufferPointer pcoeff = blk.data(fbucket + buckno);
                 if (pcoeff == null)
                 {
-                    // cstate[0..15] will be filled later
                     bstatetmp = UNK_COEFF;
                 }
                 else
@@ -439,23 +411,20 @@ public class IW44ImageDecoder {
                         if (pcoeff.getValue(i) != 0) {
                             cstatetmp = ACTIVE_COEFF;
                         }
-                        // cstate[i] = cstatetmp;
                         cstate.setValue(i, cstatetmp);
                         bstatetmp |= cstatetmp;
                     }
                 }
-                // bucketstate[buckno] = bstatetmp;
+
                 this.bucketState[buckno] = bstatetmp;
                 bbstate |= bstatetmp;
             }
         }
         else
         {
-            // Band zero ( fbucket==0 implies band==zero and nbucket==1 )
             BufferPointer pcoeff = blk.data(0);
             if (pcoeff == null)
             {
-                // cstate[0..15] will be filled later
                 bbstate = UNK_COEFF;
             }
             else
@@ -470,12 +439,12 @@ public class IW44ImageDecoder {
                             cstatetmp = ACTIVE_COEFF;
                         }
                     }
-                    // cstate[i] = cstatetmp;
+
                     cstate.setValue(i, cstatetmp);
                     bbstate |= cstatetmp;
                 }
             }
-            // bucketstate[0] = bbstate;
+
             this.bucketState[0] = bbstate;
         }
         return bbstate;
