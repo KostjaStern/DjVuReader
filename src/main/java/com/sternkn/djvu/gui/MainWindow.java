@@ -21,6 +21,7 @@ public class MainWindow extends Frame {
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
     private JScrollPane rightPanel;
+    private JToolBar toolBar;
 
     /*
        https://docs.oracle.com/javase/tutorial/uiswing/components/tree.html
@@ -29,8 +30,9 @@ public class MainWindow extends Frame {
         this.setTitle("DjVu Viewer");
         this.setMenuBar(buildMenuBar());
 
+        this.toolBar = buildToolBar();
         this.setLayout(new BorderLayout());
-        this.add(buildToolBar(), BorderLayout.NORTH);
+        this.add(this.toolBar, BorderLayout.NORTH);
 
         leftPanel  = new JScrollPane();
         rightPanel = new JScrollPane();
@@ -56,8 +58,8 @@ public class MainWindow extends Frame {
     private JToolBar buildToolBar() {
         JToolBar toolBar = new JToolBar("Still draggable");
 
-        JButton zoomIn = createToolBarButton("zoom-in-32", "previous", "zoom in");
-        JButton zoomOut = createToolBarButton("zoom-out-32", "up", "zoom out");
+        JButton zoomIn = createToolBarButton(ToolBarButton.ZOOM_IN);
+        JButton zoomOut = createToolBarButton(ToolBarButton.ZOOM_OUT);
 
         toolBar.add(zoomIn);
         toolBar.add(zoomOut);
@@ -65,20 +67,19 @@ public class MainWindow extends Frame {
         return toolBar;
     }
 
-    private JButton createToolBarButton(String imageName,
-                                           String actionCommand,
-                                           String altText) {
+    private JButton createToolBarButton(ToolBarButton buttonType) {
         JButton button = new JButton();
-        button.setActionCommand(actionCommand);
-        button.setToolTipText(altText);
+        button.setName(buttonType.name());
+        button.setActionCommand(buttonType.getActionCommand());
+        button.setToolTipText(buttonType.getAltText());
         // button.addActionListener(this);
 
-        final String imageLocation = String.format("/icons/%s.png", imageName);
+        final String imageLocation = String.format("/icons/%s.png", buttonType.getImageName());
         final URL imageURL = this.getClass().getResource(imageLocation);
         if (imageURL != null) {
-            button.setIcon(new ImageIcon(imageURL, altText));
+            button.setIcon(new ImageIcon(imageURL, buttonType.getAltText()));
         } else {
-            button.setText(altText);
+            button.setText(buttonType.getAltText());
             LOG.error("Resource not found: {}", imageLocation);
         }
 
@@ -117,7 +118,7 @@ public class MainWindow extends Frame {
             djvuFile = reader.readFile();
         }
 
-        DjVuTreeModel model = new DjVuTreeModel(djvuFile, leftPanel,  rightPanel);
+        DjVuTreeModel model = new DjVuTreeModel(djvuFile, leftPanel,  rightPanel, toolBar);
         model.initTree();
         model.initStatistics();
     }

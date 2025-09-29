@@ -20,6 +20,7 @@ import com.sternkn.djvu.file.coders.JB2CodecDecoder;
 import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 import com.sternkn.djvu.file.coders.PixelColor;
+import com.sternkn.djvu.gui.ImageCanvas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,11 +57,13 @@ public class DjVuTreeModel {
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
     private JScrollPane rightPanel;
+    private JToolBar toolBar;
 
-    public DjVuTreeModel(DjVuFile djvuFile, JScrollPane leftPanel, JScrollPane rightPanel) {
+    public DjVuTreeModel(DjVuFile djvuFile, JScrollPane leftPanel, JScrollPane rightPanel, JToolBar toolBar) {
         this.djvuFile = djvuFile;
         this.leftPanel = leftPanel;
         this.rightPanel = rightPanel;
+        this.toolBar = toolBar;
     }
 
     public void initTree() {
@@ -280,7 +283,7 @@ public class DjVuTreeModel {
         topPanel.setViewportView(textArea);
 
         JScrollPane bottomPanel = new JScrollPane();
-        ImageCanvas imageCanvas = new ImageCanvas(img);
+        ImageCanvas imageCanvas = new ImageCanvas(img, toolBar);
         bottomPanel.setViewportView(imageCanvas);
         imageCanvas.setVisible(true);
 
@@ -344,7 +347,7 @@ public class DjVuTreeModel {
         topPanel.setViewportView(textArea);
 
         JScrollPane bottomPanel = new JScrollPane();
-        ImageCanvas imageCanvas = new ImageCanvas(img);
+        ImageCanvas imageCanvas = new ImageCanvas(img, toolBar);
         bottomPanel.setViewportView(imageCanvas);
         imageCanvas.setVisible(true);
 
@@ -355,25 +358,6 @@ public class DjVuTreeModel {
         // panel.setLayout(chunkInfoLayout);
 
         return panel;
-    }
-
-    private static class ImageCanvas extends Canvas {
-        BufferedImage image;
-
-        public ImageCanvas(BufferedImage image) {
-            this.image = image;
-        }
-
-        @Override
-        public void paint(Graphics g) {
-            super.paint(g);
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.scale(0.2, 0.2);
-
-            if (image != null) {
-                g.drawImage(image, 40, 10, this); // Draw the image at (0,0)
-            }
-        }
     }
 
     private void showPopupMenu(JTree tree, MouseEvent event) {
