@@ -8,8 +8,6 @@ import java.io.InputStream;
 import static com.sternkn.djvu.file.utils.InputStreamUtils.read8;
 
 public class IW44Image {
-    private static final int IWCODEC_MAJOR = 1;
-    private static final int IWCODEC_MINOR = 2;
 
     private int cslice;
     private int cserial;
@@ -29,16 +27,21 @@ public class IW44Image {
 
     private ZPCodecDecoder zpDecoder;
 
-    public IW44Image() {
+    private IW44SecondaryHeader secondaryHeader;
 
+    public IW44Image() {
     }
 
     public int getWidth() {
-        return ymap != null ? ymap.iw : 0;
+        return secondaryHeader != null ? secondaryHeader.getWidth() : 0;
     }
 
     public int getHeight() {
-        return ymap != null ? ymap.ih : 0;
+        return secondaryHeader != null ? secondaryHeader.getHeight() : 0;
+    }
+
+    public IW44SecondaryHeader getSecondaryHeader() {
+        return secondaryHeader;
     }
 
     public GPixmap get_pixmap() {
@@ -133,32 +136,11 @@ public class IW44Image {
 
         // Read secondary header
         if (cserial == 0) {
-            SecondaryHeader secondary = new SecondaryHeader();
-            secondary.decode(inputStream);
-            if ((secondary.major & 0x7f) != IWCODEC_MAJOR) {
-                throw new DjVuFileException("IW44Image.incompat_codec");
-            }
-            if (secondary.minor > IWCODEC_MINOR) {
-                throw new DjVuFileException("IW44Image.recent_codec");
-            }
-
-            TertiaryHeader tertiary = new TertiaryHeader();
-            tertiary.decode(inputStream, secondary.major & 0x7f, secondary.minor);
-
-            // Handle header information
-            int w = (tertiary.xhi << 8) | tertiary.xlo;
-            int h = (tertiary.yhi << 8) | tertiary.ylo;
-            crcb_delay = 0;
-            crcb_half = 0;
-            if (secondary.minor >= 2) {
-                crcb_delay = tertiary.crcbdelay & 0x7f;
-            }
-            if (secondary.minor >= 2) {
-                crcb_half = (((tertiary.crcbdelay & 0x80) != 0) ? 0 : 1);
-            }
-            if ((secondary.major & 0x80) != 0) {
-                crcb_delay = -1;
-            }
+            secondaryHeader = new IW44SecondaryHeader(inputStream);
+            int w = secondaryHeader.getWidth();
+            int h = secondaryHeader.getHeight();
+            crcb_delay = secondaryHeader.getChrominanceDelay();
+            crcb_half = secondaryHeader.getCrcbHalf();
 
             ymap = new IW44ImageMap(w, h);
             ycodec = new IW44ImageDecoder(ymap);
@@ -203,54 +185,6 @@ public class IW44Image {
         void decode(InputStream inputStream) {
             serial = read8(inputStream);
             slices = read8(inputStream);
-        }
-    }
-
-    public static class SecondaryHeader {
-
-        /*
-           Major version number and color type. One octet containing two values, present only if
-           the serial number is 0.
-
-           The least significant seven bits designate the major version number of the standard being implemented
-           by the decoder. For this version of the standard, the major version number is 1.
-
-           The most significant bit is the color type bit. The color type bit is 0 if the chunk describes three
-           color components. The color type bit is 1 if the chunk describes one color component.
-         */
-        int major;
-
-        /*
-           Minor version number. A one-octet unsigned integer, present only if the serial umber is 0.
-           This octet designates the minor version number of the standard being implemented by the
-           decoder. For this version of the standard, the minor version number is 2.
-         */
-        int minor;
-
-        void decode(InputStream inputStream) {
-            major = read8(inputStream);
-            minor = read8(inputStream);
-        }
-    }
-
-    public static class TertiaryHeader {
-        int xhi;
-        int xlo;
-        int yhi;
-        int ylo;
-        int crcbdelay;
-
-        // tertiary.decode(gbs, secondary.major & 0x7f, secondary.minor);
-        void decode(InputStream inputStream, int major, int minor) {
-            xhi = read8(inputStream);
-            xlo = read8(inputStream);
-            yhi = read8(inputStream);
-            ylo = read8(inputStream);
-            crcbdelay = 0;
-
-            if (major== 1 && minor >= 2) {
-                crcbdelay = read8(inputStream);
-            }
         }
     }
 }

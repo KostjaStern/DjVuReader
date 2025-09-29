@@ -15,6 +15,7 @@ import com.sternkn.djvu.file.coders.BufferPointer;
 import com.sternkn.djvu.file.coders.GBitmap;
 import com.sternkn.djvu.file.coders.GPixmap;
 import com.sternkn.djvu.file.coders.IW44Image;
+import com.sternkn.djvu.file.coders.IW44SecondaryHeader;
 import com.sternkn.djvu.file.coders.JB2CodecDecoder;
 import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
@@ -239,6 +240,7 @@ public class DjVuTreeModel {
         IW44Image image = new IW44Image();
         chunks.forEach(ch -> image.decode_chunk(ch.getData()));
         image.close_codec();
+        IW44SecondaryHeader header = image.getSecondaryHeader();
 
         GPixmap pixmap = image.get_pixmap();
 
@@ -261,11 +263,17 @@ public class DjVuTreeModel {
         textArea.setText(String.format(
                 """
                  %s
-                 Bitmap:
-                   height = %s
-                   width = %s
-                """
-                , chunk.getDataAsText(), height,  width));
+                 majorVersion = %s
+                 minorVersion = %s
+                 colorType = %s
+                 chrominanceDelay = %s
+                 crcbHalf = %s
+                 height = %s
+                 width = %s
+                """, chunk.getDataAsText(),
+                header.getMajorVersion(), header.getMinorVersion(), header.getColorType(),
+                header.getChrominanceDelay(), header.getCrcbHalf(),
+                height,  width));
         textArea.setEditable(false);
 
         JScrollPane topPanel  = new JScrollPane();
