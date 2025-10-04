@@ -15,7 +15,7 @@ import java.io.File;
 import java.net.URL;
 
 public class MainWindow extends Frame {
-
+    private static final String APP_TITLE = "DjVu Viewer";
     private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 
     private DjVuFile djvuFile;
@@ -23,11 +23,11 @@ public class MainWindow extends Frame {
     private JSplitPane rightPanel;
     private JToolBar toolBar;
 
-    /*
-       https://docs.oracle.com/javase/tutorial/uiswing/components/tree.html
-     */
+    private DjVuTreeModel model;
+
     public MainWindow() {
-        this.setTitle("DjVu Viewer");
+        this.setTitle(APP_TITLE);
+
         this.setMenuBar(buildMenuBar());
 
         this.toolBar = buildToolBar();
@@ -41,16 +41,16 @@ public class MainWindow extends Frame {
 
         this.add(splitPane);
 
-        // Set frame properties
-        setSize(600, 300); // Set size to image dimensions
-        setLocationRelativeTo(null); // Center the frame
+        setSize(600, 300);
+        setLocationRelativeTo(null);
         setVisible(true);
+
         // Add window listener to handle closing the frame
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent we) {
-                dispose(); // Release resources
-                System.exit(0); // Exit the application
+                dispose();
+                System.exit(0);
             }
         });
     }
@@ -87,6 +87,7 @@ public class MainWindow extends Frame {
 
     private MenuBar buildMenuBar() {
         MenuBar menuBar = new MenuBar();
+
         Menu fileMenu = new Menu("File");
 
         MenuItem openItem = new MenuItem("Open...");
@@ -94,6 +95,16 @@ public class MainWindow extends Frame {
 
         fileMenu.add(openItem);
         menuBar.add(fileMenu);
+
+        Menu viewMenu = new Menu("View");
+        MenuItem showStatisticsItem = new MenuItem("Show statistics");
+        showStatisticsItem.addActionListener((l) -> {
+            if (this.model != null) {
+                this.model.initStatistics();
+            }
+        });
+        viewMenu.add(showStatisticsItem);
+        menuBar.add(viewMenu);
 
         return menuBar;
     }
@@ -117,12 +128,13 @@ public class MainWindow extends Frame {
             djvuFile = reader.readFile();
         }
 
-        DjVuTreeModel model = new DjVuTreeModel(djvuFile, leftPanel,  rightPanel, toolBar);
+        model = new DjVuTreeModel(djvuFile, leftPanel,  rightPanel, toolBar);
         model.initTree();
         model.initStatistics();
     }
 
     public static void main(String[] args) {
+        System.setProperty("apple.awt.application.name", APP_TITLE);
         new MainWindow();
     }
 }
