@@ -70,14 +70,14 @@ public class TestJB2CodecDecoder extends TestSupport {
 
         assertEquals(488, dict.get_shape_count());
 
-        assertEquals(34, dict.get_shape(0).getBits().columns());
-        assertEquals(41, dict.get_shape(0).getBits().rows());
-        assertEquals(32, dict.get_shape(1).getBits().columns());
-        assertEquals(38, dict.get_shape(1).getBits().rows());
+        assertEquals(34, dict.get_shape(0).getBits().getWidth());
+        assertEquals(41, dict.get_shape(0).getBits().getHeight());
+        assertEquals(32, dict.get_shape(1).getBits().getWidth());
+        assertEquals(38, dict.get_shape(1).getBits().getHeight());
 
-        assertEquals(5, dict.get_shape(486).getBits().columns());
-        assertEquals(7, dict.get_shape(486).getBits().rows());
-        assertEquals(22, dict.get_shape(487).getBits().columns());
-        assertEquals(21, dict.get_shape(487).getBits().rows());
+        assertEquals(5, dict.get_shape(486).getBits().getWidth());
+        assertEquals(7, dict.get_shape(486).getBits().getHeight());
+        assertEquals(22, dict.get_shape(487).getBits().getWidth());
+        assertEquals(21, dict.get_shape(487).getBits().getHeight());
     }
 }

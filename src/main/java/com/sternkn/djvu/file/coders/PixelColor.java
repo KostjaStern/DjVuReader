@@ -4,6 +4,9 @@ import java.util.Objects;
 
 public class PixelColor {
 
+    public static final PixelColor WHITE = new PixelColor(255, 255, 255);
+    public static final PixelColor BLACK = new PixelColor(0, 0, 0);
+
     private int blue;
     private int green;
     private int red;

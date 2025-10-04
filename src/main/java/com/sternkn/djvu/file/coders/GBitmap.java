@@ -5,7 +5,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 
 import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
 
-public class GBitmap {
+public class GBitmap implements Pixmap {
 
     private int rows;
     private int columns;
@@ -30,15 +30,18 @@ public class GBitmap {
         init(ref, border);
     }
 
-    public int columns() {
+    @Override
+    public int getWidth() {
         return columns;
     }
 
-    public int rows() {
+    @Override
+    public int getHeight() {
         return rows;
     }
 
-    public int border() {
+    @Override
+    public int getBorder() {
         return border;
     }
 
@@ -60,6 +63,13 @@ public class GBitmap {
         }
 
         return new BufferPointer(this.bytes_data, row * bytes_per_row + border);
+    }
+
+    @Override
+    public PixelColor getPixel(int x, int y) {
+        int index = y * bytes_per_row + border + x;
+        int value = bytes_data[index];
+        return value == 0 ? PixelColor.WHITE : PixelColor.BLACK;
     }
 
     public void check_border() {
@@ -167,8 +177,8 @@ public class GBitmap {
         // Check boundaries
         if ((x >= columns)         ||
             (y >= rows)            ||
-            (x + bm.columns() < 0) ||
-            (y + bm.rows() < 0) ) {
+            (x + bm.getWidth() < 0) ||
+            (y + bm.getHeight() < 0) ) {
             return;
         }
 
@@ -184,12 +194,12 @@ public class GBitmap {
             BufferPointer srow = new BufferPointer(bm.bytes_data, bm.border);
             BufferPointer drow = new BufferPointer(bytes_data, border + y * bytes_per_row + x);
             // unsigned char *drow = bytes_data + border + y * bytes_per_row + x;
-            for (int sr = 0; sr < bm.rows(); sr++)
+            for (int sr = 0; sr < bm.getHeight(); sr++)
             {
                 if ((sr + y >= 0) && (sr + y < this.rows))
                 {
                     int sc = Math.max(0, -x);
-                    int sc1 = Math.min(bm.columns(), this.columns - x);
+                    int sc1 = Math.min(bm.getWidth(), this.columns - x);
                     while (sc < sc1)
                     {
                         int newDrowValue = drow.getValue(sc) + srow.getValue(sc);
@@ -250,8 +260,8 @@ public class GBitmap {
         // Check boundaries
         if ((xh >= this.columns * subsample) ||
             (yh >= this.rows * subsample)    ||
-            (xh + bm.columns() < 0)          ||
-            (yh + bm.rows() < 0) ) {
+            (xh + bm.getWidth() < 0)          ||
+            (yh + bm.getHeight() < 0) ) {
             return;
         }
 
@@ -273,13 +283,13 @@ public class GBitmap {
 
             BufferPointer srow = new BufferPointer(bm.bytes_data, bm.border);
             BufferPointer drow = new BufferPointer(bytes_data, border + dr.getValue() * bytes_per_row);
-            for (int sr = 0; sr < bm.rows(); sr++)
+            for (int sr = 0; sr < bm.getHeight(); sr++)
             {
                 if (dr.getValue() >= 0 && dr.getValue() < this.rows)
                 {
                     BitContext dc = new BitContext(zdc.getValue());
                     BitContext dc1 = new BitContext(zdc1.getValue());
-                    for (int sc = 0; sc < bm.columns(); sc++)
+                    for (int sc = 0; sc < bm.getWidth(); sc++)
                     {
                         int dcValue = dc.getValue();
                         if (dcValue >= 0 && dcValue < this.columns) {

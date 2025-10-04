@@ -11,15 +11,13 @@ import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.TXTzChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
-import com.sternkn.djvu.file.coders.BufferPointer;
-import com.sternkn.djvu.file.coders.GBitmap;
-import com.sternkn.djvu.file.coders.GPixmap;
 import com.sternkn.djvu.file.coders.IW44Image;
 import com.sternkn.djvu.file.coders.IW44SecondaryHeader;
 import com.sternkn.djvu.file.coders.JB2CodecDecoder;
 import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 import com.sternkn.djvu.file.coders.PixelColor;
+import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.gui.ImageCanvas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,14 +48,15 @@ import static com.sternkn.djvu.file.utils.StringUtils.padRight;
 public class DjVuTreeModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuTreeModel.class);
 
-    private static final int[] WHITE = {255, 255, 255, 255}; // Red, Green, Blue, Alpha
-    private static final int[] BLACK = {0, 0, 0, 255};
     private static final Font MONOSPACED_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
     private JSplitPane rightPanel;
     private JToolBar toolBar;
+
+    private ImageCanvas imageCanvas;
+    private JScrollPane bottomPanel;
 
     public DjVuTreeModel(DjVuFile djvuFile, JScrollPane leftPanel, JSplitPane rightPanel, JToolBar toolBar) {
         this.djvuFile = djvuFile;
@@ -235,21 +234,7 @@ public class DjVuTreeModel {
         image.close_codec();
         IW44SecondaryHeader header = image.getSecondaryHeader();
 
-        GPixmap pixmap = image.get_pixmap();
-
-        int height = pixmap.getHeight();
-        int width = pixmap.getWidth();
-        LOG.debug("IW44 bitmap: height = {}, width = {}", height,  width);
-
-        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        WritableRaster raster = img.getRaster();
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                PixelColor pixel = pixmap.getPixel(x, y);
-                raster.setPixel(x, height - y - 1, pixel.getColor());
-            }
-        }
+        Pixmap bitmap = image.get_pixmap();
 
         String text = String.format(
                 """
@@ -264,14 +249,10 @@ public class DjVuTreeModel {
                 """, chunk.getDataAsText(),
                 header.getMajorVersion(), header.getMinorVersion(), header.getColorType(),
                 header.getChrominanceDelay(), header.getCrcbHalf(),
-                height,  width);
+                bitmap.getHeight(),  bitmap.getWidth());
 
         addTopTextInfo(text, 3, 60);
-
-        ImageCanvas imageCanvas = new ImageCanvas(img, toolBar);
-        JScrollPane bottomPanel = new JScrollPane(imageCanvas);
-        imageCanvas.setVisible(true);
-        this.rightPanel.setBottomComponent(bottomPanel);
+        updateImage(bitmap);
     }
 
     /*
@@ -291,22 +272,7 @@ public class DjVuTreeModel {
         JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(chunk.getData()));
         decoder.decode(image);
 
-        GBitmap bitmap = image.get_bitmap();
-
-        int height = bitmap.rows();
-        int width = bitmap.columns();
-        LOG.debug("bitmap: border = {}, height = {}, width = {}", bitmap.border(), height,  width);
-
-        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        WritableRaster raster = img.getRaster();
-
-        for (int rowId = 0; rowId < bitmap.rows(); rowId++) {
-            BufferPointer row = bitmap.getRow(rowId);
-            for (int colId = 0; colId < bitmap.columns(); colId++) {
-                int[] color = row.getValue(colId) == 0 ? WHITE : BLACK;
-                raster.setPixel(colId, bitmap.rows() - rowId - 1, color);
-            }
-        }
+        Pixmap bitmap = image.get_bitmap();
 
         String text = String.format(
         """
@@ -315,14 +281,10 @@ public class DjVuTreeModel {
            border = %s
            height = %s
            width = %s
-        """, chunk.getDataAsText(), bitmap.border(), height,  width);
+        """, chunk.getDataAsText(), bitmap.getBorder(), bitmap.getHeight(),  bitmap.getWidth());
 
         addTopTextInfo(text, 3, 60);
-
-        ImageCanvas imageCanvas = new ImageCanvas(img, toolBar);
-        JScrollPane bottomPanel = new JScrollPane(imageCanvas);
-        imageCanvas.setVisible(true);
-        this.rightPanel.setBottomComponent(bottomPanel);
+        updateImage(bitmap);
     }
 
     private void showPopupMenu(JTree tree, MouseEvent event) {
@@ -336,6 +298,34 @@ public class DjVuTreeModel {
         saveChunkData.addActionListener(e -> saveChunkDataDialog(chunkNode.getChunk(), tree));
         popupMenu.add(saveChunkData);
         popupMenu.show(event.getComponent(), event.getX(), event.getY());
+    }
+
+    private void updateImage(Pixmap bitmap) {
+        int height = bitmap.getHeight();
+        int width = bitmap.getWidth();
+        LOG.debug("bitmap: border = {}, height = {}, width = {}", bitmap.getBorder(), height,  width);
+
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        WritableRaster raster = image.getRaster();
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                PixelColor pixel = bitmap.getPixel(x, y);
+                raster.setPixel(x, height - y - 1, pixel.getColor());
+            }
+        }
+
+        if (this.imageCanvas == null) {
+            imageCanvas = new ImageCanvas(image, toolBar);
+            bottomPanel = new JScrollPane(imageCanvas);
+            imageCanvas.setVisible(true);
+        }
+        else {
+            imageCanvas.setImage(image);
+            imageCanvas.rePaint();
+        }
+
+        this.rightPanel.setBottomComponent(bottomPanel);
     }
 
     private void saveChunkDataDialog(Chunk chunk, JTree tree) {

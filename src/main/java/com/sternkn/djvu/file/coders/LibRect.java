@@ -15,8 +15,8 @@ public class LibRect {
         // Avoid trouble
         // GMonitorLock lock(bm.monitor());
         // Get size
-        final int w = bm.columns();
-        final int h = bm.rows();
+        final int w = bm.getWidth();
+        final int h = bm.getHeight();
         final int s = bm.rowsize();
 
         // Right border

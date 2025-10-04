@@ -7,7 +7,7 @@ import java.util.Objects;
 
 import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
 
-public class GPixmap {
+public class GPixmap implements Pixmap {
 
     private final int height;
     private final int width;
@@ -35,6 +35,7 @@ public class GPixmap {
          x - 0 ... width - 1
          y - 0 ... height - 1
     */
+    @Override
     public PixelColor getPixel(int x, int y) {
         return pixels[y * width + x];
     }
@@ -43,12 +44,19 @@ public class GPixmap {
         pixels[y * width + x] = pixel;
     }
 
+    @Override
     public int getHeight() {
         return height;
     }
 
+    @Override
     public int getWidth() {
         return width;
+    }
+
+    @Override
+    public int getBorder() {
+        return 0;
     }
 
     @Override

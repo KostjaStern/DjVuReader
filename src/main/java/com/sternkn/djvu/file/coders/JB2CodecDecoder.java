@@ -182,7 +182,7 @@ public class JB2CodecDecoder {
             {
                 code_absolute_mark_size(bm, 4);
                 code_bitmap_directly(bm);
-                blit = code_relative_location(bm.rows(), bm.columns());
+                blit = code_relative_location(bm.getHeight(), bm.getWidth());
                 break;
             }
             case NEW_MARK_LIBRARY_ONLY:
@@ -208,7 +208,7 @@ public class JB2CodecDecoder {
                                     libRect.getRight() - libRect.getLeft() + 1,
                                     libRect.getTop() - libRect.getBottom() + 1, 4);
                 code_bitmap_by_cross_coding(bm, cbm, libRect);
-                blit = code_relative_location (bm.rows(), bm.columns());
+                blit = code_relative_location (bm.getHeight(), bm.getWidth());
                 break;
             }
             case MATCHED_REFINE_LIBRARY_ONLY:
@@ -254,7 +254,7 @@ public class JB2CodecDecoder {
 
                 JB2Blit jblt;
                 if (image.isReproduceOldBug()) {
-                    jblt = code_relative_location(bm.rows(), bm.columns());
+                    jblt = code_relative_location(bm.getHeight(), bm.getWidth());
                 }
                 else {
                     jblt = code_relative_location(libRect.getTop() - libRect.getBottom() + 1,
@@ -586,9 +586,9 @@ public class JB2CodecDecoder {
 
     private void code_bitmap_by_cross_coding(GBitmap bm, GBitmap cbm, LibRect libRect) {
         // Center bitmaps
-        final int cw = cbm.columns();
-        final int dw = bm.columns();
-        final int dh = bm.rows();
+        final int cw = cbm.getWidth();
+        final int dw = bm.getWidth();
+        final int dh = bm.getHeight();
 
         final int xd2c = (dw/2 - dw + 1) - ((libRect.getRight() - libRect.getLeft() + 1)/2 - libRect.getRight());
         final int yd2c = (dh/2 - dh + 1) - ((libRect.getTop() - libRect.getBottom() + 1)/2 - libRect.getTop());
@@ -745,8 +745,8 @@ public class JB2CodecDecoder {
     }
 
     private void code_bitmap_directly(GBitmap bm) {
-        int dw = bm.columns();
-        int dy = bm.rows() - 1;
+        int dw = bm.getWidth();
+        int dy = bm.getHeight() - 1;
 
         BufferPointer up2 = bm.getRow(dy + 2);
         BufferPointer up1 = bm.getRow(dy + 1);

@@ -5,18 +5,19 @@ import javax.swing.Scrollable;
 import javax.swing.JToolBar;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
-import java.awt.Rectangle;
-import java.awt.Dimension;
-import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.Graphics2D;
+// import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 public class ImageCanvas extends JComponent implements Scrollable {
     private static final int INCREMENT_UNIT = 16;
 
-    private final BufferedImage image;
     private final JToolBar toolBar;
+    private BufferedImage image;
     private double scale;
 
     public ImageCanvas(BufferedImage image, JToolBar toolBar) {
@@ -28,7 +29,17 @@ public class ImageCanvas extends JComponent implements Scrollable {
         addZoomOutAction();
     }
 
-    private void reScale() {
+    public BufferedImage getImage() {
+        return image;
+    }
+    public void setImage(BufferedImage img) {
+        if (image != null) {
+            image.flush();
+        }
+        this.image = img;
+    }
+
+    public void rePaint() {
         this.revalidate();
         this.repaint();
     }
@@ -41,7 +52,7 @@ public class ImageCanvas extends JComponent implements Scrollable {
 
         zoomIn.addActionListener(l -> {
             this.scale += 0.01;
-            reScale();
+            rePaint();
         });
     }
 
@@ -53,7 +64,7 @@ public class ImageCanvas extends JComponent implements Scrollable {
 
         zoomOut.addActionListener(l -> {
             this.scale -= 0.01;
-            reScale();
+            rePaint();
         });
     }
 
@@ -63,6 +74,8 @@ public class ImageCanvas extends JComponent implements Scrollable {
 
         if (image != null) {
             Graphics2D g2 = (Graphics2D) graphics.create();
+//            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+//                                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g2.scale(scale, scale);
             g2.drawImage(image, 40, 10, null);
             g2.dispose();
