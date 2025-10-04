@@ -1,28 +1,36 @@
 package com.sternkn.djvu.gui;
 
+import javax.swing.JComponent;
+import javax.swing.Scrollable;
 import javax.swing.JToolBar;
 import javax.swing.JButton;
-import java.awt.Canvas;
-import java.awt.Graphics;
+import javax.swing.SwingConstants;
+import java.awt.Rectangle;
+import java.awt.Dimension;
 import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
-public class ImageCanvas extends Canvas {
+public class ImageCanvas extends JComponent implements Scrollable {
+    private static final int INCREMENT_UNIT = 16;
+
     private final BufferedImage image;
     private final JToolBar toolBar;
-
-    private Graphics2D graphics2D;
     private double scale;
 
     public ImageCanvas(BufferedImage image, JToolBar toolBar) {
         this.image = image;
         this.scale = 0.2;
-        this.setSize((int)(scale * image.getWidth()), (int) (scale * image.getHeight()));
         this.toolBar = toolBar;
 
         addZoomInAction();
         addZoomOutAction();
+    }
+
+    private void reScale() {
+        this.revalidate();
+        this.repaint();
     }
 
     private void addZoomInAction() {
@@ -33,8 +41,7 @@ public class ImageCanvas extends Canvas {
 
         zoomIn.addActionListener(l -> {
             this.scale += 0.01;
-            this.revalidate();
-            this.repaint();
+            reScale();
         });
     }
 
@@ -46,19 +53,19 @@ public class ImageCanvas extends Canvas {
 
         zoomOut.addActionListener(l -> {
             this.scale -= 0.01;
-            this.revalidate();
-            this.repaint();
+            reScale();
         });
     }
 
     @Override
-    public void paint(Graphics graphics) {
-        super.paint(graphics);
-        graphics2D = (Graphics2D) graphics;
-        graphics2D.scale(scale, scale);
+    public void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
 
         if (image != null) {
-            graphics.drawImage(image, 40, 10, this);
+            Graphics2D g2 = (Graphics2D) graphics.create();
+            g2.scale(scale, scale);
+            g2.drawImage(image, 40, 10, null);
+            g2.dispose();
         }
     }
 
@@ -69,5 +76,40 @@ public class ImageCanvas extends Canvas {
             }
         }
         return null;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return image == null ?
+            new Dimension(0, 0) :
+            new Dimension(
+                (int) Math.round(image.getWidth()  * scale),
+                (int) Math.round(image.getHeight() * scale));
+    }
+
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return getPreferredSize();
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportWidth()  {
+        return false;
+    }
+
+    @Override public boolean getScrollableTracksViewportHeight() {
+        return false;
+    }
+
+    @Override
+    public int getScrollableUnitIncrement(Rectangle vr, int orient, int dir) {
+        return INCREMENT_UNIT;
+    }
+
+    @Override
+    public int getScrollableBlockIncrement(Rectangle vr, int orient, int dir) {
+        return orient == SwingConstants.VERTICAL ?
+            Math.max(INCREMENT_UNIT, vr.height - INCREMENT_UNIT) :
+            Math.max(INCREMENT_UNIT, vr.width  - INCREMENT_UNIT);
     }
 }

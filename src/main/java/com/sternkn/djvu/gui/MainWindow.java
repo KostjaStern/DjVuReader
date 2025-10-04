@@ -20,7 +20,7 @@ public class MainWindow extends Frame {
 
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
-    private JScrollPane rightPanel;
+    private JSplitPane rightPanel;
     private JToolBar toolBar;
 
     /*
@@ -35,7 +35,7 @@ public class MainWindow extends Frame {
         this.add(this.toolBar, BorderLayout.NORTH);
 
         leftPanel  = new JScrollPane();
-        rightPanel = new JScrollPane();
+        rightPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
 
@@ -72,7 +72,6 @@ public class MainWindow extends Frame {
         button.setName(buttonType.name());
         button.setActionCommand(buttonType.getActionCommand());
         button.setToolTipText(buttonType.getAltText());
-        // button.addActionListener(this);
 
         final String imageLocation = String.format("/icons/%s.png", buttonType.getImageName());
         final URL imageURL = this.getClass().getResource(imageLocation);

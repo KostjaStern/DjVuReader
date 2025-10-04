@@ -56,10 +56,10 @@ public class DjVuTreeModel {
 
     private DjVuFile djvuFile;
     private JScrollPane leftPanel;
-    private JScrollPane rightPanel;
+    private JSplitPane rightPanel;
     private JToolBar toolBar;
 
-    public DjVuTreeModel(DjVuFile djvuFile, JScrollPane leftPanel, JScrollPane rightPanel, JToolBar toolBar) {
+    public DjVuTreeModel(DjVuFile djvuFile, JScrollPane leftPanel, JSplitPane rightPanel, JToolBar toolBar) {
         this.djvuFile = djvuFile;
         this.leftPanel = leftPanel;
         this.rightPanel = rightPanel;
@@ -68,21 +68,14 @@ public class DjVuTreeModel {
 
     public void initTree() {
         JTree tree = new JTree();
-        tree.setVisible(false);
         tree.setModel(getTreeModel());
-        // tree.setMinimumSize(new Dimension(100, 100));
-
         addMouseListener(tree);
-        tree.setVisible(true);
+
         leftPanel.setViewportView(tree);
     }
 
     public void initStatistics() {
-        JTextArea textArea = new JTextArea(40, 60);
-        textArea.setFont(MONOSPACED_FONT);
-        textArea.setText(getDjVuChunkStatistics());
-        textArea.setEditable(false);
-        rightPanel.setViewportView(textArea);
+        addTopTextInfo(getDjVuChunkStatistics(), 40, 60);
     }
 
     private String getDjVuChunkStatistics() {
@@ -188,18 +181,16 @@ public class DjVuTreeModel {
             return;
         }
 
-        Chunk chunk = chunkNode.getChunk();
-        Component component = getChunkComponent(chunk);
-        rightPanel.setViewportView(component);
+        showChunk(chunkNode.getChunk());
     }
 
-    private Component getChunkComponent(Chunk chunk) {
+    private void showChunk(Chunk chunk) {
         if (chunk.getChunkId() == ChunkId.Sjbz) {
-            return getBitonalImageComponent(chunk);
+            showBitonalChunkImage(chunk);
         }
 
         if (chunk.getChunkId().isIW44Chunk()) {
-            return getBackgroudImageComponent(chunk);
+            showBackgroudChunkImage(chunk);
         }
 
         Chunk decodedChunk = switch (chunk.getChunkId()) {
@@ -213,31 +204,30 @@ public class DjVuTreeModel {
             default -> chunk;
         };
 
-        JTextArea textArea = new JTextArea(20, 60);
-        textArea.setFont(MONOSPACED_FONT);
-        textArea.setText(decodedChunk.getDataAsText());
-        textArea.setEditable(false);
+        addTopTextInfo(decodedChunk.getDataAsText(), 20, 60);
 
         if (!(decodedChunk instanceof TXTzChunk textChunk)) {
-            return textArea;
+            return;
         }
-
-        JPanel panel = new JPanel();
-        panel.add(textArea);
-
-        GridLayout chunkInfoLayout = new GridLayout(2,1);
-        panel.setLayout(chunkInfoLayout);
 
         DefaultTreeModel treeModel = getTreeModelForTextZones(textChunk);
 
         JTree tree = new JTree();
         tree.setModel(treeModel);
-        panel.add(tree);
-
-        return panel;
+        this.rightPanel.setBottomComponent(new JScrollPane(tree));
     }
 
-    private Component getBackgroudImageComponent(Chunk chunk) {
+    private void addTopTextInfo(String text, int rows, int columns) {
+        JTextArea textArea = new JTextArea(rows, columns);
+        textArea.setFont(MONOSPACED_FONT);
+        textArea.setText(text);
+        textArea.setEditable(false);
+
+        JScrollPane scroll = new JScrollPane(textArea);
+        this.rightPanel.setTopComponent(scroll);
+    }
+
+    private void showBackgroudChunkImage(Chunk chunk) {
         List<Chunk> chunks = this.djvuFile.getAllImageChunks(chunk);
 
         IW44Image image = new IW44Image();
@@ -261,9 +251,7 @@ public class DjVuTreeModel {
             }
         }
 
-        JTextArea textArea = new JTextArea(3, 60);
-        textArea.setFont(MONOSPACED_FONT);
-        textArea.setText(String.format(
+        String text = String.format(
                 """
                  %s
                  majorVersion = %s
@@ -276,31 +264,21 @@ public class DjVuTreeModel {
                 """, chunk.getDataAsText(),
                 header.getMajorVersion(), header.getMinorVersion(), header.getColorType(),
                 header.getChrominanceDelay(), header.getCrcbHalf(),
-                height,  width));
-        textArea.setEditable(false);
+                height,  width);
 
-        JScrollPane topPanel  = new JScrollPane();
-        topPanel.setViewportView(textArea);
+        addTopTextInfo(text, 3, 60);
 
-        JScrollPane bottomPanel = new JScrollPane();
         ImageCanvas imageCanvas = new ImageCanvas(img, toolBar);
-        bottomPanel.setViewportView(imageCanvas);
+        JScrollPane bottomPanel = new JScrollPane(imageCanvas);
         imageCanvas.setVisible(true);
-
-        JSplitPane panel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, bottomPanel);
-
-        // JPanel panel = new JPanel();
-        // GridLayout chunkInfoLayout = new GridLayout(2,1);
-        // panel.setLayout(chunkInfoLayout);
-
-        return panel;
+        this.rightPanel.setBottomComponent(bottomPanel);
     }
 
     /*
         https://habr.com/ru/articles/331618/ - Smoothing images with Peron and Malik's anisotropic diffusion filter
         Methods of Bitonal Image Conversion for Modern and Classic Documents
      */
-    private Component getBitonalImageComponent(Chunk chunk) {
+    private void showBitonalChunkImage(Chunk chunk) {
         Chunk sharedShape = this.djvuFile.findSharedShapeChunk(chunk);
         JB2Dict dict = null;
         if (sharedShape != null) {
@@ -330,34 +308,21 @@ public class DjVuTreeModel {
             }
         }
 
-        JTextArea textArea = new JTextArea(3, 60);
-        textArea.setFont(MONOSPACED_FONT);
-        textArea.setText(String.format(
+        String text = String.format(
         """
          %s
          Bitmap:
            border = %s
            height = %s
            width = %s
-        """
-        , chunk.getDataAsText(), bitmap.border(), height,  width));
-        textArea.setEditable(false);
+        """, chunk.getDataAsText(), bitmap.border(), height,  width);
 
-        JScrollPane topPanel  = new JScrollPane();
-        topPanel.setViewportView(textArea);
+        addTopTextInfo(text, 3, 60);
 
-        JScrollPane bottomPanel = new JScrollPane();
         ImageCanvas imageCanvas = new ImageCanvas(img, toolBar);
-        bottomPanel.setViewportView(imageCanvas);
+        JScrollPane bottomPanel = new JScrollPane(imageCanvas);
         imageCanvas.setVisible(true);
-
-        JSplitPane panel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, bottomPanel);
-
-        // JPanel panel = new JPanel();
-        // GridLayout chunkInfoLayout = new GridLayout(2,1);
-        // panel.setLayout(chunkInfoLayout);
-
-        return panel;
+        this.rightPanel.setBottomComponent(bottomPanel);
     }
 
     private void showPopupMenu(JTree tree, MouseEvent event) {
