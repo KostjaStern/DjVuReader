@@ -8,6 +8,7 @@ import com.sternkn.djvu.file.chunks.DirectoryChunk;
 import com.sternkn.djvu.file.chunks.FGbzChunk;
 import com.sternkn.djvu.file.chunks.InclChunk;
 import com.sternkn.djvu.file.chunks.InfoChunk;
+import com.sternkn.djvu.file.chunks.LTAnnotationChunk;
 import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.TXTzChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
@@ -200,6 +201,7 @@ public class DjVuTreeModel {
             case ChunkId.FGbz -> new FGbzChunk(chunk);
             case ChunkId.TXTz -> new TXTzChunk(chunk);
             case ChunkId.ANTz, ChunkId.ANTa -> new AnnotationChunk(chunk);
+            case ChunkId.LTAz, ChunkId.LTAa -> new LTAnnotationChunk(chunk);
             default -> chunk;
         };
 

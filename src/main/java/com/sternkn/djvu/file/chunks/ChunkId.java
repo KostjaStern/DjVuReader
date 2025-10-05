@@ -18,6 +18,13 @@ public enum ChunkId {
        hyperlinks, text boxes, etc. */
     ANTa, ANTz,
 
+    /* Please note that these are undocumented chunks.
+     *
+     * TODO: The DjVu spec allows unknown chunks and says decoders must silently skip identifiers they don’t
+     *       recognize — this is how LTAz could exist without breaking older software.
+     **/
+    LTAa, LTAz,
+
     /* Unicode Text and layout information */
     TXTa, TXTz,
 
