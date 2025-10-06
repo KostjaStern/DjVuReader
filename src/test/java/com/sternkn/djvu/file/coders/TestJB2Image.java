@@ -26,4 +26,13 @@ public class TestJB2Image extends TestSupport {
             }
         }
     }
+
+    @Test
+    public void testFullBitmap() {
+        JB2Image image = readImage("Sjbz_ddd.data", "Djbz_ddd.data");
+        Pixmap actualPixmap = image.get_bitmap();
+        Pixmap expectedPixmap = readPixmap("Sjbz_out_ddd.png");
+
+        assertPixmapEquals(expectedPixmap, actualPixmap);
+    }
 }

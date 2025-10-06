@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class TestSupport {
     private static final String PATH_CHUNKS = "test_chunks/";
     private static final String PATH_IMAGES = "test_images/";
@@ -39,6 +41,16 @@ public class TestSupport {
         }
         catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void assertPixmapEquals(Pixmap expected, Pixmap actual) {
+        assertEquals(expected.getWidth(), actual.getWidth());
+        assertEquals(expected.getHeight(), actual.getHeight());
+        for (int y = 0; y < actual.getHeight(); y++) {
+            for (int x = 0; x < actual.getWidth(); x++) {
+                assertEquals(expected.getPixel(x, y), actual.getPixel(x, y));
+            }
         }
     }
 
