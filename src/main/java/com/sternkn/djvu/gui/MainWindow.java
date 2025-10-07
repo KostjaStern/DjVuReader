@@ -27,6 +27,7 @@ public class MainWindow extends Frame {
 
     public MainWindow() {
         this.setTitle(APP_TITLE);
+        this.setIconImage(getAppIcon());
 
         this.setMenuBar(buildMenuBar());
 
@@ -135,6 +136,17 @@ public class MainWindow extends Frame {
 
     public static void main(String[] args) {
         System.setProperty("apple.awt.application.name", APP_TITLE);
+        if (Taskbar.isTaskbarSupported()) {
+            Taskbar tb = Taskbar.getTaskbar();
+            if (tb.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                tb.setIconImage(getAppIcon());
+            }
+        }
         new MainWindow();
+    }
+
+    private static Image getAppIcon() {
+        URL appImageURL = MainWindow.class.getResource("/icons/djvu_app_icon_2_128.png");
+        return Toolkit.getDefaultToolkit().getImage(appImageURL);
     }
 }
