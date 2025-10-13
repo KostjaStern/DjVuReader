@@ -4,6 +4,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -360,7 +361,7 @@ public class BSByteInputStream extends InputStream {
     }
 
     @Override
-    public int available () {
+    public int available() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -370,6 +371,7 @@ public class BSByteInputStream extends InputStream {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
+        this.zpDecoder.close();
     }
 }

@@ -4,7 +4,6 @@ import com.sternkn.djvu.file.DjVuFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HexFormat;
@@ -22,7 +21,7 @@ import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
     https://sourceforge.net/p/djvu/djvulibre-git/ci/master/tree/libdjvu/ZPCodec.h
     https://sourceforge.net/p/djvu/djvulibre-git/ci/master/tree/libdjvu/ZPCodec.cpp
  */
-public class ZpCodecInputStream implements ZPCodecDecoder, Closeable {
+public class ZpCodecInputStream implements ZPCodecDecoder {
     private static final Logger LOG = LoggerFactory.getLogger(ZpCodecInputStream.class);
 
     private static final int NO_MORE_BYTE = -1;

@@ -59,7 +59,7 @@ public class TestSupport {
     }
 
     public byte[] readByteBuffer(String fileName) {
-        try (InputStream inputStream = classLoader.getResourceAsStream(PATH_CHUNKS + fileName)) {
+        try (InputStream inputStream = readStream(fileName)) {
             return inputStream != null ? inputStream.readAllBytes() : new byte[0];
         }
         catch (IOException e) {
@@ -90,7 +90,7 @@ public class TestSupport {
         JB2Dict dict = dictFileName != null ? readDictionary(dictFileName) : null;
         JB2Image image = new JB2Image(dict);
 
-        try (InputStream inputStream = classLoader.getResourceAsStream(PATH_CHUNKS + imageFileName)) {
+        try (InputStream inputStream = readStream(imageFileName)) {
             JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
             decoder.decode(image);
         }
@@ -104,7 +104,7 @@ public class TestSupport {
     JB2Dict readDictionary(String fileName) {
         JB2Dict dict = new JB2Dict();
 
-        try (InputStream inputStream = classLoader.getResourceAsStream(PATH_CHUNKS + fileName)) {
+        try (InputStream inputStream = readStream(fileName)) {
             JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
             decoder.decode(dict);
         }
