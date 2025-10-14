@@ -1,5 +1,7 @@
 
 target/
+docs/
+test_files/
 
 # IntelliJ IDEA
 *.iml
