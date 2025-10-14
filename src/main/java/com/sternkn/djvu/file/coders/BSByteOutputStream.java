@@ -15,7 +15,7 @@ import static com.sternkn.djvu.file.coders.BSByteStreamUtils.getXMTF;
 public class BSByteOutputStream extends OutputStream {
     private static final Logger LOG = LoggerFactory.getLogger(BSByteOutputStream.class);
 
-    private static final int MINBLOCK = 10;
+    private static final int MIN_BLOCK = 10;
     private static final int FREQS0 = 100000;
     private static final int FREQS1 = 1000000;
     private static final int FREQMAX = 4;
@@ -35,7 +35,7 @@ public class BSByteOutputStream extends OutputStream {
     public BSByteOutputStream(OutputStream outputStream, int xencoding) {
         zpEncoder = new ZpCodecOutputStream(outputStream);
 
-        int encoding = Math.max(xencoding, MINBLOCK);
+        int encoding = Math.max(xencoding, MIN_BLOCK);
         if (encoding > MAX_BLOCK) {
             throw new DjVuFileException("The block size is greater than " + MAX_BLOCK);
         }
