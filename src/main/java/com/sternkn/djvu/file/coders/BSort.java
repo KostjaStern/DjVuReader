@@ -1,40 +1,7 @@
 package com.sternkn.djvu.file.coders;
 
-
 import com.sternkn.djvu.file.DjVuFileException;
 
-/*
-class _BSort  // DJVU_CLASS
-{
-public:
-  ~_BSort();
-  _BSort(unsigned char *data, int size);
-  void run(int &markerpos);
-private:
-  // Members
-  int            size;
-  unsigned char *data;
-  unsigned int  *posn;
-  GPBuffer<unsigned int> gposn;
-  int           *rank;
-  GPBuffer<int> grank;
-  // Helpers
-  inline int GT(int p1, int p2, int depth);
-  inline int GTD(int p1, int p2, int depth);
-  // -- final in-depth sort
-  void ranksort(int lo, int hi, int d);
-  // -- doubling sort
-  int  pivot3r(int *rr, int lo, int hi);
-  void quicksort3r(int lo, int hi, int d);
-  // -- presort to depth PRESORT_DEPTH
-  unsigned char pivot3d(unsigned char *dd, int lo, int hi);
-  void quicksort3d(int lo, int hi, int d);
-  // -- radixsort
-  void radixsort16(void);
-  void radixsort8(void);
-};
-
- */
 public class BSort {
     // Sorting tresholds
     private static final int RANKSORT_THRESH = 10;
@@ -49,8 +16,6 @@ public class BSort {
     private int[] posn;
     private int size;
 
-//    _BSort::_BSort(unsigned char *xdata, int xsize)
-//  : size(xsize), data(xdata), gposn(posn,xsize), grank(rank,xsize+1)
     public BSort(int[] data, int size) {
         if (size <= 0 || size >= 0x1000000) {
             throw new DjVuFileException("Invalid size: " + size);
@@ -72,11 +37,6 @@ public class BSort {
             throw new DjVuFileException("Invalid data state: data[size - 1] should be zero");
         }
 
-        // ASSERT(size>0);
-        // ASSERT(data[size-1]==0);
-//#ifdef BSORT_TIMER
-//        long start = GOS::ticks();
-//#endif
         // Step 1: Radix sort
         int depth = 0;
         if (size > RADIX_THRESH)
@@ -100,9 +60,6 @@ public class BSort {
             lo = hi;
         }
         depth = PRESORT_DEPTH;
-//#ifdef BSORT_TIMER
-//        long middle = GOS::ticks();
-//#endif
 
         // Step 3: Perform rank doubling
         int again = 1;
@@ -140,12 +97,12 @@ public class BSort {
                 posn[sorted_lo] = (posn[sorted_lo] & 0xffffff) | (step << 24);
                 sorted_lo += step + 1;
             }
+
             // Double depth
             depth += depth;
         }
 
         // Step 4: Permute data
-        // int i;
         int markerpos = -1;
         for (int i = 0; i < size; i++) {
             rank[i] = data[i];
@@ -162,22 +119,17 @@ public class BSort {
             }
         }
 
-        // ASSERT(result>=0 && result<size);
         if (markerpos < 0) {
             throw new DjVuFileException("Invalid data state: result is out of range");
         }
-//#ifdef BSORT_TIMER
-//        long end = GOS::ticks();
-//        DjVuPrintErrorUTF8("Sorting time: %d bytes in %ld + %ld = %ld ms\n",
-//                size-1, middle-start, end-middle, end-start);
-//#endif
+
         return markerpos;
     }
 
-    // _BSort::quicksort3r -- Three way quicksort algorithm
-    //    Sort suffixes based on rank at pos+depth
-    //    The algorithm breaks into ranksort when size is
-    //    smaller than RANKSORT_THRESH
+    // quicksort3r -- Three way quicksort algorithm
+    // Sort suffixes based on rank at pos+depth
+    // The algorithm breaks into ranksort when size is
+    // smaller than RANKSORT_THRESH
     private void quicksort3r(int lo, int hi, int depth) {
         /* Initialize stack */
         int[] slo = new int[QUICKSORT_STACK];
@@ -199,6 +151,7 @@ public class BSort {
                 int tmp;
                 BufferPointer rr = new BufferPointer(rank, depth);
                 int med = pivot3r(rr, lo, hi);
+
                 // -- positions are organized as follows:
                 //   [lo..l1[ [l1..l[ ]h..h1] ]h1..hi]
                 //      =        <       >        =
@@ -212,6 +165,7 @@ public class BSort {
                 }
                 int l = l1;
                 int h = h1;
+
                 // -- partition set
                 for (;;)
                 {
@@ -241,6 +195,7 @@ public class BSort {
                     posn[l] = posn[h];
                     posn[h] = tmp;
                 }
+
                 // -- reorganize as follows
                 //   [lo..l1[ [l1..h1] ]h1..hi]
                 //      <        =        >
@@ -252,7 +207,6 @@ public class BSort {
                 h1 = hi - (h1 - h);
 
                 // -- process segments
-                // ASSERT(sp+2<QUICKSORT_STACK);
                 if (sp + 2 >= QUICKSORT_STACK) {
                     throw new DjVuFileException("Invalid state: sp + 2 >= QUICKSORT_STACK");
                 }
@@ -316,8 +270,7 @@ public class BSort {
         return Math.min(c2, c3);
     }
 
-    // _BSort::ranksort --
-    // -- a simple insertion sort based on GT
+    // ranksort - a simple insertion sort based on GT
     private void ranksort(int lo, int hi, int depth) {
         int i;
         int j;
@@ -328,10 +281,12 @@ public class BSort {
             for(j = i - 1; j >= lo && GT(posn[j], tmp, depth); j--) {
                 posn[j + 1] = posn[j];
             }
-            posn[j+1] = tmp;
+            posn[j + 1] = tmp;
         }
-        for(i=lo;i<=hi;i++)
-            rank[posn[i]]=i;
+
+        for(i = lo; i <= hi; i++) {
+            rank[posn[i]] = i;
+        }
     }
 
     // GT -- compare suffixes using rank information
@@ -355,56 +310,14 @@ public class BSort {
             if (r1 != r2) {
                 return r1 > r2;
             }
-
-            r1 = rank[p1 + depth];
-            r2 = rank[p2 + depth];
-            p1 += twod;
-            p2 += twod;
-            if (r1 != r2) {
-                return r1 > r2;
-            }
-
-            r1 = rank[p1];
-            r2 = rank[p2];
-            if (r1 != r2) {
-                return r1 > r2;
-            }
-
-            r1 = rank[p1 + depth];
-            r2 = rank[p2 + depth];
-            p1 += twod;
-            p2 += twod;
-            if (r1 != r2) {
-                return r1 > r2;
-            }
-
-            r1 = rank[p1];
-            r2 = rank[p2];
-            if (r1 != r2) {
-                return r1 > r2;
-            }
-
-            r1 = rank[p1 + depth];
-            r2 = rank[p2 + depth];
-            p1 += twod;
-            p2 += twod;
-            if (r1 != r2) {
-                return r1 > r2;
-            }
-
-            r1 = rank[p1];
-            r2 = rank[p2];
-            if (r1 != r2) {
-                return r1 > r2;
-            }
         }
     }
 
-    // _BSort::quicksort3d -- Three way quicksort algorithm
-    //    Sort suffixes based on strings until reaching
-    //    depth rank at pos+depth
-    //    The algorithm breaks into ranksort when size is
-    //    smaller than PRESORT_THRESH
+    // quicksort3d -- Three way quicksort algorithm
+    // Sort suffixes based on strings until reaching
+    // depth rank at pos+depth
+    // The algorithm breaks into ranksort when size is
+    // smaller than PRESORT_THRESH
     private void quicksort3d(int lo, int hi, int depth) {
         /* Initialize stack */
         int[] slo = new int[QUICKSORT_STACK];
@@ -644,12 +557,10 @@ public class BSort {
     }
 
     private void radixsort16() {
-        // int i;
+
         // Initialize frequency array
         int[] ftab = new int[65536];
-        // GPBuffer<int> gftab(ftab,65536);
-//        for (i=0; i<65536; i++)
-//            ftab[i] = 0;
+
         // Count occurences
         int c1 = data[0];
         for (int i = 0; i < size - 1; i++) {
@@ -657,6 +568,7 @@ public class BSort {
             ftab[(c1 << 8) | c2] ++;
             c1 = c2;
         }
+
         // Generate upper position
         for (int i = 1; i < 65536; i++) {
             ftab[i] += ftab[i - 1];
@@ -679,24 +591,22 @@ public class BSort {
         }
 
         // Fixup marker stuff
-        // ASSERT(data[size-1]==0);
         c1 = data[size - 2];
         posn[0] = size - 1;
         posn[ ftab[(c1 << 8)] ] = size - 2;
         rank[size - 1] = 0;
         rank[size - 2] = ftab[(c1 << 8)];
+
         // Extra element
         rank[size] = -1;
     }
 
     private void radixsort8() {
-        // int i;
 
         // Initialize frequency array
         int[] lo = new int[256];
         int[] hi = new int[256];
-//        for (i=0; i<256; i++)
-//            hi[i] = lo[i] = 0;
+
         // Count occurences
         for (int i = 0; i < size - 1; i++) {
             hi[data[i]]++;
@@ -718,6 +628,7 @@ public class BSort {
         // Process marker "$"
         posn[0] = size - 1;
         rank[size - 1] = 0;
+
         // Extra element
         rank[size] = -1;
     }

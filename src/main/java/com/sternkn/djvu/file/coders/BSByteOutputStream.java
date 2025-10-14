@@ -1,31 +1,32 @@
 package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.DjVuFileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.stream.IntStream;
+
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.CTXIDS;
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.KILOBYTE;
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.MAX_BLOCK;
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.getXMTF;
 
 public class BSByteOutputStream extends OutputStream {
+    private static final Logger LOG = LoggerFactory.getLogger(BSByteOutputStream.class);
+
     private static final int MINBLOCK = 10;
-    private static final int MAXBLOCK = 4096;
     private static final int FREQS0 = 100000;
     private static final int FREQS1 = 1000000;
     private static final int FREQMAX = 4;
-    private static final int CTXIDS = 3;
-
-    private static final int[] XMTF = IntStream.range(0, 256).toArray();
 
     // Overflow required when encoding
     private static final int OVERFLOW = 32;
-
 
     private final ZPCodecEncoder zpEncoder;
     private final int blocksize;
 
     private int[] gdata;
-    // private int offset;
     private int bptr;
     private int size;
 
@@ -33,15 +34,14 @@ public class BSByteOutputStream extends OutputStream {
 
     public BSByteOutputStream(OutputStream outputStream, int xencoding) {
         zpEncoder = new ZpCodecOutputStream(outputStream);
-        // gzp=ZPCodec::create(gbs,true,true);
 
         int encoding = Math.max(xencoding, MINBLOCK);
-        if (encoding > MAXBLOCK) {
-            throw new DjVuFileException("The block size is greater than " + MAXBLOCK);
+        if (encoding > MAX_BLOCK) {
+            throw new DjVuFileException("The block size is greater than " + MAX_BLOCK);
         }
 
-        blocksize = encoding * 1024;
-        // this.offset = 0;
+        blocksize = encoding * KILOBYTE;
+        LOG.debug("blocksize = {}", blocksize);
 
         this.ctx = new BitContext[300];
 
@@ -70,10 +70,7 @@ public class BSByteOutputStream extends OutputStream {
     }
 
     private void write(int[] buffer) throws IOException {
-
-
         int sz = buffer.length;
-        // int copied = 0;
 
         while (sz > 0) {
             if (gdata == null) {
@@ -82,22 +79,14 @@ public class BSByteOutputStream extends OutputStream {
             }
 
             int bytes = Math.min(blocksize - 1 - bptr, sz);
-//            if (bytes > sz) {
-//                bytes = sz;
-//            }
-
-            // Store date (todo: rle)
-            // memcpy(data+bptr, buffer, bytes);
-            // buffer = (void*)((char*)buffer + bytes);
             System.arraycopy(buffer, 0, gdata, bptr, bytes);
 
             bptr += bytes;
             sz -= bytes;
-            // copied += bytes;
-            // offset += bytes;
 
             // Flush when needed
             if (bptr + 1 >= blocksize) {
+                LOG.debug("Flushing during writing");
                 flush();
             }
         }
@@ -109,8 +98,7 @@ public class BSByteOutputStream extends OutputStream {
             if (bptr >= blocksize) {
                 throw new DjVuFileException("The bptr (" + bptr + ") is greater than blocksize(" + blocksize + ")");
             }
-            // ASSERT(bptr<(int)blocksize);
-            // memset(data+bptr, 0, OVERFLOW);
+
             size = bptr + 1;
             encode();
         }
@@ -123,15 +111,16 @@ public class BSByteOutputStream extends OutputStream {
         flush();
 
         // Encode EOF marker
-        encode_raw(24, 0);
+        encodeRaw(24, 0);
 
         zpEncoder.close();
     }
 
     private long encode() {
         final int markerpos = blocksort(gdata, size);
+        LOG.debug("encode: markerpos = {}", markerpos);
 
-        encode_raw(24, size);
+        encodeRaw(24, size);
 
         // Determine and Encode Estimation Speed
         int fshift = 0;
@@ -180,7 +169,7 @@ public class BSByteOutputStream extends OutputStream {
             b = (frequenciesContext.mtfno < 4) ? 1 : 0;
             zpEncoder.encoder(b, cx.getCurrentValue());
             if (b == 1) {
-                encode_binary(cx, 1, frequenciesContext.mtfno - 2);
+                encodeBinary(cx, 1, frequenciesContext.mtfno - 2);
                 frequenciesContext.adjustFrequenciesForOverflow(c);
                 continue;
             }
@@ -188,7 +177,7 @@ public class BSByteOutputStream extends OutputStream {
             b = (frequenciesContext.mtfno < 8) ? 1 : 0;
             zpEncoder.encoder(b, cx.getCurrentValue());
             if (b == 1) {
-                encode_binary(cx,2,frequenciesContext.mtfno - 4);
+                encodeBinary(cx,2,frequenciesContext.mtfno - 4);
                 frequenciesContext.adjustFrequenciesForOverflow(c);
                 continue;
             }
@@ -196,7 +185,7 @@ public class BSByteOutputStream extends OutputStream {
             b = (frequenciesContext.mtfno < 16) ? 1 : 0;
             zpEncoder.encoder(b, cx.getCurrentValue());
             if (b == 1) {
-                encode_binary(cx,3,frequenciesContext.mtfno - 8);
+                encodeBinary(cx,3,frequenciesContext.mtfno - 8);
                 frequenciesContext.adjustFrequenciesForOverflow(c);
                 continue;
             }
@@ -204,7 +193,7 @@ public class BSByteOutputStream extends OutputStream {
             b = (frequenciesContext.mtfno < 32) ? 1 : 0;
             zpEncoder.encoder(b, cx.getCurrentValue());
             if (b == 1) {
-                encode_binary(cx,4,frequenciesContext.mtfno - 16);
+                encodeBinary(cx,4,frequenciesContext.mtfno - 16);
                 frequenciesContext.adjustFrequenciesForOverflow(c);
                 continue;
             }
@@ -212,7 +201,7 @@ public class BSByteOutputStream extends OutputStream {
             b = (frequenciesContext.mtfno < 64) ? 1 : 0;
             zpEncoder.encoder(b, cx.getCurrentValue());
             if (b == 1) {
-                encode_binary(cx,5,frequenciesContext.mtfno - 32);
+                encodeBinary(cx,5,frequenciesContext.mtfno - 32);
                 frequenciesContext.adjustFrequenciesForOverflow(c);
                 continue;
             }
@@ -220,7 +209,7 @@ public class BSByteOutputStream extends OutputStream {
             b = (frequenciesContext.mtfno < 128) ? 1 : 0;
             zpEncoder.encoder(b, cx.getCurrentValue());
             if (b == 1) {
-                encode_binary(cx,6,frequenciesContext.mtfno - 64);
+                encodeBinary(cx,6,frequenciesContext.mtfno - 64);
                 frequenciesContext.adjustFrequenciesForOverflow(c);
                 continue;
             }
@@ -228,7 +217,7 @@ public class BSByteOutputStream extends OutputStream {
             b = (frequenciesContext.mtfno < 256) ? 1 : 0;
             zpEncoder.encoder(b, cx.getCurrentValue());
             if (b == 1) {
-                encode_binary(cx,7,frequenciesContext.mtfno - 128);
+                encodeBinary(cx,7,frequenciesContext.mtfno - 128);
                 frequenciesContext.adjustFrequenciesForOverflow(c);
             }
         }
@@ -251,8 +240,8 @@ public class BSByteOutputStream extends OutputStream {
 
         FrequenciesContext(int fshift) {
             this.fshift = fshift;
-            mtf = Arrays.copyOf(XMTF, XMTF.length);
-            rmtf = Arrays.copyOf(XMTF, XMTF.length);
+            mtf = getXMTF();
+            rmtf = getXMTF();
             freq = new long[FREQMAX];
             fadd = 4;
             mtfno = 3;
@@ -288,21 +277,19 @@ public class BSByteOutputStream extends OutputStream {
         }
     }
 
-
-    private void encode_binary(ArrayPointer<BitContext> ctx, int bits, int x) {
+    private void encodeBinary(ArrayPointer<BitContext> ctx, int bits, int x) {
         int n = 1;
         int m = (1 << bits);
 
-        while (n < m)
-        {
-            x = (x & (m-1)) << 1;
+        while (n < m) {
+            x = (x & (m - 1)) << 1;
             int b = (x >> bits);
             zpEncoder.encoder(b, ctx.getValue(n));
-            n = (n<<1) | b;
+            n = (n << 1) | b;
         }
     }
 
-    private void encode_raw(int bits, int x) {
+    private void encodeRaw(int bits, int x) {
         int n = 1;
         int m = (1 << bits);
         while (n < m) {

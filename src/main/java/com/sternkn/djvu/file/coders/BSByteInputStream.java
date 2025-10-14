@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
 
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.CTXIDS;
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.KILOBYTE;
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.MAX_BLOCK_SIZE;
+import static com.sternkn.djvu.file.coders.BSByteStreamUtils.getXMTF;
 import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedInt;
 import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedByte;
 
@@ -22,17 +24,6 @@ public class BSByteInputStream extends InputStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(BSByteInputStream.class);
 
-    private static final int[] XMTF = IntStream.range(0, 256).toArray();
-
-    // Limits on block sizes
-    private static final int KILOBYTE = 1024;
-    private static final long MAX_BLOCK_SIZE = 4096 * KILOBYTE; // 4M
-    private static final long MIN_BLOCK_SIZE = 10 * KILOBYTE;   // 10K
-
-    private static final int FREQMAX = 4;
-    private static final int CTXIDS = 3;
-
-    private long offset;
     private int bptr;
     private int blocksize;
     private int size;
@@ -64,9 +55,7 @@ public class BSByteInputStream extends InputStream {
 
     public BSByteInputStream(InputStream inputStream) {
         this.zpDecoder = new ZpCodecInputStream(inputStream);
-        // this.zpDecoder = new MyZpCodecInputStream(inputStream);
 
-        this.offset = 0;
         this.bptr = 0;
         this.blocksize = 0;
         this.size = 0;
@@ -118,8 +107,7 @@ public class BSByteInputStream extends InputStream {
                     ". It should be between 10K and 4M");
         }
 
-        if (blocksize < size)
-        {
+        if (blocksize < size) {
             blocksize = size;
             if (gdata == null) {
                 gdata = new int[blocksize];
@@ -127,22 +115,18 @@ public class BSByteInputStream extends InputStream {
         }
 
         // Decode Estimation Speed
-        if (zpDecoder.decoder() != 0)
-        {
+        if (zpDecoder.decoder() != 0) {
             zpDecoder.decoder();
         }
 
-        int[] mtf = Arrays.copyOf(XMTF, XMTF.length);
+        int[] mtf = getXMTF();
 
         // Decode
         int mtfno = 3;
         int markerpos = -1;
 
         for (int index = 0; index < size; index++) {
-            int ctxid = CTXIDS - 1;
-            if (ctxid > mtfno) {
-                ctxid = mtfno;
-            }
+            final int ctxid = Math.min(CTXIDS - 1, mtfno);
 
             if (zpDecoder.decoder(ctx[ctxid]) != 0) {
                 mtfno = 0;
@@ -281,14 +265,11 @@ public class BSByteInputStream extends InputStream {
         int sz = buffer.length;
         int bufferPtr = 0;
 
-        while (sz > 0 && !eof)
-        {
+        while (sz > 0 && !eof) {
             // Decode if needed
-            if (size == 0)
-            {
+            if (size == 0) {
                 bptr = 0;
-                if (decode() == 0)
-                {
+                if (decode() == 0) {
                     size = 1 ;
                     eof = true;
                 }
@@ -308,7 +289,6 @@ public class BSByteInputStream extends InputStream {
             bptr += bytes;
             sz -= bytes;
             copied += bytes;
-            offset += bytes;
         }
 
         // Return copied bytes
