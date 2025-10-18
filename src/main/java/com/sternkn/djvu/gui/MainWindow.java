@@ -129,6 +129,7 @@ public class MainWindow extends Frame {
             djvuFile = reader.readFile();
         }
 
+        this.setTitle(filename);
         model = new DjVuTreeModel(djvuFile, leftPanel,  rightPanel, toolBar);
         model.initTree();
         model.initStatistics();
