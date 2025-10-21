@@ -1,4 +1,4 @@
-package com.sternkn.djvu.gui.tree;
+package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.chunks.TextZone;
 

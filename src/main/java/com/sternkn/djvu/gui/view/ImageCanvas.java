@@ -1,4 +1,4 @@
-package com.sternkn.djvu.gui;
+package com.sternkn.djvu.gui.view;
 
 import javax.swing.JComponent;
 import javax.swing.Scrollable;
@@ -10,7 +10,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Graphics2D;
-// import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 public class ImageCanvas extends JComponent implements Scrollable {
@@ -20,8 +19,7 @@ public class ImageCanvas extends JComponent implements Scrollable {
     private BufferedImage image;
     private double scale;
 
-    public ImageCanvas(BufferedImage image, JToolBar toolBar) {
-        this.image = image;
+    public ImageCanvas(JToolBar toolBar) {
         this.scale = 0.2;
         this.toolBar = toolBar;
 
@@ -74,8 +72,6 @@ public class ImageCanvas extends JComponent implements Scrollable {
 
         if (image != null) {
             Graphics2D g2 = (Graphics2D) graphics.create();
-//            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-//                                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g2.scale(scale, scale);
             g2.drawImage(image, 40, 10, null);
             g2.dispose();
