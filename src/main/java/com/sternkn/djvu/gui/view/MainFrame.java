@@ -28,8 +28,6 @@ public class MainFrame extends JFrame {
     private static final Logger LOG = LoggerFactory.getLogger(MainFrame.class);
 
     private static final Font MONOSPACED_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
-    private static final KeyStroke OPEN_DJVU_FILE_KEY = KeyStroke.getKeyStroke(
-            'O', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
 
     private ChunkTree chunkTree;
     private JScrollPane leftPanel;
@@ -134,7 +132,8 @@ public class MainFrame extends JFrame {
 
         JMenuItem openItem = new JMenuItem("Open...");
         openItem.setName(ControlName.FILE_OPEN_MENU.name());
-        openItem.setAccelerator(OPEN_DJVU_FILE_KEY);
+        openItem.setAccelerator(KeyStroke.getKeyStroke(
+                'O', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         openItem.addActionListener(this::onOpenFile);
 
         fileMenu.add(openItem);
