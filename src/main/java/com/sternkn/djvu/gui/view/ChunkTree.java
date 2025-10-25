@@ -18,6 +18,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 
+import static com.sternkn.djvu.gui.view.ControlName.FILE_CHUNKS_TREE;
+import static com.sternkn.djvu.gui.view.ControlName.SAVE_CHUNK_DATA_DIALOG;
+
 public class ChunkTree {
     private static final Logger LOG = LoggerFactory.getLogger(ChunkTree.class);
 
@@ -38,6 +41,7 @@ public class ChunkTree {
 
     private void initTree() {
         tree = new JTree();
+        tree.setName(FILE_CHUNKS_TREE.name());
         tree.setVisible(false);
         addMouseListener(tree);
         panel.setViewportView(tree);
@@ -94,6 +98,7 @@ public class ChunkTree {
         LOG.debug("Saving chunk = {} data", chunkNode);
 
         JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setName(SAVE_CHUNK_DATA_DIALOG.name());
         fileChooser.setDialogTitle("Save chunk  data as");
         String fileName = String.format("%s_%s.data", chunkNode.getChunkName(), chunkNode.getChunkId());
         fileChooser.setSelectedFile(new File(fileName));

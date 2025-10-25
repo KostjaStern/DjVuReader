@@ -6,8 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultTreeModel;
-import java.awt.*;
+import java.awt.Font;
+import java.awt.Taskbar;
+import java.awt.Toolkit;
+import java.awt.BorderLayout;
+import java.awt.Image;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -22,6 +28,8 @@ public class MainFrame extends JFrame {
     private static final Logger LOG = LoggerFactory.getLogger(MainFrame.class);
 
     private static final Font MONOSPACED_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+    private static final KeyStroke OPEN_DJVU_FILE_KEY = KeyStroke.getKeyStroke(
+            'O', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
 
     private ChunkTree chunkTree;
     private JScrollPane leftPanel;
@@ -51,16 +59,18 @@ public class MainFrame extends JFrame {
         this.setTitle(this.viewModel.getTitle());
         this.setIconImage(getAppIcon());
 
-        this.setMenuBar(buildMenuBar());
+        this.setJMenuBar(buildMenuBar());
 
         this.toolBar = buildToolBar();
         this.setLayout(new BorderLayout());
         this.add(this.toolBar, BorderLayout.NORTH);
 
         leftPanel  = new JScrollPane();
+        leftPanel.setName(ControlName.LEFT_PANEL.name());
         chunkTree = new ChunkTree(leftPanel, this.viewModel);
 
         rightPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        rightPanel.setName(ControlName.RIGHT_PANEL.name());
         addTopTextArea();
         this.imageCanvas = new ImageCanvas(toolBar);
         this.textTree = new JTree();
@@ -116,19 +126,24 @@ public class MainFrame extends JFrame {
         return button;
     }
 
-    private MenuBar buildMenuBar() {
-        MenuBar menuBar = new MenuBar();
+    private JMenuBar buildMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
 
-        Menu fileMenu = new Menu("File");
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setName(ControlName.FILE_MENU.name());
 
-        MenuItem openItem = new MenuItem("Open...");
+        JMenuItem openItem = new JMenuItem("Open...");
+        openItem.setName(ControlName.FILE_OPEN_MENU.name());
+        openItem.setAccelerator(OPEN_DJVU_FILE_KEY);
         openItem.addActionListener(this::onOpenFile);
 
         fileMenu.add(openItem);
         menuBar.add(fileMenu);
 
-        Menu viewMenu = new Menu("View");
-        MenuItem showStatisticsItem = new MenuItem("Show statistics");
+        JMenu viewMenu = new JMenu("View");
+        viewMenu.setName(ControlName.VIEW_MENU.name());
+        JMenuItem showStatisticsItem = new JMenuItem("Show statistics");
+        showStatisticsItem.setName(ControlName.VIEW_SHOW_STATISTICS_MENU.name());
         showStatisticsItem.addActionListener((l) -> this.viewModel.showStatistics());
         viewMenu.add(showStatisticsItem);
         menuBar.add(viewMenu);
@@ -137,25 +152,22 @@ public class MainFrame extends JFrame {
     }
 
     public void onOpenFile(ActionEvent actionEvent) {
-        FileDialog fileDialog = new FileDialog(this, "Select a file to open", FileDialog.LOAD);
-        fileDialog.setVisible(true);
+        JFileChooser chooser = new JFileChooser();
+        chooser.setName(ControlName.OPEN_DJVU_FILE_DIALOG.name());
+        chooser.setDialogTitle("Select a DJVU file to open");
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setFileFilter(new FileNameExtensionFilter("DjVu files (*.djvu)", "djvu"));
 
-        String filename = fileDialog.getFile();
-        String directory = fileDialog.getDirectory();
-
-        if (filename == null || directory == null) {
-            return;
+        int result = chooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = chooser.getSelectedFile();
+            viewModel.loadFileAsync(selectedFile);
         }
-
-        final String path = directory + filename;
-        LOG.debug("path = {}", path);
-
-        final File file = new File(path);
-        this.viewModel.loadFileAsync(file);
     }
 
     private void addTopTextArea() {
         topTextArea = new JTextArea(40, 60);
+        topTextArea.setName(ControlName.TOP_TEXT_AREA.name());
         topTextArea.setFont(MONOSPACED_FONT);
         topTextArea.setText(this.viewModel.getTopText());
         topTextArea.setEditable(false);

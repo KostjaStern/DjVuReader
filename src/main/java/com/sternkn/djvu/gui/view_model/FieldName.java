@@ -7,6 +7,5 @@ public enum FieldName {
     IMAGE,
     ERROR_MESSAGE,
     TREE_MODEL,
-    DJVU_MODEL,
     BUSY;
 }

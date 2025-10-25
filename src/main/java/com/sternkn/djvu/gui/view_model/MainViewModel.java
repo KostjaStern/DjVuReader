@@ -1,9 +1,8 @@
 package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.model.DjVuModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeListener;
@@ -11,23 +10,41 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 
 public class MainViewModel {
-    private static final Logger LOG = LoggerFactory.getLogger(MainViewModel.class);
 
     public static final String APP_TITLE = "DjVu Viewer";
 
     private final PropertyChangeSupport propertyChange;
+    private final FileWorkerFactory fileWorkerFactory;
+    private final ChunkDecodingWorkerFactory chunkDecodingWorkerFactory;
 
-    private String title;
-    private boolean busy;
-    private DefaultTreeModel treeModel;
     private DjVuModel djvuModel;
 
+    // main window title
+    private String title;
+
+    // This flag indicates that some long calculation/loading is in progress.
+    private boolean busy;
+
+    // left chunk tree
+    private DefaultTreeModel treeModel;
+
+    // controls on right panel
     private String topText;
     private DefaultTreeModel textTreeModel;
     private BufferedImage image;
+
+    // the latest error message
     private String errorMessage;
 
     public MainViewModel() {
+        this(DjVuFileWorker::new, ChunkDecodingWorker::new);
+    }
+
+    public MainViewModel(FileWorkerFactory fileWorkerFactory,
+                         ChunkDecodingWorkerFactory chunkDecodingWorkerFactory) {
+        this.fileWorkerFactory = fileWorkerFactory;
+        this.chunkDecodingWorkerFactory = chunkDecodingWorkerFactory;
+
         propertyChange = new PropertyChangeSupport(this);
         title = APP_TITLE;
         errorMessage  = "";
@@ -41,14 +58,14 @@ public class MainViewModel {
     public void loadFileAsync(File file) {
         setBusy(true);
 
-        DjVuFileWorker worker = new DjVuFileWorker(this, file);
+        SwingWorker<?, ?> worker = fileWorkerFactory.create(this, file);
         worker.execute();
     }
 
     public void showChunkInfo(long chunkId) {
         setBusy(true);
 
-        ChunkDecodingWorker worker = new ChunkDecodingWorker(this, djvuModel, chunkId);
+        SwingWorker<?, ?> worker = chunkDecodingWorkerFactory.create(this, djvuModel, chunkId);
         worker.execute();
     }
 
@@ -114,14 +131,8 @@ public class MainViewModel {
         firePropertyChange(FieldName.IMAGE, old, image);
     }
 
-    public DjVuModel getDjvuModel() {
-        return djvuModel;
-    }
-
     public void setDjvuModel(DjVuModel djvuModel) {
-        var old = this.djvuModel;
         this.djvuModel = djvuModel;
-        firePropertyChange(FieldName.DJVU_MODEL, old, djvuModel);
     }
 
     public boolean isBusy() {

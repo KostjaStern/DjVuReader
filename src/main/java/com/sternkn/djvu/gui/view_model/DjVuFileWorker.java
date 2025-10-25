@@ -3,7 +3,7 @@ package com.sternkn.djvu.gui.view_model;
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.DjVuFileReader;
 import com.sternkn.djvu.file.chunks.Chunk;
-import com.sternkn.djvu.model.DjVuModel;
+import com.sternkn.djvu.model.DjVuModelImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class DjVuFileWorker extends SwingWorker<DjVuFile, Void> {
             DefaultTreeModel treeModel = getTreeModel(djvFile);
             viewModel.setTreeModel(treeModel);
 
-            DjVuModel djvuModel = new DjVuModel(djvFile);
+            DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             viewModel.setDjvuModel(djvuModel);
 
             viewModel.setTitle(file.getName());
