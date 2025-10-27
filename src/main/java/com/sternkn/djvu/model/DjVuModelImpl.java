@@ -99,7 +99,7 @@ public class DjVuModelImpl implements DjVuModel {
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
         StringBuilder buffer = new StringBuilder();
-        buffer.append("    Composite chunks  ").append(NL);
+        buffer.append("    Composite chunks").append(NL);
         buffer.append("---------------------------------").append(NL);
         for (Map.Entry<String, Long> entry : compositeChunksStat.entrySet()) {
             buffer.append(" ")
@@ -107,7 +107,7 @@ public class DjVuModelImpl implements DjVuModel {
                   .append(": ").append(entry.getValue()).append(NL);
         }
         buffer.append(NL).append(NL);
-        buffer.append("    Data chunks  ").append(NL);
+        buffer.append("    Data chunks").append(NL);
         buffer.append("---------------------------------").append(NL);
         for (Map.Entry<String, Long> entry : dataChunksStat.entrySet()) {
             buffer.append(" ")

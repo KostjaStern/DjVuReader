@@ -1,5 +1,6 @@
 package com.sternkn.djvu.gui.view;
 
+import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.gui.GuiTestSupport;
 import com.sternkn.djvu.gui.view_model.ChunkDecodingWorkerFactory;
 import com.sternkn.djvu.gui.view_model.FileWorkerFactory;
@@ -7,10 +8,13 @@ import com.sternkn.djvu.gui.view_model.MainViewModel;
 import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JFileChooserFixture;
+import org.assertj.swing.fixture.JMenuItemFixture;
 import org.assertj.swing.junit.extension.GUITestExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,9 +22,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 
 @ExtendWith({GUITestExtension.class, MockitoExtension.class})
 public class TestMainFrame extends GuiTestSupport {
@@ -64,7 +74,7 @@ public class TestMainFrame extends GuiTestSupport {
         window.requireTitle(MainViewModel.APP_TITLE);
     }
 
-    /*
+    @Disabled
     @Test
     public void testMainFrameOpenFileDialog() throws IOException {
         String fileName = "sample.djvu";
@@ -89,6 +99,4 @@ public class TestMainFrame extends GuiTestSupport {
 
         window.requireTitle(fileName);
     }
-
-     */
 }
