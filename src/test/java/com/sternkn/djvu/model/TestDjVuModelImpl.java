@@ -144,7 +144,31 @@ public class TestDjVuModelImpl extends TestSupport {
         """;
 
         assertEquals(1L, chunkInfo.getChunkId());
-        assertEquals(expectedPixmap, chunkInfo.getBitmap());
+        assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
+        assertEquals(expectedTextData, chunkInfo.getTextData());
+        assertNull(chunkInfo.getTextZones());
+    }
+
+    @Test
+    public void testGetChunkInfoForBitonalChunk() {
+        Chunk djbz = createChunk(1L, ChunkId.Djbz, "Mozart_Djbz.data");
+        Chunk sjbz = createChunk(2L, ChunkId.Sjbz, "Mozart_Sjbz.data");
+        List<Chunk> chunks = List.of(djbz, sjbz);
+
+        when(djvuFile.getChunks()).thenReturn(chunks);
+        when(djvuFile.findSharedShapeChunk(sjbz)).thenReturn(djbz);
+
+        ChunkInfo chunkInfo = model.getChunkInfo(2L);
+        GPixmap expectedPixmap = readPixmap("Mozart.png");
+        String expectedTextData = """
+         ChunkId: Sjbz
+         OffsetStart: 0
+         OffsetEnd: 249179
+         Size: 249179
+        """;
+
+        assertEquals(2L, chunkInfo.getChunkId());
+        assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertNull(chunkInfo.getTextZones());
     }
