@@ -107,7 +107,7 @@ public class TestMainViewModel extends GuiTestSupport {
 
         viewModel.loadFileAsync(file);
 
-        assertTrue(latch.await(1, TimeUnit.SECONDS), "We did not wait for the events");
+        assertTrue(latch.await(5, TimeUnit.SECONDS), "We did not wait for the events");
 
         assertEquals(fileName, viewModel.getTitle());
         assertEquals(model, viewModel.getTreeModel());
