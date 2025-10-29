@@ -77,6 +77,7 @@ public enum ChunkId {
     CIDa;
 
     private static final Set<ChunkId> IW44_CHUNKS = EnumSet.of(BG44, FG44, PM44, BM44, TH44);
+    private static final Set<ChunkId> TEXT_CHUNKS = EnumSet.of(TXTa, TXTz);
 
     public boolean isComposite() {
         return this == FORM;
@@ -84,5 +85,9 @@ public enum ChunkId {
 
     public boolean isIW44Chunk() {
         return IW44_CHUNKS.contains(this);
+    }
+
+    public boolean isTextChunk() {
+        return TEXT_CHUNKS.contains(this);
     }
 }

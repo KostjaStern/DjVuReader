@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestTXTzChunk extends TestSupport {
+public class TestTextChunk extends TestSupport {
 
     @Test
     public void testTextChunkDecoding() {
         Chunk chunk = readChunk("TXTz_10.data", ChunkId.TXTz);
 
-        TXTzChunk textChunk = new TXTzChunk(chunk);
+        TextChunk textChunk = new TextChunk(chunk);
         assertEquals(ChunkId.TXTz, textChunk.getChunkId());
         assertEquals(239, textChunk.getLenText());
         assertEquals(1, textChunk.getVersion());
@@ -51,7 +51,7 @@ public class TestTXTzChunk extends TestSupport {
     public void testOneMoreTextChunkDecoding() {
         Chunk chunk = readChunk("TXTz_69.data", ChunkId.TXTz);
 
-        TXTzChunk textChunk = new TXTzChunk(chunk);
+        TextChunk textChunk = new TextChunk(chunk);
         assertEquals(ChunkId.TXTz, textChunk.getChunkId());
         assertEquals(1, textChunk.getVersion());
         assertEquals(45, textChunk.getLenText());
@@ -96,7 +96,7 @@ public class TestTXTzChunk extends TestSupport {
     public void testTextChunkWithCharacterZoneDecoding() {
         Chunk chunk = readChunk("TXTz_33.data", ChunkId.TXTz);
 
-        TXTzChunk textChunk = new TXTzChunk(chunk);
+        TextChunk textChunk = new TextChunk(chunk);
         assertEquals(ChunkId.TXTz, textChunk.getChunkId());
         assertEquals(56, textChunk.getLenText());
         assertEquals(1, textChunk.getVersion());

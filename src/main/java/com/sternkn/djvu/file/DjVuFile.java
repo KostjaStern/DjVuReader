@@ -24,6 +24,10 @@ public class DjVuFile {
     private final long fileSize;
     private final DirectoryChunk directoryChunk;
 
+    public DjVuFile() {
+        this(MagicHeader.AT_T, List.of(), 0L);
+    }
+
     public DjVuFile(MagicHeader header, List<Chunk> chunks, long fileSize) {
         this.header = header;
         this.chunks = chunks;

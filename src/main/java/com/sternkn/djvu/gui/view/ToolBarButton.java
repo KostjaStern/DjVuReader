@@ -1,5 +1,4 @@
-package com.sternkn.djvu.gui;
-
+package com.sternkn.djvu.gui.view;
 
 public enum ToolBarButton {
 
