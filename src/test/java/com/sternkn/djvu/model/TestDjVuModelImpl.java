@@ -4,7 +4,10 @@ import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.file.chunks.GRect;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
+import com.sternkn.djvu.file.chunks.TextZone;
+import com.sternkn.djvu.file.chunks.TextZoneType;
 import com.sternkn.djvu.file.coders.GPixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
 import org.junit.jupiter.api.AfterEach;
@@ -42,12 +45,12 @@ public class TestDjVuModelImpl extends TestSupport {
     @Test
     public void testGetChunkStatistics() {
         List<Chunk> chunks = List.of(
-            createChunk(1L, ChunkId.FORM, SecondaryChunkId.DJVM),
+            createCompositeChunk(1L, SecondaryChunkId.DJVM),
             createChunk(2L, ChunkId.DIRM),
             createChunk(3L, ChunkId.NAVM),
-            createChunk(4L, ChunkId.FORM, SecondaryChunkId.DJVI),
+            createCompositeChunk(4L, SecondaryChunkId.DJVI),
             createChunk(5L, ChunkId.Djbz),
-            createChunk(6L, ChunkId.FORM, SecondaryChunkId.DJVU),
+            createCompositeChunk(6L, SecondaryChunkId.DJVU),
             createChunk(7L, ChunkId.INFO),
             createChunk(8L, ChunkId.INCL),
             createChunk(9L, ChunkId.Sjbz),
@@ -56,7 +59,7 @@ public class TestDjVuModelImpl extends TestSupport {
             createChunk(12L, ChunkId.BG44),
             createChunk(13L, ChunkId.BG44),
             createChunk(14L, ChunkId.BG44),
-            createChunk(15L, ChunkId.FORM, SecondaryChunkId.DJVU),
+            createCompositeChunk(15L, SecondaryChunkId.DJVU),
             createChunk(16L, ChunkId.INFO)
         );
 
@@ -147,6 +150,7 @@ public class TestDjVuModelImpl extends TestSupport {
         assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertNull(chunkInfo.getTextZones());
+        assertEquals(0, chunkInfo.getTextZoneCount());
     }
 
     @Test
@@ -171,11 +175,87 @@ public class TestDjVuModelImpl extends TestSupport {
         assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertNull(chunkInfo.getTextZones());
+        assertEquals(0, chunkInfo.getTextZoneCount());
     }
 
-    private Chunk createChunk(long id, ChunkId chunkId, SecondaryChunkId secondaryChunkId) {
+    @Test
+    public void testGetChunkInfoForTextChunk() {
+        Chunk textChunk = createChunk(2L, ChunkId.TXTz, "TXTz_10.data");
+
+        when(djvuFile.getChunks()).thenReturn(List.of(textChunk));
+
+        ChunkInfo chunkInfo = model.getChunkInfo(2L);
+
+        String expectedTextData = """
+         ChunkId: TXTz
+         OffsetStart: 0
+         OffsetEnd: 304
+         Size: 304
+        
+         Version: 1
+         Text zone count: 19
+         Size of the text string in bytes: 239
+         Text:\s
+        --------------------------------------------------------
+        Эрик Эеанс\s
+        Предисловие\s
+        Мартина Фаулера\s
+        Предметно-ориентированное\s
+        проектирование\s
+        СТРУКТУРИЗАЦИЯ СЛОЖНЫХ\s
+        ПРОГРАММНЫХ СИСТЕМ\s
+        
+        
+        """;
+
+        assertEquals(2L, chunkInfo.getChunkId());
+        assertNull(chunkInfo.getBitmap());
+        assertEquals(expectedTextData, chunkInfo.getTextData());
+        assertEquals(1, chunkInfo.getTextZones().size());
+        assertEquals(19, chunkInfo.getTextZoneCount());
+
+        TextZone textZone = chunkInfo.getTextZones().getFirst();
+        assertEquals(TextZoneType.PAGE, textZone.getType());
+        assertEquals(0, textZone.getTextStart());
+        assertEquals(239, textZone.getTextLength());
+        assertEquals(new GRect(0, 0, 3956, 5575), textZone.getRect());
+    }
+
+    @Test
+    public void testGetChunkInfo() {
+        String data = "Ab0009_0001.djbz";
+        byte[] bytes = data.getBytes();
+
+        Chunk chunk = Chunk.builder()
+                .withChunkId(ChunkId.INCL)
+                .withId(23L)
+                .withData(bytes)
+                .withSize(bytes.length)
+                .build();
+
+        when(djvuFile.getChunks()).thenReturn(List.of(chunk));
+
+        ChunkInfo chunkInfo = model.getChunkInfo(23L);
+
+        String expectedTextData = """
+         ChunkId: INCL
+         OffsetStart: 0
+         OffsetEnd: 16
+         Size: 16
+        
+         Shared component ID: Ab0009_0001.djbz
+        """;
+
+        assertEquals(23L, chunkInfo.getChunkId());
+        assertNull(chunkInfo.getBitmap());
+        assertEquals(expectedTextData, chunkInfo.getTextData());
+        assertNull(chunkInfo.getTextZones());
+        assertEquals(0, chunkInfo.getTextZoneCount());
+    }
+
+    private Chunk createCompositeChunk(long id, SecondaryChunkId secondaryChunkId) {
         return Chunk.builder()
-                .withChunkId(chunkId)
+                .withChunkId(ChunkId.FORM)
                 .withSecondaryChunkId(secondaryChunkId)
                 .withId(id)
                 .withSize(1)
