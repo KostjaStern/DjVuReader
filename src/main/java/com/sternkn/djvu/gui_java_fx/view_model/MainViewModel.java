@@ -10,8 +10,10 @@ import com.sternkn.djvu.gui.view_model.TextZoneNode;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.DjVuModelImpl;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -49,7 +51,7 @@ public class MainViewModel {
     private DoubleProperty progress;
     // public static final double INDETERMINATE_PROGRESS = (double)-1.0F;
 
-    private DoubleProperty imageScale;
+    private StringProperty zoom;
 
     // left chunk tree
     private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
@@ -57,6 +59,7 @@ public class MainViewModel {
     // controls on right panel
     private StringProperty topText;
     private ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
+    private BooleanProperty showTextTree;
     private ObjectProperty<Image> image;
 
     // the latest error message
@@ -76,10 +79,11 @@ public class MainViewModel {
         topText = new SimpleStringProperty("");
 
         textRootNode = new SimpleObjectProperty<>();
+        showTextTree  = new SimpleBooleanProperty(false);
         chunkRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
-        imageScale = new SimpleDoubleProperty(1.0);
+        zoom = new SimpleStringProperty("1.0");
     }
 
     public void showStatistics() {
@@ -138,7 +142,9 @@ public class MainViewModel {
         task.setOnSucceeded(event -> {
             ChunkInfo chunkInfo = task.getValue();
 
-            setTextRootNode(getTextRootNode(chunkInfo, chunkId));
+            TreeItem<TextZoneNode> textRootNode = getTextRootNode(chunkInfo, chunkId);
+            setTextRootNode(textRootNode);
+            setShowTextTree(textRootNode != null);
             setTopText(chunkInfo.getTextData());
             setImage(getImage(chunkInfo.getBitmap()));
             setProgressDone();
@@ -219,16 +225,18 @@ public class MainViewModel {
         this.title.set(title);
     }
 
-    public DoubleProperty getImageScale() {
-        return imageScale;
+    public StringProperty getZoom() {
+        return zoom;
     }
     public void zoomIn() {
-        double currentScale = imageScale.get();
-        imageScale.set(currentScale + zoomDelta);
+        double currentZoom = Double.parseDouble(zoom.get());
+        double newZoom = currentZoom + zoomDelta;
+        zoom.set(String.valueOf(newZoom));
     }
     public void zoomOut() {
-        double currentScale = imageScale.get();
-        imageScale.set(currentScale - zoomDelta);
+        double currentZoom = Double.parseDouble(zoom.get());
+        double newZoom = currentZoom - zoomDelta;
+        zoom.set(String.valueOf(newZoom));
     }
 
     public StringProperty getTopText() {
@@ -254,8 +262,15 @@ public class MainViewModel {
         chunkRootNode.set(rootNode);
     }
 
-    public TreeItem<TextZoneNode> getTextRootNode() {
-        return this.textRootNode.get();
+    public BooleanProperty getShowTextTree() {
+        return showTextTree;
+    }
+    public void setShowTextTree(Boolean value) {
+        this.showTextTree.set(value);
+    }
+
+    public ObjectProperty<TreeItem<TextZoneNode>> getTextRootNode() {
+        return this.textRootNode;
     }
     public void setTextRootNode(TreeItem<TextZoneNode> rootNode) {
         this.textRootNode.set(rootNode);

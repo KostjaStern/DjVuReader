@@ -1,16 +1,22 @@
 package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.ChunkId;
 
 public class ChunkTreeNode {
 
     private final long chunkId;
+    private final boolean isComposite;
     private final String chunkName;
     private final String nodeName;
 
     public ChunkTreeNode(Chunk chunk) {
         this.chunkId = chunk.getId();
-        this.chunkName = chunk.getChunkId().name();
+
+        ChunkId chunkType = chunk.getChunkId();
+
+        this.isComposite = chunkType.isComposite();
+        this.chunkName = chunkType.name();
         this.nodeName = buildNodeName(chunk);
     }
 
@@ -26,6 +32,10 @@ public class ChunkTreeNode {
         buffer.append("]");
 
         return buffer.toString();
+    }
+
+    public boolean isComposite() {
+        return isComposite;
     }
 
     public long getChunkId() {

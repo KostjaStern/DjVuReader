@@ -3,10 +3,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<!-- <?import javafx.scene.Group?> -->
 
-<BorderPane xmlns:fx="http://javafx.com/fxml">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:id="root">
 
-    <!-- Main menu -->
     <top>
         <VBox>
             <MenuBar fx:id="menuBar">
@@ -24,7 +24,6 @@
                 </Menu>
             </MenuBar>
             <ToolBar>
-                <!-- <Separator orientation="VERTICAL"/> -->
                 <Button fx:id="zoomInButton" onAction="#onZoomInClicked">
                     <tooltip>
                         <Tooltip text="Zoom In"/>
@@ -45,6 +44,11 @@
                         </ImageView>
                     </graphic>
                 </Button>
+                <TextField fx:id="zoomValue" prefHeight="36" prefWidth="70" />
+                <Label text="x: "/>
+                <TextField fx:id="xCoordinate" prefHeight="36" prefWidth="70" />
+                <Label text="y: "/>
+                <TextField fx:id="yCoordinate" prefHeight="36" prefWidth="70" />
             </ToolBar>
         </VBox>
     </top>
@@ -55,12 +59,17 @@
             <TreeView fx:id="chunkTree" prefWidth="200"/>
 
             <SplitPane fx:id="rightSplitPane" orientation="VERTICAL" dividerPositions="0.2">
-                <TextArea fx:id="topTextArea" wrapText="true" editable="false" />
+                <TextArea fx:id="topTextArea" wrapText="true" />
 
-                <ScrollPane fx:id="imageScrollPane" fitToWidth="true" fitToHeight="true">
-                    <StackPane>
-                        <ImageView fx:id="imageView" preserveRatio="true" />
-                    </StackPane>
+                <ScrollPane fx:id="imageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
+                    <!-- <StackPane fx:id="imageStackPane">
+                        <Group> -->
+                    <VBox>
+                            <ImageView fx:id="imageView" preserveRatio="true" />
+                            <TreeView fx:id="textTree" />
+                    </VBox>
+                        <!-- </Group>
+                    </StackPane> -->
                 </ScrollPane>
             </SplitPane>
         </SplitPane>
