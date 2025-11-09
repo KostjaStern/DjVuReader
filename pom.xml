@@ -65,6 +65,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>tokyo.northside</groupId>
             <artifactId>assertj-swing-junit-jupiter</artifactId>
             <version>4.0.0-beta-3</version>
@@ -145,20 +152,15 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.3.0</version>
-                <!--
-                <executions>
-                    <execution>
-                        <id>fx-execution</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                -->
                 <configuration>
                     <mainClass>com.sternkn.djvu.gui_java_fx.MainApp</mainClass>
                     <classpathScope>runtime</classpathScope>
+                    <systemProperties>
+                        <systemProperty>
+                            <key>apple.awt.application.name</key>
+                            <value>DjVu Viewer</value>
+                        </systemProperty>
+                    </systemProperties>
                 </configuration>
             </plugin>
         </plugins>

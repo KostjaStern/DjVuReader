@@ -155,14 +155,19 @@ public class MainFrameController {
         stage.close();
     }
 
-    @FXML
-    private void onOpenFile() {
+    protected FileChooser createFileChooser() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Select a DJVU file to open");
-
-        chooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("DjVu files", "*.djvu")
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("DjVu files", "*.djvu")
         );
+
+        return chooser;
+    }
+
+    @FXML
+    private void onOpenFile() {
+        FileChooser chooser = createFileChooser();
 
         File file = chooser.showOpenDialog(stage);
         if (file != null) {

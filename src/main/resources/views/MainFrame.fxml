@@ -10,7 +10,7 @@
     <top>
         <VBox>
             <MenuBar fx:id="menuBar">
-                <Menu text="File">
+                <Menu fx:id="fileMenu" text="File">
                     <MenuItem fx:id="openMenuItem" text="Open..." onAction="#onOpenFile"/>
                     <MenuItem fx:id="exitMenuItem" text="Exit" onAction="#onExit"/>
                 </Menu>
