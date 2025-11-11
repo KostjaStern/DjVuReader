@@ -3,7 +3,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<!-- <?import javafx.scene.Group?> -->
 
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:id="root">
 
@@ -45,41 +44,30 @@
                     </graphic>
                 </Button>
                 <TextField fx:id="zoomValue" prefHeight="36" prefWidth="70" />
-                <Label text="x: "/>
-                <TextField fx:id="xCoordinate" prefHeight="36" prefWidth="70" />
-                <Label text="y: "/>
-                <TextField fx:id="yCoordinate" prefHeight="36" prefWidth="70" />
             </ToolBar>
         </VBox>
     </top>
 
-    <!-- Main window: SplitPane -->
     <center>
         <SplitPane dividerPositions="0.25">
             <TreeView fx:id="chunkTree" prefWidth="200"/>
 
             <SplitPane fx:id="rightSplitPane" orientation="VERTICAL" dividerPositions="0.2">
-                <TextArea fx:id="topTextArea" wrapText="true" />
+                <TextArea fx:id="topTextArea"
+                          style="-fx-font-family: monospace; -fx-text-fill: #000000; -fx-font-weight: bold;"/>
 
                 <ScrollPane fx:id="imageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
-                    <!-- <StackPane fx:id="imageStackPane">
-                        <Group> -->
-                    <VBox>
-                            <ImageView fx:id="imageView" preserveRatio="true" />
-                            <TreeView fx:id="textTree" />
+                    <VBox fx:id="chunkInfoBox">
+                        <ImageView fx:id="imageView" preserveRatio="true" />
+                        <TreeView fx:id="textTree" />
                     </VBox>
-                        <!-- </Group>
-                    </StackPane> -->
                 </ScrollPane>
             </SplitPane>
         </SplitPane>
     </center>
 
     <bottom>
-        <!-- fx:id="statusBar" -->
         <HBox spacing="10" style="-fx-padding: 5; -fx-border-color: #ccc; -fx-border-width: 1 0 0 0;">
-            <!-- <Label text="Status:"/>
-            <Label fx:id="statusLabel"/> -->
             <ProgressBar fx:id="progressBar" prefWidth="150"/>
         </HBox>
     </bottom>

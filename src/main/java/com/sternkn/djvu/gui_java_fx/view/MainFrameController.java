@@ -6,20 +6,17 @@ import com.sternkn.djvu.gui_java_fx.view_model.MainViewModel;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Control;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.control.TextInputControl;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
-import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +38,6 @@ public class MainFrameController {
 
     @FXML
     private TreeView<TextZoneNode> textTree;
-
-//    @FXML
-//    private StackPane imageStackPane;
 
     @FXML
     private TextArea topTextArea;
@@ -86,38 +80,13 @@ public class MainFrameController {
         textTree.visibleProperty().bind(viewModel.getShowTextTree());
         textTree.managedProperty().bind(viewModel.getShowTextTree());
 
-
-        // zoomValue.textProperty().bind(viewModel.getImageScale().asString());
-
         imageView.visibleProperty().bind(viewModel.getShowTextTree().not());
         imageView.managedProperty().bind(imageView.visibleProperty());
-        imageView.imageProperty().bind(viewModel.getImage());
-        imageView.xProperty().addListener((observable, oldValue, newValue) -> {
-            LOG.debug("Image-X = {}", newValue);
-        });
-        imageView.yProperty().addListener((observable, oldValue, newValue) -> {
-            LOG.debug("Image-Y = {}", newValue);
-        });
-        // xCoordinate.textProperty().bind(imageView.layoutXProperty().asString());
-        // yCoordinate.textProperty().bind(imageView.layoutYProperty().asString());
-
-        // imageView.scaleXProperty().bind(viewModel.getZoom(), new StringN);
-        // imageView.scaleYProperty().bind(viewModel.getImageScale());
-
-//        imageScrollPane.viewportBoundsProperty().addListener((obs, oldV, v) -> {
-//            imageView.setFitWidth(v.getWidth());
-//            imageView.setFitHeight(v.getHeight());
-//        });
 
         bindZoom();
     }
 
     private void bindZoom() {
-        StringConverter<Number> converter = new NumberStringConverter();
-        Bindings.bindBidirectional(viewModel.getZoom(), imageView.scaleXProperty(), converter);
-        Bindings.bindBidirectional(viewModel.getZoom(), imageView.scaleYProperty(), converter);
-
-        // private TextFormatter<Double> zoomFormatter;
         TextFormatter<Double> zoomFormatter = new TextFormatter<>(
             change -> {
                 String newValue = change.getControlNewText();
@@ -126,16 +95,12 @@ public class MainFrameController {
                     value = Double.parseDouble(newValue);
                 }
                 catch (NumberFormatException exception) {
-                    LOG.debug("Zoom refused value (not number) = {}", change);
                     return null;
                 }
 
                 if (value > 0 && value < 1000) {
-                    LOG.debug("Zoom valid value = {}", change);
                     return change;
                 }
-
-                LOG.debug("Zoom refused value = {}", change);
                 return null;
             }
         );
@@ -148,6 +113,29 @@ public class MainFrameController {
                 zoomValue.setText(String.format(Locale.ROOT, "%.2f", zoomFormatter.getValue()));
             }
         });
+
+        viewModel.getZoom().addListener((observable, oldValue, newValue) -> {
+            Image image = imageView.getImage();
+            if (image == null || newValue == null) {
+                return;
+            }
+            double scale = Double.parseDouble(newValue);
+            double width = imageView.getFitWidth() > 0 ? imageView.getFitWidth() : image.getWidth();
+            double height = imageView.getFitHeight() > 0 ? imageView.getFitHeight() : image.getHeight();
+            LOG.debug("Zoom update: scale = {}", scale);
+            LOG.debug("Zoom update: width = {}", width);
+            LOG.debug("Zoom update: height = {}", height);
+
+            double newWidth = width * scale;
+            double newHeight = height * scale;
+            LOG.debug("Zoom update: newWidth = {}", newWidth);
+            LOG.debug("Zoom update: newHeight = {}", newHeight);
+
+            imageView.setFitWidth(newWidth);
+            imageView.setFitHeight(newHeight);
+        });
+
+        imageView.imageProperty().bind(viewModel.getImage());
     }
 
     @FXML
@@ -191,19 +179,11 @@ public class MainFrameController {
 
     @FXML
     private void onZoomInClicked() {
-        // LOG.debug("Zoom In clicked ... ");
         viewModel.zoomIn();
     }
 
     @FXML
     private void onZoomOutClicked() {
-        // LOG.debug("Zoom Out clicked ... ");
         viewModel.zoomOut();
-    }
-
-    private void dump(String name, Control control) {
-        boolean isEditable = control instanceof TextInputControl tic && tic.isEditable();
-        LOG.debug("{} : disabled = {}, editable = {}, focusTraversable = {}, mouseTransparent = {}",
-            name, control.isDisabled(), isEditable, control.isFocusTraversable(), control.isMouseTransparent());
     }
 }
