@@ -4,8 +4,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:id="root">
-
+<BorderPane xmlns:fx="http://javafx.com/fxml">
     <top>
         <VBox>
             <MenuBar fx:id="menuBar">
@@ -28,7 +27,7 @@
                         <Tooltip text="Zoom In"/>
                     </tooltip>
                     <graphic>
-                        <ImageView fitWidth="32" fitHeight="32">
+                        <ImageView fitWidth="24" fitHeight="24">
                             <Image url="/icons/zoom-in-32.png"/>
                         </ImageView>
                     </graphic>
@@ -38,19 +37,18 @@
                         <Tooltip text="Zoom Out"/>
                     </tooltip>
                     <graphic>
-                        <ImageView fitWidth="32" fitHeight="32">
+                        <ImageView fitWidth="24" fitHeight="24">
                             <Image url="/icons/zoom-out-32.png"/>
                         </ImageView>
                     </graphic>
                 </Button>
-                <TextField fx:id="zoomValue" prefHeight="36" prefWidth="70" />
             </ToolBar>
         </VBox>
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.25">
-            <TreeView fx:id="chunkTree" prefWidth="200"/>
+        <SplitPane dividerPositions="0.2">
+            <TreeView fx:id="chunkTree"/>
 
             <SplitPane fx:id="rightSplitPane" orientation="VERTICAL" dividerPositions="0.2">
                 <TextArea fx:id="topTextArea"

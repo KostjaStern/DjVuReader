@@ -36,22 +36,18 @@ public class MainViewModel {
     private static final Logger LOG = LoggerFactory.getLogger(MainViewModel.class);
 
     public static final String APP_TITLE = "DjVu Viewer";
-    public static final double zoomDelta = 0.01;
+    public static final int ZOOM_DELTA = 10;
 
-    // private final PropertyChangeSupport propertyChange;
     private final FileTaskFactory fileTaskFactory;
     private final ChunkDecodingTaskFactory chunkDecodingTaskFactory;
 
     private DjVuModel djvuModel;
 
-    // main window title
     private StringProperty title;
 
-    // This flag indicates that some long calculation/loading is in progress.
     private DoubleProperty progress;
-    // public static final double INDETERMINATE_PROGRESS = (double)-1.0F;
 
-    private StringProperty zoom;
+    private DoubleProperty fitWidth;
 
     // left chunk tree
     private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
@@ -83,7 +79,7 @@ public class MainViewModel {
         chunkRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
-        zoom = new SimpleStringProperty("1.0");
+        fitWidth = new SimpleDoubleProperty(-1);
     }
 
     public void showStatistics() {
@@ -225,18 +221,26 @@ public class MainViewModel {
         this.title.set(title);
     }
 
-    public StringProperty getZoom() {
-        return zoom;
+    public DoubleProperty getFitWidth() {
+        return this.fitWidth;
     }
     public void zoomIn() {
-        double currentZoom = Double.parseDouble(zoom.get());
-        double newZoom = currentZoom + zoomDelta;
-        zoom.set(String.valueOf(newZoom));
+        double width = this.fitWidth.get();
+        if (width < 0) {
+            return;
+        }
+
+        double newWidth = width + ZOOM_DELTA;
+        fitWidth.set(newWidth);
     }
     public void zoomOut() {
-        double currentZoom = Double.parseDouble(zoom.get());
-        double newZoom = currentZoom - zoomDelta;
-        zoom.set(String.valueOf(newZoom));
+        double width = this.fitWidth.get();
+        double newWidth = width - ZOOM_DELTA;
+        if (newWidth < 0) {
+            return;
+        }
+
+        fitWidth.set(newWidth);
     }
 
     public StringProperty getTopText() {

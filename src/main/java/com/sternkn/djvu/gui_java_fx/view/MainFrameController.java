@@ -3,25 +3,20 @@ package com.sternkn.djvu.gui_java_fx.view;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
 import com.sternkn.djvu.gui_java_fx.view_model.MainViewModel;
-import javafx.beans.binding.Bindings;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.File;
-import java.util.Locale;
+
 
 public class MainFrameController {
 
@@ -43,22 +38,10 @@ public class MainFrameController {
     private TextArea topTextArea;
 
     @FXML
-    private TextField zoomValue;
-
-    @FXML
-    private ScrollPane imageScrollPane;
-
-    @FXML
     private ImageView imageView;
 
     @FXML
-    private TextField xCoordinate;
-
-    @FXML
-    private TextField yCoordinate;
-
-    @FXML
-    private BorderPane root;
+    private VBox chunkInfoBox;
 
     public MainFrameController(MainViewModel viewModel, Stage stage) {
         this.viewModel = viewModel;
@@ -70,7 +53,7 @@ public class MainFrameController {
         LOG.debug("Initializing MainFrameController ... ");
 
         chunkTree.rootProperty().bind(viewModel.getChunkRootNode());
-        chunkTree.setCellFactory(tv -> new ChunkTreeCell(viewModel, stage));
+        chunkTree.setCellFactory(tv -> new ChunkTreeCell(this));
 
         topTextArea.textProperty().bind(viewModel.getTopText());
 
@@ -81,61 +64,13 @@ public class MainFrameController {
         textTree.managedProperty().bind(viewModel.getShowTextTree());
 
         imageView.visibleProperty().bind(viewModel.getShowTextTree().not());
+        imageView.fitWidthProperty().bind(viewModel.getFitWidth());
+        imageView.imageProperty().bind(viewModel.getImage());
         imageView.managedProperty().bind(imageView.visibleProperty());
 
-        bindZoom();
-    }
-
-    private void bindZoom() {
-        TextFormatter<Double> zoomFormatter = new TextFormatter<>(
-            change -> {
-                String newValue = change.getControlNewText();
-                Double value = null;
-                try {
-                    value = Double.parseDouble(newValue);
-                }
-                catch (NumberFormatException exception) {
-                    return null;
-                }
-
-                if (value > 0 && value < 1000) {
-                    return change;
-                }
-                return null;
-            }
-        );
-        zoomValue.setTextFormatter(zoomFormatter);
-
-        Bindings.bindBidirectional(zoomValue.textProperty(), viewModel.getZoom());
-
-        zoomValue.focusedProperty().addListener((o, was, now) -> {
-            if (!now && zoomFormatter.getValue() != null) {
-                zoomValue.setText(String.format(Locale.ROOT, "%.2f", zoomFormatter.getValue()));
-            }
+        Platform.runLater(() -> {
+            viewModel.getFitWidth().set(chunkInfoBox.getWidth());
         });
-
-        viewModel.getZoom().addListener((observable, oldValue, newValue) -> {
-            Image image = imageView.getImage();
-            if (image == null || newValue == null) {
-                return;
-            }
-            double scale = Double.parseDouble(newValue);
-            double width = imageView.getFitWidth() > 0 ? imageView.getFitWidth() : image.getWidth();
-            double height = imageView.getFitHeight() > 0 ? imageView.getFitHeight() : image.getHeight();
-            LOG.debug("Zoom update: scale = {}", scale);
-            LOG.debug("Zoom update: width = {}", width);
-            LOG.debug("Zoom update: height = {}", height);
-
-            double newWidth = width * scale;
-            double newHeight = height * scale;
-            LOG.debug("Zoom update: newWidth = {}", newWidth);
-            LOG.debug("Zoom update: newHeight = {}", newHeight);
-
-            imageView.setFitWidth(newWidth);
-            imageView.setFitHeight(newHeight);
-        });
-
-        imageView.imageProperty().bind(viewModel.getImage());
     }
 
     @FXML
@@ -143,19 +78,34 @@ public class MainFrameController {
         stage.close();
     }
 
-    protected FileChooser createFileChooser() {
+    MainViewModel getViewModel() {
+        return viewModel;
+    }
+
+    Stage getStage() {
+        return stage;
+    }
+
+    FileChooser openFileDialog() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Select a DJVU file to open");
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("DjVu files", "*.djvu")
+            new FileChooser.ExtensionFilter("DjVu files", "*.djvu")
         );
+
+        return chooser;
+    }
+
+    FileChooser saveChunkDataDialog() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save chunk data as");
 
         return chooser;
     }
 
     @FXML
     private void onOpenFile() {
-        FileChooser chooser = createFileChooser();
+        FileChooser chooser = openFileDialog();
 
         File file = chooser.showOpenDialog(stage);
         if (file != null) {

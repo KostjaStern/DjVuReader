@@ -1,7 +1,6 @@
 package com.sternkn.djvu.gui_java_fx.view;
 
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
-import com.sternkn.djvu.gui_java_fx.view_model.MainViewModel;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -10,7 +9,6 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.net.URL;
@@ -20,6 +18,7 @@ import java.util.Objects;
     https://openjfx.io/javadoc/23/javafx.controls/javafx/scene/control/Cell.html
  */
 public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
+    final static String SAVE_CHUNK_DATA = "Save chunk data as ...";
 
     private final ImageView imageView;
     private final Image imgClosed;
@@ -27,14 +26,11 @@ public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
     private final Image imgDoc;
 
     private final ChangeListener<Boolean> expandedListener;
-
-    private final MainViewModel viewModel;
-    private final Stage stage;
+    private final MainFrameController frameController;
 
 
-    public ChunkTreeCell(MainViewModel viewModel, Stage stage) {
-        this.viewModel = viewModel;
-        this.stage = stage;
+    public ChunkTreeCell(MainFrameController controller) {
+        this.frameController = controller;
 
         imageView = new ImageView();
         imageView.setFitWidth(24);
@@ -56,7 +52,7 @@ public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
 
         this.selectedProperty().addListener((observable, oldValue, isSelected) -> {
             if (isSelected) {
-                viewModel.showChunkInfo(this.getItem().getChunkId());
+                frameController.getViewModel().showChunkInfo(this.getItem().getChunkId());
             }
         });
     }
@@ -85,7 +81,6 @@ public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
         }
         else {
             imageView.setImage(treeItem.isExpanded() ? imgOpen : imgClosed);
-            // treeItem.expandedProperty().removeListener(expandedListener); ???
             treeItem.expandedProperty().addListener(expandedListener);
         }
         setGraphic(imageView);
@@ -93,19 +88,18 @@ public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
 
     private void addContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
-        MenuItem saveChunk = new MenuItem("Save chunk data as ...");
+        MenuItem saveChunk = new MenuItem(SAVE_CHUNK_DATA);
         contextMenu.getItems().addAll(saveChunk);
 
         saveChunk.setOnAction(e -> {
             ChunkTreeNode chunkNode = this.getItem();
             String fileName = String.format("%s_%s.data", chunkNode.getChunkName(), chunkNode.getChunkId());
 
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Save chunk  data as");
+            FileChooser fileChooser = frameController.saveChunkDataDialog();
             fileChooser.setInitialFileName(fileName);
-            File file = fileChooser.showSaveDialog(stage);
+            File file = fileChooser.showSaveDialog(frameController.getStage());
             if (file != null) {
-                viewModel.saveChunkData(file,  chunkNode.getChunkId());
+                frameController.getViewModel().saveChunkData(file,  chunkNode.getChunkId());
             }
         });
 

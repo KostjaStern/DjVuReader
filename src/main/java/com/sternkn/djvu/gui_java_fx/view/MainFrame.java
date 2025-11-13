@@ -10,6 +10,8 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class MainFrame {
+    private final static double SCREEN_WIDTH = 800;
+    private final static double SCREEN_HEIGHT = 600;
 
     private final MainViewModel viewModel;
     private final Stage stage;
@@ -20,7 +22,7 @@ public class MainFrame {
 
         Parent root = loadRootNode();
 
-        Scene scene = new Scene(root, 600, 400);
+        Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
         stage.titleProperty().bind(viewModel.getTitle());
         stage.setScene(scene);
     }
