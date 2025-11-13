@@ -56,7 +56,9 @@
 
                 <ScrollPane fx:id="imageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
                     <VBox fx:id="chunkInfoBox">
-                        <ImageView fx:id="imageView" preserveRatio="true" />
+                        <StackPane>
+                            <ImageView fx:id="imageView" preserveRatio="true" />
+                        </StackPane>
                         <TreeView fx:id="textTree" />
                     </VBox>
                 </ScrollPane>
