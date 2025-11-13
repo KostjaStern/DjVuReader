@@ -1,4 +1,4 @@
-package com.sternkn.djvu.gui_java_fx.view_model;
+package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.DjVuFileReader;

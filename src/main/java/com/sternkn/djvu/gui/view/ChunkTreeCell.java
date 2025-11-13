@@ -1,4 +1,4 @@
-package com.sternkn.djvu.gui_java_fx.view;
+package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import javafx.beans.value.ChangeListener;

@@ -72,12 +72,6 @@
         </dependency>
 
         <dependency>
-            <groupId>tokyo.northside</groupId>
-            <artifactId>assertj-swing-junit-jupiter</artifactId>
-            <version>4.0.0-beta-3</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
@@ -152,7 +146,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <mainClass>com.sternkn.djvu.gui_java_fx.MainApp</mainClass>
+                    <mainClass>com.sternkn.djvu.gui.MainApp</mainClass>
                     <classpathScope>runtime</classpathScope>
                     <systemProperties>
                         <systemProperty>

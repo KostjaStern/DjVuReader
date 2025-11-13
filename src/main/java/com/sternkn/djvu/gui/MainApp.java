@@ -1,7 +1,7 @@
-package com.sternkn.djvu.gui_java_fx;
+package com.sternkn.djvu.gui;
 
-import com.sternkn.djvu.gui_java_fx.view.MainFrame;
-import com.sternkn.djvu.gui_java_fx.view_model.MainViewModel;
+import com.sternkn.djvu.gui.view.MainFrame;
+import com.sternkn.djvu.gui.view_model.MainViewModel;
 import javafx.application.Application;
 import javafx.stage.Stage;
 

@@ -1,10 +1,10 @@
-package com.sternkn.djvu.gui_java_fx.view;
+package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
-import com.sternkn.djvu.gui_java_fx.view_model.MainViewModel;
+import com.sternkn.djvu.gui.view_model.MainViewModel;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;

@@ -1,8 +1,8 @@
-package com.sternkn.djvu.gui_java_fx.view;
+package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
-import com.sternkn.djvu.gui_java_fx.view_model.MainViewModel;
+import com.sternkn.djvu.gui.view_model.MainViewModel;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;

@@ -1,54 +1,83 @@
 package com.sternkn.djvu.gui.view_model;
 
+import com.sternkn.djvu.file.DjVuFile;
+import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.TextZone;
+import com.sternkn.djvu.file.coders.PixelColor;
+import com.sternkn.djvu.file.coders.Pixmap;
+import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
+import com.sternkn.djvu.model.DjVuModelImpl;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.concurrent.Task;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.swing.SwingWorker;
-import javax.swing.tree.DefaultTreeModel;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainViewModel {
+    private static final Logger LOG = LoggerFactory.getLogger(MainViewModel.class);
 
     public static final String APP_TITLE = "DjVu Viewer";
+    public static final int ZOOM_DELTA = 10;
 
-    private final PropertyChangeSupport propertyChange;
-    private final FileWorkerFactory fileWorkerFactory;
-    private final ChunkDecodingWorkerFactory chunkDecodingWorkerFactory;
+    private final FileTaskFactory fileTaskFactory;
+    private final ChunkDecodingTaskFactory chunkDecodingTaskFactory;
 
     private DjVuModel djvuModel;
 
-    // main window title
-    private String title;
+    private StringProperty title;
 
-    // This flag indicates that some long calculation/loading is in progress.
-    private boolean busy;
+    private DoubleProperty progress;
+
+    private DoubleProperty fitWidth;
 
     // left chunk tree
-    private DefaultTreeModel treeModel;
+    private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
 
     // controls on right panel
-    private String topText;
-    private DefaultTreeModel textTreeModel;
-    private BufferedImage image;
+    private StringProperty topText;
+    private ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
+    private BooleanProperty showTextTree;
+    private ObjectProperty<Image> image;
 
     // the latest error message
-    private String errorMessage;
+    private StringProperty errorMessage;
 
     public MainViewModel() {
-        this(DjVuFileWorker::new, ChunkDecodingWorker::new);
+        this(DjVuFileTask::new, ChunkDecodingTask::new);
     }
 
-    public MainViewModel(FileWorkerFactory fileWorkerFactory,
-                         ChunkDecodingWorkerFactory chunkDecodingWorkerFactory) {
-        this.fileWorkerFactory = fileWorkerFactory;
-        this.chunkDecodingWorkerFactory = chunkDecodingWorkerFactory;
+    public MainViewModel(FileTaskFactory fileTaskFactory,
+                         ChunkDecodingTaskFactory chunkDecodingTaskFactory) {
+        this.fileTaskFactory = fileTaskFactory;
+        this.chunkDecodingTaskFactory = chunkDecodingTaskFactory;
 
-        propertyChange = new PropertyChangeSupport(this);
-        title = APP_TITLE;
-        errorMessage  = "";
-        topText = "";
+        title = new SimpleStringProperty(APP_TITLE);
+        errorMessage  = new SimpleStringProperty("");
+        topText = new SimpleStringProperty("");
+
+        textRootNode = new SimpleObjectProperty<>();
+        showTextTree  = new SimpleBooleanProperty(false);
+        chunkRootNode = new SimpleObjectProperty<>();
+        image = new SimpleObjectProperty<>();
+        progress = new SimpleDoubleProperty(0);
+        fitWidth = new SimpleDoubleProperty(-1);
     }
 
     public void showStatistics() {
@@ -56,104 +85,217 @@ public class MainViewModel {
     }
 
     public void loadFileAsync(File file) {
-        setBusy(true);
+        setInProgress();
 
-        SwingWorker<?, ?> worker = fileWorkerFactory.create(this, file);
-        worker.execute();
+        Task<DjVuFile> task = fileTaskFactory.create(file);
+        task.setOnSucceeded(event -> {
+            DjVuFile djvFile = task.getValue();
+            TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
+
+            setChunkRootNode(rootNode);
+            setDjvuModel(new DjVuModelImpl(djvFile));
+            setTitle(file.getName());
+            setProgressDone();
+        });
+
+        task.setOnFailed(event -> {
+            setErrorMessage(task.getException().getMessage());
+            setProgressDone();
+        });
+
+        new Thread(task).start();
+    }
+
+    private TreeItem<ChunkTreeNode> getRootNode(DjVuFile djvuFile) {
+        List<Chunk> chunks = djvuFile.getChunks();
+
+        TreeItem<ChunkTreeNode> root = null;
+        List<TreeItem<ChunkTreeNode>> nodes = new ArrayList<>(chunks.size());
+
+        for (Chunk chunk : chunks) {
+            TreeItem<ChunkTreeNode> node = new TreeItem<>(new ChunkTreeNode(chunk));
+            if (root == null) {
+                root = node;
+            }
+            nodes.add(node);
+
+            Chunk parentChunk = chunk.getParent();
+            if (parentChunk != null) {
+                TreeItem<ChunkTreeNode> parentNode = nodes.get((int) parentChunk.getId());
+                parentNode.getChildren().add(node);
+            }
+        }
+
+        return root;
     }
 
     public void showChunkInfo(long chunkId) {
-        setBusy(true);
+        setInProgress();
 
-        SwingWorker<?, ?> worker = chunkDecodingWorkerFactory.create(this, djvuModel, chunkId);
-        worker.execute();
+        Task<ChunkInfo> task = chunkDecodingTaskFactory.create(djvuModel, chunkId);
+        task.setOnSucceeded(event -> {
+            ChunkInfo chunkInfo = task.getValue();
+
+            TreeItem<TextZoneNode> textRootNode = getTextRootNode(chunkInfo, chunkId);
+            setTextRootNode(textRootNode);
+            setShowTextTree(textRootNode != null);
+            setTopText(chunkInfo.getTextData());
+            setImage(getImage(chunkInfo.getBitmap()));
+            setProgressDone();
+        });
+
+        task.setOnFailed(event -> {
+            setErrorMessage(task.getException().getMessage());
+            setProgressDone();
+        });
+
+        new Thread(task).start();
+    }
+
+    private TreeItem<TextZoneNode> getTextRootNode(ChunkInfo chunkInfo, long chunkId) {
+        List<TextZone> textZones  = chunkInfo.getTextZones();
+        if (textZones == null || textZones.isEmpty()) {
+            return null;
+        }
+
+        final int size = textZones.size();
+        if (size > 1) {
+            LOG.warn("More than one root text zone {} for chunkId = {}", size, chunkId);
+        }
+
+        TextZone root = textZones.getFirst();
+        TreeItem<TextZoneNode> rootNode = new TreeItem<>(new TextZoneNode(root));
+
+        for (TextZone zone : root.getChildren()) {
+            TreeItem<TextZoneNode> node = new TreeItem<>(new TextZoneNode(zone));
+            rootNode.getChildren().add(node);
+
+            addTextZoneChildren(node, zone.getChildren());
+        }
+
+        return rootNode;
+    }
+
+    private void addTextZoneChildren(TreeItem<TextZoneNode> parent, List<TextZone> textZones) {
+        for (TextZone textZone : textZones) {
+            TreeItem<TextZoneNode> node = new TreeItem<>(new TextZoneNode(textZone));
+            parent.getChildren().add(node);
+            addTextZoneChildren(node, textZone.getChildren());
+        }
+    }
+
+    private Image getImage(Pixmap bitmap) {
+        if (bitmap == null) {
+            return null;
+        }
+
+        int height = bitmap.getHeight();
+        int width = bitmap.getWidth();
+        LOG.debug("bitmap: border = {}, height = {}, width = {}", bitmap.getBorder(), height,  width);
+
+
+        WritableImage image = new WritableImage(width, height);
+        PixelWriter pixelWriter = image.getPixelWriter();
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                PixelColor pixel = bitmap.getPixel(x, y);
+                Color color = Color.rgb(pixel.getRed(), pixel.getGreen(), pixel.getBlue());
+                pixelWriter.setColor(x, height - y - 1, color);
+            }
+        }
+
+        return image;
     }
 
     public void saveChunkData(File file, long chunkId) {
         djvuModel.saveChunkData(file, chunkId);
     }
 
-    public String getTitle() {
+    public StringProperty getTitle() {
         return title;
     }
-
     public void setTitle(String title) {
-        var old = this.title;
-        this.title = title;
-        firePropertyChange(FieldName.TITLE, old, title);
+        this.title.set(title);
     }
 
-    public String getTopText() {
+    public DoubleProperty getFitWidth() {
+        return this.fitWidth;
+    }
+    public void zoomIn() {
+        double width = this.fitWidth.get();
+        if (width < 0) {
+            return;
+        }
+
+        double newWidth = width + ZOOM_DELTA;
+        fitWidth.set(newWidth);
+    }
+    public void zoomOut() {
+        double width = this.fitWidth.get();
+        double newWidth = width - ZOOM_DELTA;
+        if (newWidth < 0) {
+            return;
+        }
+
+        fitWidth.set(newWidth);
+    }
+
+    public StringProperty getTopText() {
         return topText;
     }
 
     public void setTopText(String topText) {
-        var old = this.topText;
-        this.topText = topText;
-        firePropertyChange(FieldName.TOP_TEXT, old, topText);
+        this.topText.set(topText);
     }
 
-    public String getErrorMessage() {
+    public StringProperty getErrorMessage() {
         return errorMessage;
     }
 
     public void setErrorMessage(String errorMessage) {
-        var old = this.errorMessage;
-        this.errorMessage = errorMessage;
-        firePropertyChange(FieldName.ERROR_MESSAGE, old, errorMessage);
+        this.errorMessage.set(errorMessage);
     }
 
-    public DefaultTreeModel getTreeModel() {
-        return treeModel;
+    public ObjectProperty<TreeItem<ChunkTreeNode>> getChunkRootNode() {
+        return chunkRootNode;
+    }
+    public void setChunkRootNode(TreeItem<ChunkTreeNode> rootNode) {
+        chunkRootNode.set(rootNode);
     }
 
-    public void setTreeModel(DefaultTreeModel treeModel) {
-        var old = this.treeModel;
-        this.treeModel = treeModel;
-        firePropertyChange(FieldName.TREE_MODEL, old, treeModel);
+    public BooleanProperty getShowTextTree() {
+        return showTextTree;
+    }
+    public void setShowTextTree(Boolean value) {
+        this.showTextTree.set(value);
     }
 
-    public DefaultTreeModel getTextTreeModel() {
-        return textTreeModel;
+    public ObjectProperty<TreeItem<TextZoneNode>> getTextRootNode() {
+        return this.textRootNode;
     }
-    public void setTextTreeModel(DefaultTreeModel textTreeModel) {
-        var old = this.textTreeModel;
-        this.textTreeModel = textTreeModel;
-        firePropertyChange(FieldName.TEXT_TREE_MODEL, old, textTreeModel);
+    public void setTextRootNode(TreeItem<TextZoneNode> rootNode) {
+        this.textRootNode.set(rootNode);
     }
 
-    public BufferedImage getImage() {
+    public ObjectProperty<Image> getImage() {
         return image;
     }
-    public void setImage(BufferedImage image) {
-        var old = this.image;
-        this.image = image;
-        firePropertyChange(FieldName.IMAGE, old, image);
+    public void setImage(Image img) {
+        this.image.set(img);
     }
 
     public void setDjvuModel(DjVuModel djvuModel) {
         this.djvuModel = djvuModel;
     }
 
-    public boolean isBusy() {
-        return busy;
+    public DoubleProperty getProgress() {
+        return progress;
     }
-
-    public void setBusy(boolean busy) {
-        var old = this.busy;
-        this.busy = busy;
-        firePropertyChange(FieldName.BUSY, old, busy);
+    public void setInProgress() {
+        this.progress.set(ProgressBar.INDETERMINATE_PROGRESS);
     }
-
-    private void firePropertyChange(FieldName fieldName, Object oldValue, Object newValue) {
-        propertyChange.firePropertyChange(fieldName.name(), oldValue, newValue);
-    }
-
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertyChange.addPropertyChangeListener(listener);
-    }
-
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        propertyChange.removePropertyChangeListener(listener);
+    public void setProgressDone() {
+        this.progress.set(0);
     }
 }
