@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml">
+    <top>
+        <VBox>
+            <MenuBar fx:id="menuBar">
+                <Menu fx:id="fileMenu" text="File">
+                    <MenuItem fx:id="openMenuItem" text="Open..." onAction="#onOpenFile"/>
+                    <MenuItem fx:id="exitMenuItem" text="Exit" onAction="#onExit"/>
+                </Menu>
+
+                <Menu text="View">
+                    <MenuItem fx:id="showStatistics" text="Show statistics" onAction="#onShowStatistics"/>
+                </Menu>
+
+                <Menu text="Help">
+                    <MenuItem text="About" onAction="#onAbout"/>
+                </Menu>
+            </MenuBar>
+            <ToolBar>
+                <Button fx:id="zoomInButton" onAction="#onZoomInClicked">
+                    <tooltip>
+                        <Tooltip text="Zoom In"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="24" fitHeight="24">
+                            <Image url="/icons/zoom-in-32.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="zoomOutButton" onAction="#onZoomOutClicked">
+                    <tooltip>
+                        <Tooltip text="Zoom Out"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="24" fitHeight="24">
+                            <Image url="/icons/zoom-out-32.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </ToolBar>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.2">
+            <TreeView fx:id="chunkTree"/>
+
+            <SplitPane fx:id="rightSplitPane" orientation="VERTICAL" dividerPositions="0.2">
+                <TextArea fx:id="topTextArea"
+                          style="-fx-font-family: monospace; -fx-text-fill: #000000; -fx-font-weight: bold;"/>
+
+                <ScrollPane fx:id="imageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
+                    <VBox fx:id="chunkInfoBox">
+                        <StackPane>
+                            <ImageView fx:id="imageView" preserveRatio="true" />
+                        </StackPane>
+                        <TreeView fx:id="textTree" />
+                    </VBox>
+                </ScrollPane>
+            </SplitPane>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="10" style="-fx-padding: 5; -fx-border-color: #ccc; -fx-border-width: 1 0 0 0;">
+            <ProgressBar fx:id="progressBar" prefWidth="150"/>
+        </HBox>
+    </bottom>
+</BorderPane>

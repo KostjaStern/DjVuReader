@@ -22,6 +22,17 @@
         <version.junit>5.8.0</version.junit>
         <version.mockito>5.12.0</version.mockito>
 
+        <javafx.version>23</javafx.version>
+
+        <!--
+              Windows: win
+              macOS / Intel: mac
+              macOS / Apple Silicon: mac-aarch64
+              Linux / x64: linux
+              Linux / aarch64 (Raspberry Pi): linux-aarch64
+        -->
+        <javafx.platform>mac-aarch64</javafx.platform>
+
         <version.slf4j>1.7.5</version.slf4j>
         <logback.version>1.2.3</logback.version>
     </properties>
@@ -54,9 +65,23 @@
         </dependency>
 
         <dependency>
-            <groupId>tokyo.northside</groupId>
-            <artifactId>assertj-swing-junit-jupiter</artifactId>
-            <version>4.0.0-beta-3</version>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
         </dependency>
 
     </dependencies>
@@ -103,29 +128,24 @@
                 <version>4.9.3.1</version>
             </plugin>
 
+            <!--
+                $ mvnDebug package
+                $ mvn exec:java
+            -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.3.0</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>com.sternkn.djvu.gui.MainWindow</mainClass>
-                        </manifest>
-                    </archive>
+                    <mainClass>com.sternkn.djvu.gui.MainApp</mainClass>
+                    <classpathScope>runtime</classpathScope>
+                    <systemProperties>
+                        <systemProperty>
+                            <key>apple.awt.application.name</key>
+                            <value>DjVu Viewer</value>
+                        </systemProperty>
+                    </systemProperties>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>assemble-all</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
