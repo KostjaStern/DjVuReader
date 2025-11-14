@@ -3,6 +3,21 @@
 In scope of this project I want to learn DjVu file format and provide a simple tool for DjVu file viewing and may be an editting some metadata.
 
 
+
+![Main application window](docs/djvu_reader_main_window.png)
+
+### Requirements
+```
+Java version 21
+Maven version 3.9.11 
+```
+
+### Local build and run
+```
+$ mvn clean package
+$ mvn exec:java
+```
+
 ### Links
  - https://djvureader.atlassian.net/jira/software/projects/DJV/boards/1
  - https://github.com/DjvuNet/
