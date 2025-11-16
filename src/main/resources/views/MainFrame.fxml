@@ -64,23 +64,34 @@
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.2">
-            <TreeView fx:id="chunkTree"/>
+        <TabPane fx:id="tabPane">
+            <Tab text="Chunks" closable="false">
+                <SplitPane fx:id="chunksSplitPane">
+                    <TreeView fx:id="chunkTree"/>
+                    <SplitPane fx:id="rightSplitPane" orientation="VERTICAL" dividerPositions="0.2">
+                        <TextArea fx:id="topTextArea"
+                                  style="-fx-font-family: monospace; -fx-text-fill: #000000; -fx-font-weight: bold;"/>
 
-            <SplitPane fx:id="rightSplitPane" orientation="VERTICAL" dividerPositions="0.2">
-                <TextArea fx:id="topTextArea"
-                          style="-fx-font-family: monospace; -fx-text-fill: #000000; -fx-font-weight: bold;"/>
+                        <ScrollPane fx:id="imageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
+                            <VBox fx:id="chunkInfoBox">
+                                <StackPane>
+                                    <ImageView fx:id="imageView" preserveRatio="true" />
+                                </StackPane>
+                                <TreeView fx:id="textTree" />
+                            </VBox>
+                        </ScrollPane>
+                    </SplitPane>
+                </SplitPane>
+            </Tab>
+            <Tab text="Pages" closable="false">
+                <SplitPane fx:id="pagesSplitPane">
+                    <ListView fx:id="pageList"/>
+                    <VBox fx:id="pageBox">
 
-                <ScrollPane fx:id="imageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
-                    <VBox fx:id="chunkInfoBox">
-                        <StackPane>
-                            <ImageView fx:id="imageView" preserveRatio="true" />
-                        </StackPane>
-                        <TreeView fx:id="textTree" />
                     </VBox>
-                </ScrollPane>
-            </SplitPane>
-        </SplitPane>
+                </SplitPane>
+            </Tab>
+        </TabPane>
     </center>
 
     <bottom>

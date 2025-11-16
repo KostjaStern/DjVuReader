@@ -21,9 +21,12 @@ import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
@@ -60,9 +63,18 @@ public class MainFrameController {
     @FXML
     private VBox chunkInfoBox;
 
+    @FXML
+    private SplitPane chunksSplitPane;
+
+    @FXML
+    private SplitPane pagesSplitPane;
+
+    private final DoubleProperty sharedPos;
+
     public MainFrameController(MainViewModel viewModel, Stage stage) {
         this.viewModel = viewModel;
         this.stage = stage;
+        sharedPos = new SimpleDoubleProperty(0.25);
     }
 
     @FXML
@@ -85,9 +97,17 @@ public class MainFrameController {
         imageView.imageProperty().bind(viewModel.getImage());
         imageView.managedProperty().bind(imageView.visibleProperty());
 
+        bindDivider(chunksSplitPane);
+        bindDivider(pagesSplitPane);
+
         Platform.runLater(() -> {
             viewModel.getFitWidth().set(chunkInfoBox.getWidth());
         });
+    }
+
+    private void bindDivider(SplitPane splitPane) {
+        var divider = splitPane.getDividers().getFirst();
+        divider.positionProperty().bindBidirectional(sharedPos);
     }
 
     @FXML
