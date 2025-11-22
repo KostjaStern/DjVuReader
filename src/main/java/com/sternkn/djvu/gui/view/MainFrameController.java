@@ -18,6 +18,7 @@
 package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
+import com.sternkn.djvu.gui.view_model.PageNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
 import javafx.application.Platform;
@@ -25,6 +26,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
@@ -69,6 +71,9 @@ public class MainFrameController {
     @FXML
     private SplitPane pagesSplitPane;
 
+    @FXML
+    private ListView<PageNode> pageList;
+
     private final DoubleProperty sharedPos;
 
     public MainFrameController(MainViewModel viewModel, Stage stage) {
@@ -96,6 +101,10 @@ public class MainFrameController {
         imageView.fitWidthProperty().bind(viewModel.getFitWidth());
         imageView.imageProperty().bind(viewModel.getImage());
         imageView.managedProperty().bind(imageView.visibleProperty());
+
+        pageList.getStyleClass().add("pages");
+        pageList.itemsProperty().bind(viewModel.getPages());
+        pageList.setCellFactory(v -> new PageCell(viewModel));
 
         bindDivider(chunksSplitPane);
         bindDivider(pagesSplitPane);

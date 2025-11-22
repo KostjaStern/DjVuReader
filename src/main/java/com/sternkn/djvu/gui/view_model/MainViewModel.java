@@ -27,12 +27,16 @@ import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.DjVuModelImpl;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+//import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
@@ -46,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class MainViewModel {
     private static final Logger LOG = LoggerFactory.getLogger(MainViewModel.class);
@@ -63,6 +68,8 @@ public class MainViewModel {
     private DoubleProperty progress;
 
     private DoubleProperty fitWidth;
+
+    private ListProperty<PageNode> pages;
 
     // left chunk tree
     private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
@@ -89,6 +96,7 @@ public class MainViewModel {
         errorMessage  = new SimpleStringProperty("");
         topText = new SimpleStringProperty("");
 
+        pages = new SimpleListProperty<>();
         textRootNode = new SimpleObjectProperty<>();
         showTextTree  = new SimpleBooleanProperty(false);
         chunkRootNode = new SimpleObjectProperty<>();
@@ -110,7 +118,11 @@ public class MainViewModel {
             TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
 
             setChunkRootNode(rootNode);
-            setDjvuModel(new DjVuModelImpl(djvFile));
+
+            DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
+            setDjvuModel(djvuModel);
+            setPages(djvuModel.getPageOffsets());
+
             setTitle(file.getName());
             setProgressDone();
         });
@@ -121,6 +133,10 @@ public class MainViewModel {
         });
 
         new Thread(task).start();
+    }
+
+    public void loadPageAsync(PageNode page) {
+        LOG.info("Loading page {}", page);
     }
 
     private TreeItem<ChunkTreeNode> getRootNode(DjVuFile djvuFile) {
@@ -227,6 +243,20 @@ public class MainViewModel {
 
     public void saveChunkData(File file, long chunkId) {
         djvuModel.saveChunkData(file, chunkId);
+    }
+
+    public ListProperty<PageNode> getPages() {
+        return pages;
+    }
+    private void setPages(List<Long> offsets) {
+        List<PageNode> pgs = IntStream.range(0, offsets.size())
+            .mapToObj(index -> new PageNode(index + 1, offsets.get(index)))
+            .toList();
+
+        var list = FXCollections.observableList(pgs);
+        // pages.setAll(pgs);
+        // pages.get().addAll(pgs);
+        pages.setValue(list);
     }
 
     public StringProperty getTitle() {

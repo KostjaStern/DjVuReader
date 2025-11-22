@@ -18,10 +18,13 @@
 package com.sternkn.djvu.model;
 
 import java.io.File;
+import java.util.List;
 
 public interface DjVuModel {
 
     void saveChunkData(File file, long chunkId);
+
+    List<Long> getPageOffsets();
 
     ChunkInfo getChunkInfo(long chunkId);
 

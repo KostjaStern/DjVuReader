@@ -18,11 +18,11 @@
 package com.sternkn.djvu.model;
 
 import com.sternkn.djvu.file.DjVuFile;
-import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.AnnotationChunk;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
-import com.sternkn.djvu.file.chunks.DirectoryChunk;
+import com.sternkn.djvu.file.chunks.ComponentInfo;
+import com.sternkn.djvu.file.chunks.ComponentType;
 import com.sternkn.djvu.file.chunks.FGbzChunk;
 import com.sternkn.djvu.file.chunks.InclChunk;
 import com.sternkn.djvu.file.chunks.InfoChunk;
@@ -60,8 +60,15 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     @Override
+    public List<Long> getPageOffsets() {
+        return this.djvuFile.getDirectoryChunk().getComponents().stream()
+            .filter(c -> c.getType() == ComponentType.PAGE)
+            .map(ComponentInfo::getOffset).toList();
+    }
+
+    @Override
     public void saveChunkData(File file, long chunkId) {
-        Chunk chunk = getChunkById(chunkId);
+        Chunk chunk = this.djvuFile.getChunkById(chunkId);
 
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
             outputStream.write(chunk.getData());
@@ -73,7 +80,7 @@ public class DjVuModelImpl implements DjVuModel {
 
     @Override
     public ChunkInfo getChunkInfo(long chunkId) {
-        Chunk chunk = getChunkById(chunkId);
+        Chunk chunk = this.djvuFile.getChunkById(chunkId);
         ChunkId chunkType = chunk.getChunkId();
 
         if (chunkType == ChunkId.Sjbz) {
@@ -89,7 +96,7 @@ public class DjVuModelImpl implements DjVuModel {
         }
 
         Chunk decodedChunk = switch (chunkType) {
-            case ChunkId.DIRM -> new DirectoryChunk(chunk);
+            case ChunkId.DIRM -> this.djvuFile.getDirectoryChunk();
             case ChunkId.INFO -> new InfoChunk(chunk);
             case ChunkId.NAVM -> new NavmChunk(chunk);
             case ChunkId.INCL -> new InclChunk(chunk);
@@ -200,20 +207,5 @@ public class DjVuModelImpl implements DjVuModel {
         return new ChunkInfo(chunk.getId())
             .setTextData(chunk.getDataAsText())
             .setBitmap(bitmap);
-    }
-
-    private Chunk getChunkById(long chunkId) {
-        List<Chunk> chunks = this.djvuFile.getChunks().stream()
-                .filter(c -> c.getId() == chunkId).toList();
-
-        if (chunks.isEmpty()) {
-            throw new DjVuFileException("Chunk with id " + chunkId + " not found");
-        }
-
-        if (chunks.size() > 1) {
-            LOG.warn("More than one chunk with id {} were found", chunkId);
-        }
-
-        return chunks.getFirst();
     }
 }

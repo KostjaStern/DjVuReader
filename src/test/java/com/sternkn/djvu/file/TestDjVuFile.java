@@ -32,7 +32,10 @@ public class TestDjVuFile extends TestSupport {
 
     @Test
     public void testFindSharedShapeChunkWithIllegalArgument() {
-        DjVuFile file = new DjVuFile(MagicHeader.AT_T, List.of(), 5000000L);
+        Chunk root = createChunk(ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
+        Chunk dir = readChunk("DIRM_1.data", ChunkId.DIRM, root, 24L);
+
+        DjVuFile file = new DjVuFile(MagicHeader.AT_T, List.of(root, dir), 5000000L);
 
         Chunk chunk = createChunk(ChunkId.Djbz, null, 2009660L);
         Exception exception = assertThrows(IllegalArgumentException.class, () -> file.findSharedShapeChunk(chunk));

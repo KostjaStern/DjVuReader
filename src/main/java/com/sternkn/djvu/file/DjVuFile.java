@@ -49,7 +49,7 @@ public class DjVuFile {
         this.header = header;
         this.chunks = chunks;
         this.fileSize = fileSize;
-        this.directoryChunk = findDirectory(chunks);
+        this.directoryChunk = findDirectory();
     }
 
     public MagicHeader getHeader() {
@@ -68,11 +68,35 @@ public class DjVuFile {
         return directoryChunk;
     }
 
-    private DirectoryChunk findDirectory(List<Chunk> chunks) {
-        return chunks.stream().filter(chunk -> chunk.getChunkId() == ChunkId.DIRM)
-                .findFirst()
-                .map(DirectoryChunk::new)
-                .orElse(null);
+    private DirectoryChunk findDirectory() {
+        List<Chunk> cks = this.chunks.stream()
+                .filter(c -> c.getChunkId() == ChunkId.DIRM).toList();
+
+        if (cks.isEmpty()) {
+            throw new DjVuFileException("The DIRM chunk is missing from the DjVu file.");
+        }
+
+        if (cks.size() > 1) {
+            LOG.warn("More than one DIRM chunk ({}) were found", cks.size());
+        }
+
+        Chunk chunk = cks.getFirst();
+        return new DirectoryChunk(chunk);
+    }
+
+    public Chunk getChunkById(long chunkId) {
+        List<Chunk> chunks = this.chunks.stream()
+                .filter(c -> c.getId() == chunkId).toList();
+
+        if (chunks.isEmpty()) {
+            throw new DjVuFileException("Chunk with id " + chunkId + " not found");
+        }
+
+        if (chunks.size() > 1) {
+            LOG.warn("More than one chunk with id {} were found", chunkId);
+        }
+
+        return chunks.getFirst();
     }
 
     public List<Chunk> getAllImageChunks(Chunk chunk) {
