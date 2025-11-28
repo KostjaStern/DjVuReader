@@ -18,6 +18,7 @@
 package com.sternkn.djvu.file.utils;
 
 import com.sternkn.djvu.file.DjVuFileException;
+import com.sternkn.djvu.utils.utils.ByteOrder;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -26,11 +27,11 @@ import java.io.InputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read32;
-import static com.sternkn.djvu.file.utils.InputStreamUtils.readString;
-import static com.sternkn.djvu.file.utils.InputStreamUtils.readZeroTerminatedString;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.read24;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.read32;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.readString;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.readZeroTerminatedString;
 
 public class TestInputStreamUtils {
 

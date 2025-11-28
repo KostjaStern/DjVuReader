@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HexFormat;
 
-import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedInt;
-import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
+import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedInt;
+import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedShort;
 
 /*
     12 Appendix 3: Z´coding.

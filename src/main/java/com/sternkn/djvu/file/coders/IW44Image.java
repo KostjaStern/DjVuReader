@@ -22,7 +22,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read8;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.read8;
 
 public class IW44Image {
 

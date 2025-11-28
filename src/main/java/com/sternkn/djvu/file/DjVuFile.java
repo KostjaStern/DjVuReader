@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -97,6 +98,30 @@ public class DjVuFile {
         }
 
         return chunks.getFirst();
+    }
+
+    public Chunk getChunkByOffset(long offset) {
+        final long chunkOffset = OFFSET_ALIGNMENT + offset;
+        List<Chunk> cks = this.chunks.stream()
+                .filter(c -> chunkOffset == c.getOffsetStart()).toList();
+
+        if (cks.isEmpty()) {
+            throw new DjVuFileException("Chunk with offset " + offset + " not found");
+        }
+
+        if (cks.size() > 1) {
+            LOG.warn("More than one chunk with offset {} were found", offset);
+        }
+
+        return cks.getFirst();
+    }
+
+    public Map<ChunkId, List<Chunk>> getAllPageChunks(Chunk chunk) {
+        Chunk parent = chunk.getParent();
+        return this.chunks.stream()
+            .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
+            .filter(c -> c.getChunkId() != ChunkId.INFO)
+            .collect(Collectors.groupingBy(Chunk::getChunkId));
     }
 
     public List<Chunk> getAllImageChunks(Chunk chunk) {

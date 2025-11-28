@@ -17,6 +17,7 @@
 */
 package com.sternkn.djvu.file.utils;
 
+import com.sternkn.djvu.utils.utils.NumberUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

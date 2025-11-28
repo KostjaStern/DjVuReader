@@ -18,7 +18,7 @@
 package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.DjVuFileException;
-import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
+import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedShort;
 
 public class GBitmap implements Pixmap {
 

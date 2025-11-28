@@ -26,6 +26,8 @@ public interface DjVuModel {
 
     List<Long> getPageOffsets();
 
+    Page getPage(long offset);
+
     ChunkInfo getChunkInfo(long chunkId);
 
     String getChunkStatistics();

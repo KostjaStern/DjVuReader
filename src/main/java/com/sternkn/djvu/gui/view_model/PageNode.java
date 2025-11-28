@@ -26,11 +26,13 @@ public class PageNode {
     private int page;
     private Long offset;
     private Image image;
+    private boolean loaded;
 
     public PageNode(int page, Long offset) {
         this.page = page;
         this.offset = offset;
         image = emptyImage();
+        loaded = false;
     }
 
     public int getPage() {
@@ -41,12 +43,17 @@ public class PageNode {
         return offset;
     }
 
+    public boolean isLoaded() {
+        return loaded;
+    }
+
     public Image getImage() {
         return image;
     }
-    public void setImage(Image image) {
-        this.image = image;
-    }
+//    public void setImage(Image image) {
+//        this.loaded = true;
+//        this.image = image;
+//    }
 
     private Image emptyImage() {
         return new WritableImage(200, 260);
@@ -58,13 +65,13 @@ public class PageNode {
             return false;
         }
         return Objects.equals(page, other.page)
-            && Objects.equals(offset, other.offset);
-            // && Objects.equals(image, other.image);
+            && Objects.equals(offset, other.offset)
+            && Objects.equals(loaded, other.loaded);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(page, offset);
+        return Objects.hash(page, offset, loaded);
     }
 
     @Override
@@ -74,6 +81,8 @@ public class PageNode {
         buffer.append(page);
         buffer.append(" , ");
         buffer.append(offset);
+        buffer.append(" , ");
+        buffer.append(loaded);
         buffer.append("}");
 
         return buffer.toString();

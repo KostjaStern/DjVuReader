@@ -63,6 +63,9 @@ public class MainFrameController {
     private ImageView imageView;
 
     @FXML
+    private ImageView pageView;
+
+    @FXML
     private VBox chunkInfoBox;
 
     @FXML
@@ -101,6 +104,9 @@ public class MainFrameController {
         imageView.fitWidthProperty().bind(viewModel.getFitWidth());
         imageView.imageProperty().bind(viewModel.getImage());
         imageView.managedProperty().bind(imageView.visibleProperty());
+
+        pageView.imageProperty().bind(viewModel.getPageImage());
+        pageView.fitWidthProperty().bind(viewModel.getFitWidth());
 
         pageList.getStyleClass().add("pages");
         pageList.itemsProperty().bind(viewModel.getPages());

@@ -86,9 +86,13 @@
             <Tab text="Pages" closable="false">
                 <SplitPane fx:id="pagesSplitPane">
                     <ListView fx:id="pageList"/>
-                    <VBox fx:id="pageBox">
-
-                    </VBox>
+                    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
+                        <VBox fx:id="pageBox">
+                            <StackPane>
+                                <ImageView fx:id="pageView" preserveRatio="true" />
+                            </StackPane>
+                        </VBox>
+                    </ScrollPane>
                 </SplitPane>
             </Tab>
         </TabPane>

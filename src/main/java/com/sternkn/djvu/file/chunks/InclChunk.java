@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.readString;
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.readString;
+import static com.sternkn.djvu.utils.utils.StringUtils.NL;
 
 public class InclChunk extends Chunk {
     private static final Logger LOG = LoggerFactory.getLogger(InclChunk.class);

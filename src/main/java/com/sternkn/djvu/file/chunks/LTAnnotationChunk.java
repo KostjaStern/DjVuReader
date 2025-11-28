@@ -22,8 +22,8 @@ import com.sternkn.djvu.file.coders.BSByteInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.readString;
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.readString;
+import static com.sternkn.djvu.utils.utils.StringUtils.NL;
 
 public class LTAnnotationChunk extends Chunk {
 

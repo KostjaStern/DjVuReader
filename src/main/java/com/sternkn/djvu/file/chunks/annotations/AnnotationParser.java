@@ -27,7 +27,7 @@ import java.util.Stack;
 
 import static com.sternkn.djvu.file.chunks.annotations.ParserUtils.findNodes;
 import static com.sternkn.djvu.file.chunks.annotations.ParserUtils.parseColorNode;
-import static com.sternkn.djvu.file.utils.StringUtils.getChar;
+import static com.sternkn.djvu.utils.utils.StringUtils.getChar;
 
 public class AnnotationParser {
 

@@ -22,7 +22,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedInt;
+import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedInt;
 
 public class JB2Image implements Dict {
 

@@ -31,8 +31,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.readString;
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.utils.InputStreamUtils.readString;
+import static com.sternkn.djvu.utils.utils.StringUtils.NL;
 
 public class AnnotationChunk extends Chunk {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationChunk.class);
