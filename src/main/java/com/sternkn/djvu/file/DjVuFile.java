@@ -26,11 +26,7 @@ import java.util.Map;
 
 public interface DjVuFile {
 
-    MagicHeader getHeader();
-
     List<Chunk> getChunks();
-
-    long getFileSize();
 
     DirectoryChunk getDirectoryChunk();
 

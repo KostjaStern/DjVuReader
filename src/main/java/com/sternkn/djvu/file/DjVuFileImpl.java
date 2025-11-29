@@ -37,35 +37,17 @@ public class DjVuFileImpl implements DjVuFile {
 
     private static final int OFFSET_ALIGNMENT = 20;
 
-    private final MagicHeader header;
     private final List<Chunk> chunks;
-    private final long fileSize;
     private final DirectoryChunk directoryChunk;
 
-    public DjVuFileImpl() {
-        this(MagicHeader.AT_T, List.of(), 0L);
-    }
-
-    public DjVuFileImpl(MagicHeader header, List<Chunk> chunks, long fileSize) {
-        this.header = header;
+    public DjVuFileImpl(List<Chunk> chunks) {
         this.chunks = chunks;
-        this.fileSize = fileSize;
         this.directoryChunk = findDirectory();
-    }
-
-    @Override
-    public MagicHeader getHeader() {
-        return header;
     }
 
     @Override
     public List<Chunk> getChunks() {
         return chunks;
-    }
-
-    @Override
-    public long getFileSize() {
-        return fileSize;
     }
 
     @Override

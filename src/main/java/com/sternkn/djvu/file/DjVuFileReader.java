@@ -55,9 +55,9 @@ public class DjVuFileReader implements Closeable {
     }
 
     public DjVuFile readFile() {
-        final MagicHeader header = readHeader();
+        readHeader();
         final List<Chunk> chunks = readChunks();
-        return new DjVuFileImpl(header, chunks, fileSize);
+        return new DjVuFileImpl(chunks);
     }
 
     private List<Chunk> readChunks() {

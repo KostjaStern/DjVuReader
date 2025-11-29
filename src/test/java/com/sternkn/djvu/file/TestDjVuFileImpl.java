@@ -35,7 +35,7 @@ public class TestDjVuFileImpl extends TestSupport {
         Chunk root = createChunk(ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
         Chunk dir = readChunk("DIRM_1.data", ChunkId.DIRM, root, 24L);
 
-        DjVuFile file = new DjVuFileImpl(MagicHeader.AT_T, List.of(root, dir), 5000000L);
+        DjVuFile file = new DjVuFileImpl(List.of(root, dir));
 
         Chunk chunk = createChunk(ChunkId.Djbz, null, 2009660L);
         Exception exception = assertThrows(IllegalArgumentException.class, () -> file.findSharedShapeChunk(chunk));
@@ -58,7 +58,7 @@ public class TestDjVuFileImpl extends TestSupport {
         Chunk page1 = createChunk(ChunkId.Sjbz, null, formPage1, 2143162L);
 
         List<Chunk> chunks = List.of(root,  dir, formDict1, dict1, formDict2, dict2, link, page1);
-        DjVuFile file = new DjVuFileImpl(MagicHeader.AT_T, chunks, 5000000L);
+        DjVuFile file = new DjVuFileImpl(chunks);
 
         Chunk chunk = file.findSharedShapeChunk(page1);
         assertEquals(dict2,  chunk);
@@ -81,7 +81,7 @@ public class TestDjVuFileImpl extends TestSupport {
         Chunk page1 = createChunk(ChunkId.Sjbz, null, form2, 185492L);
 
         List<Chunk> chunks = List.of(root,  dir, formWrapper, form1, dict, form2, link1, link2, page1);
-        DjVuFile file = new DjVuFileImpl(MagicHeader.AT_T, chunks, 5000000L);
+        DjVuFile file = new DjVuFileImpl(chunks);
 
         Chunk chunk = file.findSharedShapeChunk(page1);
         assertEquals(dict,  chunk);
@@ -100,7 +100,7 @@ public class TestDjVuFileImpl extends TestSupport {
         Chunk page1 = createChunk(ChunkId.Sjbz, null, formPage1, 68576L);
 
         List<Chunk> chunks = List.of(root,  dir, formDict, ant, incl, page1);
-        DjVuFile file = new DjVuFileImpl(MagicHeader.AT_T, chunks, 5000000L);
+        DjVuFile file = new DjVuFileImpl(chunks);
 
         Chunk chunk = file.findSharedShapeChunk(page1);
         assertNull(chunk);
