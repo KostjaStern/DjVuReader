@@ -222,7 +222,7 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     private ChunkInfo getIW44ChunkImage(Chunk chunk) {
-        List<Chunk> chunks = this.djvuFile.getAllImageChunks(chunk);
+        List<Chunk> chunks = this.djvuFile.getAllPageChunksWithSameChunkId(chunk);
 
         IW44Image image = new IW44Image();
         chunks.forEach(ch -> image.decode_chunk(ch.getData()));

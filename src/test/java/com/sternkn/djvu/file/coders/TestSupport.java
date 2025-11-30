@@ -89,9 +89,14 @@ public class TestSupport {
     }
 
     public Chunk readChunk(String fileName, ChunkId chunkId, Chunk parent, Long offsetStart) {
+        return readChunk(0L, fileName, chunkId, parent, offsetStart);
+    }
+
+    public Chunk readChunk(Long id, String fileName, ChunkId chunkId, Chunk parent, Long offsetStart) {
         byte[] buffer = readByteBuffer(fileName);
 
         return Chunk.builder()
+                .withId(id)
                 .withChunkId(chunkId)
                 .withData(buffer)
                 .withParent(parent)

@@ -149,7 +149,7 @@ public class TestDjVuModelImpl extends TestSupport {
 
         when(djvuFile.getChunkById(chunkId)).thenReturn(chunk1);
         when(djvuFile.getChunks()).thenReturn(chunks);
-        when(djvuFile.getAllImageChunks(chunk1)).thenReturn(chunks);
+        when(djvuFile.getAllPageChunksWithSameChunkId(chunk1)).thenReturn(chunks);
 
         ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
         GPixmap expectedPixmap = readPixmap("BG44_test.png");

@@ -45,11 +45,17 @@ public class DjVuFileImpl implements DjVuFile {
         this.directoryChunk = findDirectory();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Chunk> getChunks() {
         return chunks;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DirectoryChunk getDirectoryChunk() {
         return directoryChunk;
@@ -59,62 +65,58 @@ public class DjVuFileImpl implements DjVuFile {
         List<Chunk> cks = this.chunks.stream()
                 .filter(c -> c.getChunkId() == ChunkId.DIRM).toList();
 
-        if (cks.isEmpty()) {
-            throw new DjVuFileException("The DIRM chunk is missing from the DjVu file.");
-        }
+        final String emptyError = "The DjVu file is missing the DIRM chunk.";
+        final String manyWarning = String.format("Multiple DIRM chunks were found (%d).", cks.size());
 
-        if (cks.size() > 1) {
-            LOG.warn("More than one DIRM chunk ({}) were found", cks.size());
-        }
-
-        Chunk chunk = cks.getFirst();
+        Chunk chunk = listToOne(cks, emptyError, manyWarning);
         return new DirectoryChunk(chunk);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Chunk getChunkById(long chunkId) {
-        List<Chunk> chunks = this.chunks.stream()
+        List<Chunk> cks = this.chunks.stream()
                 .filter(c -> c.getId() == chunkId).toList();
 
-        if (chunks.isEmpty()) {
-            throw new DjVuFileException("Chunk with id " + chunkId + " not found");
-        }
+        final String emptyError = String.format("Chunk with id %d not found.", chunkId);
+        final String manyWarning = String.format("More than one chunk with id %d were found.", chunkId);
 
-        if (chunks.size() > 1) {
-            LOG.warn("More than one chunk with id {} were found", chunkId);
-        }
-
-        return chunks.getFirst();
+        return listToOne(cks, emptyError, manyWarning);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Chunk getChunkByOffset(long offset) {
         final long chunkOffset = OFFSET_ALIGNMENT + offset;
-        List<Chunk> cks = this.chunks.stream()
+        final List<Chunk> cks = this.chunks.stream()
                 .filter(c -> chunkOffset == c.getOffsetStart()).toList();
 
-        if (cks.isEmpty()) {
-            throw new DjVuFileException("Chunk with offset " + offset + " not found");
-        }
+        final String emptyError = String.format("Chunk with offset %d not found.", offset);
+        final String manyWarning = String.format("More than one chunk with offset %d were found.", offset);
 
-        if (cks.size() > 1) {
-            LOG.warn("More than one chunk with offset {} were found", offset);
-        }
-
-        return cks.getFirst();
+        return listToOne(cks, emptyError, manyWarning);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Map<ChunkId, List<Chunk>> getAllPageChunks(Chunk chunk) {
         Chunk parent = chunk.getParent();
         return this.chunks.stream()
             .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
-            .filter(c -> c.getChunkId() != ChunkId.INFO)
             .collect(Collectors.groupingBy(Chunk::getChunkId));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public List<Chunk> getAllImageChunks(Chunk chunk) {
+    public List<Chunk> getAllPageChunksWithSameChunkId(Chunk chunk) {
         Chunk parent = chunk.getParent();
         return this.chunks.stream()
             .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
@@ -123,9 +125,7 @@ public class DjVuFileImpl implements DjVuFile {
     }
 
     /**
-     *
-     * @param chunk - Sjbz chunk
-     * @return related Djbz chunk
+     * {@inheritDoc}
      */
     @Override
     public Chunk findSharedShapeChunk(Chunk chunk) {
@@ -164,6 +164,18 @@ public class DjVuFileImpl implements DjVuFile {
         }
 
         return sharedShapeChunk;
+    }
+
+    private Chunk listToOne(List<Chunk> list, String emptyError, String manyWarning) {
+        if (list.isEmpty()) {
+            throw new DjVuFileException(emptyError);
+        }
+
+        if (list.size() > 1) {
+            LOG.warn(manyWarning);
+        }
+
+        return list.getFirst();
     }
 
     private List<String> getSharedComponentIDs(Chunk chunk) {
