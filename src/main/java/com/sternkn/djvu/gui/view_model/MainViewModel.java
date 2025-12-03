@@ -252,7 +252,7 @@ public class MainViewModel {
     public ListProperty<PageNode> getPages() {
         return pages;
     }
-    private void setPages(List<Long> offsets) {
+    public void setPages(List<Long> offsets) {
         List<PageNode> pgs = IntStream.range(0, offsets.size())
             .mapToObj(index -> new PageNode(index + 1, offsets.get(index)))
             .toList();

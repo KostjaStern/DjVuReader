@@ -24,8 +24,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -46,11 +44,7 @@ public class PageCell extends ListCell<PageNode> {
     private final Label number = new Label();
     private final StackPane pane = new StackPane();
 
-    private final MainViewModel viewModel;
-
     PageCell(MainViewModel viewModel) {
-        this.viewModel = viewModel;
-
         thumb.setPreserveRatio(true);
         thumb.setFitWidth(90);
         thumb.setSmooth(true);
@@ -73,25 +67,21 @@ public class PageCell extends ListCell<PageNode> {
         pane.getStyleClass().add("page-cell");
         pane.getChildren().add(content);
 
-        selectedProperty().addListener((obs, was, is) -> pane.pseudoClassStateChanged(SELECTED, is));
+        selectedProperty().addListener((obs, was, is) -> {
+            pane.pseudoClassStateChanged(SELECTED, is);
+
+            if (is) {
+                PageNode page = getItem();
+                LOG.debug("Page clicked: {}", page);
+
+                viewModel.loadPageAsync(page);
+            }
+        });
 
         setGraphic(pane);
         setText(null);
 
         setBackground(Background.EMPTY);
-        setOnMouseClicked(this::onMouseClicked);
-    }
-
-    private void onMouseClicked(MouseEvent event) {
-        LOG.debug("Mouse event button: {}", event.getButton());
-        LOG.debug("Mouse event click count: {}", event.getClickCount());
-
-        if (event.getButton() == MouseButton.PRIMARY) {
-            PageNode page = getItem();
-            LOG.debug("Page clicked: {}", page);
-
-            viewModel.loadPageAsync(page);
-        }
     }
 
     @Override
