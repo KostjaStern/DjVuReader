@@ -36,10 +36,6 @@ import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 import com.sternkn.djvu.file.coders.Pixmap;
 import javafx.scene.image.Image;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
-import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +48,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.sternkn.djvu.utils.utils.ImageUtils.toImage;
+import static com.sternkn.djvu.utils.utils.ImageUtils.composeImage;
 import static com.sternkn.djvu.utils.utils.StringUtils.NL;
 import static com.sternkn.djvu.utils.utils.StringUtils.padRight;
 
@@ -78,58 +74,12 @@ public class DjVuModelImpl implements DjVuModel {
 
         Map<ChunkId, List<Chunk>> pageChunks = djvuFile.getAllPageChunks(chunk);
 
-        Image mask = toImage(getBitonalImage(pageChunks.get(ChunkId.Sjbz)));
-        Image background = toImage(getColorImage(pageChunks.get(ChunkId.BG44)));
-        Image foreground = toImage(getColorImage(pageChunks.get(ChunkId.FG44)));
+        Pixmap mask = getBitonalImage(pageChunks.get(ChunkId.Sjbz));
+        Pixmap background = getColorImage(pageChunks.get(ChunkId.BG44));
+        Pixmap foreground = getColorImage(pageChunks.get(ChunkId.FG44));
 
-        if (background == null) {
-            return new Page(mask);
-        }
-        if (mask == null) {
-            return new Page(background);
-        }
-
-        double bgScale = background.getWidth() / info.getWidth();
-        double fgScale = foreground != null ? (foreground.getWidth() / info.getWidth()) : -1;
-        LOG.debug("bgScale = {}", bgScale);
-        LOG.debug("fgScale = {}", fgScale);
-
-        WritableImage image = new WritableImage(info.getWidth(), info.getHeight());
-        PixelWriter writer = image.getPixelWriter();
-        PixelReader maskReader = mask.getPixelReader();
-        PixelReader fgReader = foreground == null ? null : foreground.getPixelReader();
-        PixelReader bgReader = background.getPixelReader();
-
-        for (int y = 0; y < info.getHeight(); y++) {
-            for (int x = 0; x < info.getWidth(); x++) {
-                Color color = maskReader.getColor(x, y);
-
-                Color resultColor = null;
-                if (Color.WHITE.equals(color)) {
-                    int srcX = Math.min((int) (x * bgScale), (int)(background.getWidth() - 1));
-                    int srcY = Math.min((int) (y * bgScale), (int)(background.getHeight() - 1));
-                    resultColor = bgReader.getColor(srcX, srcY);
-                }
-                else {
-                    if (fgReader != null) {
-                        int srcX = Math.min((int) (x * fgScale), (int)(foreground.getWidth() - 1));
-                        int srcY = Math.min((int) (y * fgScale), (int)(foreground.getHeight() - 1));
-                        resultColor = fgReader.getColor(srcX, srcY);
-                    }
-                    else {
-                        resultColor = color;
-                    }
-                }
-
-                writer.setColor(x, y, resultColor);
-            }
-        }
-
+        Image image = composeImage(mask, background, foreground, info.getHeight(), info.getWidth());
         return new Page(image);
-    }
-
-    public static void main(String ... args) {
-        System.out.println("Color.WHITE = " + Color.WHITE);
     }
 
     @Override

@@ -517,7 +517,7 @@ public class JB2CodecDecoder {
 
                 code_image_size(dict);
                 code_eventual_lossless_refinement();
-                dict.init_library();
+                // dict.init_library();
                 break;
             }
             case NEW_MARK_LIBRARY_ONLY:
@@ -693,7 +693,7 @@ public class JB2CodecDecoder {
         bm.init(ysize, xsize, border);
     }
 
-    private int code_match_index(Dict dict, Parent parent) {
+    private int code_match_index(JB2Dict dict, Parent parent) {
         List<Integer> lib2shape = dict.getLib2shape();
         int match = codeNumber(0, lib2shape.size() - 1, dist_match_index, 0);
         parent.setParent(lib2shape.get(match));

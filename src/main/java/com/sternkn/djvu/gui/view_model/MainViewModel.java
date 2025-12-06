@@ -152,7 +152,6 @@ public class MainViewModel {
         task.setOnSucceeded(event -> {
             Page p = task.getValue();
 
-            // page.setImage(p.getImage());
             setPageImage(p.getImage());
             setProgressDone();
         });
@@ -258,8 +257,6 @@ public class MainViewModel {
             .toList();
 
         var list = FXCollections.observableList(pgs);
-        // pages.setAll(pgs);
-        // pages.get().addAll(pgs);
         pages.setValue(list);
     }
 

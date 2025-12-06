@@ -17,9 +17,11 @@
 */
 package com.sternkn.djvu.file.coders;
 
-import java.util.List;
-
 public interface Dict {
 
-    List<Integer> getLib2shape();
+    int get_shape_count();
+
+    int add_shape(JB2Shape shape);
+
+    JB2Shape get_shape(int shapeno);
 }

@@ -20,6 +20,7 @@ package com.sternkn.djvu.utils.utils;
 import com.sternkn.djvu.file.coders.PixelColor;
 import com.sternkn.djvu.file.coders.Pixmap;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
@@ -49,6 +50,58 @@ public final class ImageUtils {
                 PixelColor pixel = bitmap.getPixel(x, y);
                 Color color = Color.rgb(pixel.getRed(), pixel.getGreen(), pixel.getBlue());
                 pixelWriter.setColor(x, height - y - 1, color);
+            }
+        }
+
+        return image;
+    }
+
+    public static Image composeImage(Pixmap m, Pixmap b, Pixmap f, int height, int width) {
+        Image mask = toImage(m);
+        Image background = toImage(b);
+
+        if (background == null) {
+            return mask;
+        }
+        if (mask == null) {
+            return background;
+        }
+
+        Image foreground = toImage(f);
+
+        double bgScale = background.getWidth() / width;
+        double fgScale = foreground != null ? (foreground.getWidth() / width) : -1;
+        LOG.debug("bgScale = {}", bgScale);
+        LOG.debug("fgScale = {}", fgScale);
+
+        WritableImage image = new WritableImage(width, height);
+        PixelWriter writer = image.getPixelWriter();
+        PixelReader maskReader = mask.getPixelReader();
+        PixelReader fgReader = foreground == null ? null : foreground.getPixelReader();
+        PixelReader bgReader = background.getPixelReader();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color color = maskReader.getColor(x, y);
+
+                Color resultColor = null;
+                if (Color.WHITE.equals(color)) {
+                    int srcX = Math.min((int) (x * bgScale), (int)(background.getWidth() - 1));
+                    int srcY = Math.min((int) (y * bgScale), (int)(background.getHeight() - 1));
+                    resultColor = bgReader.getColor(srcX, srcY);
+                }
+                else {
+                    if (fgReader != null) {
+                        int srcX = Math.min((int) (x * fgScale), (int)(foreground.getWidth() - 1));
+                        int srcY = Math.min((int) (y * fgScale), (int)(foreground.getHeight() - 1));
+                        resultColor = fgReader.getColor(srcX, srcY);
+                    }
+                    else {
+                        resultColor = color;
+                    }
+                }
+
+                writer.setColor(x, y, resultColor);
             }
         }
 
