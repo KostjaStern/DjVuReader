@@ -50,10 +50,6 @@ public class PageNode {
     public Image getImage() {
         return image;
     }
-//    public void setImage(Image image) {
-//        this.loaded = true;
-//        this.image = image;
-//    }
 
     private Image emptyImage() {
         return new WritableImage(200, 260);

@@ -517,7 +517,6 @@ public class JB2CodecDecoder {
 
                 code_image_size(dict);
                 code_eventual_lossless_refinement();
-                // dict.init_library();
                 break;
             }
             case NEW_MARK_LIBRARY_ONLY:

@@ -1,5 +1,6 @@
 package com.sternkn.djvu.utils;
 
+import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
 import javafx.scene.image.Image;
@@ -8,8 +9,20 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
+import static com.sternkn.djvu.utils.ImageUtils.toImage;
 
 public class TestImageUtils extends TestSupport {
+
+    @Test
+    public void testToImage() {
+        Pixmap pixmap = createPixmap("Dudaev.png");
+        Image image = toImage(pixmap, ImageRotationType.COUNTER_CLOCKWISE_90);
+
+        Pixmap actual = new PNGPixmap(image);
+        Pixmap expected = createPixmap("Dudaev_COUNTER_CLOCKWISE_90.png");
+
+        assertPixmapEquals(expected, actual);
+    }
 
     @Test
     public void testComposeImage() {
