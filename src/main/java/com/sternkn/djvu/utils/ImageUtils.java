@@ -183,7 +183,7 @@ public final class ImageUtils {
         return image;
     }
 
-    public static void saveAsFile(Image image, String filename) throws IOException {
+    public static void saveAsFile(Image image, String filename) {
 
         int width = (int) image.getWidth();
         int height = (int) image.getHeight();
@@ -199,6 +199,12 @@ public final class ImageUtils {
         }
 
         File outputfile = new File(filename);
-        ImageIO.write(buffer, "png", outputfile);
+
+        try {
+            ImageIO.write(buffer, "png", outputfile);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

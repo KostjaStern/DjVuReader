@@ -10,18 +10,41 @@ import java.io.File;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestImageUtils extends TestSupport {
 
     @Test
-    public void testToImage() {
+    public void testToImageCounterClockwise90() {
         Pixmap pixmap = createPixmap("Dudaev.png");
         Image image = toImage(pixmap, ImageRotationType.COUNTER_CLOCKWISE_90);
 
         Pixmap actual = new PNGPixmap(image);
         Pixmap expected = createPixmap("Dudaev_COUNTER_CLOCKWISE_90.png");
 
-        assertPixmapEquals(expected, actual);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testToImageUpsideDown() {
+        Pixmap pixmap = createPixmap("Dudaev.png");
+        Image image = toImage(pixmap, ImageRotationType.UPSIDE_DOWN);
+
+        Pixmap actual = new PNGPixmap(image);
+        Pixmap expected = createPixmap("Dudaev_UPSIDE_DOWN.png");
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testToImageClockwise90() {
+        Pixmap pixmap = createPixmap("Dudaev.png");
+        Image image = toImage(pixmap, ImageRotationType.CLOCKWISE_90);
+
+        Pixmap actual = new PNGPixmap(image);
+        Pixmap expected = createPixmap("Dudaev_CLOCKWISE_90.png");
+
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -35,7 +58,7 @@ public class TestImageUtils extends TestSupport {
         Pixmap actual = new PNGPixmap(image);
         Pixmap expected = createPixmap("Dudaev.png");
 
-        assertPixmapEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     private PNGPixmap createPixmap(String filename) {

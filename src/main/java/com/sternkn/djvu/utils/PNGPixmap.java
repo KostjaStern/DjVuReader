@@ -10,6 +10,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class PNGPixmap implements Pixmap {
 
@@ -89,5 +91,21 @@ public class PNGPixmap implements Pixmap {
 
     public void setPixel(int x, int y, PixelColor pixel) {
         pixels[y * width + x] = pixel;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof PNGPixmap other)) {
+            return false;
+        }
+
+        return width == other.width
+            && height == other.height
+            && Arrays.equals(pixels, other.pixels);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(width, height, Arrays.hashCode(pixels));
     }
 }
