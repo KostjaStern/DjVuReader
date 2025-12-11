@@ -24,6 +24,7 @@ import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.ComponentInfo;
 import com.sternkn.djvu.file.chunks.ComponentType;
 import com.sternkn.djvu.file.chunks.FGbzChunk;
+import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.chunks.InclChunk;
 import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.LTAnnotationChunk;
@@ -31,15 +32,12 @@ import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.TextChunk;
 import com.sternkn.djvu.file.coders.IW44Image;
 import com.sternkn.djvu.file.coders.IW44SecondaryHeader;
-import com.sternkn.djvu.file.coders.JB2CodecDecoder;
-import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 import com.sternkn.djvu.file.coders.Pixmap;
 import javafx.scene.image.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,9 +46,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.sternkn.djvu.utils.utils.ImageUtils.composeImage;
-import static com.sternkn.djvu.utils.utils.StringUtils.NL;
-import static com.sternkn.djvu.utils.utils.StringUtils.padRight;
+import static com.sternkn.djvu.utils.ImageUtils.composeImage;
+import static com.sternkn.djvu.utils.ImageUtils.decodeBitonalImage;
+import static com.sternkn.djvu.utils.ImageUtils.decodeColorImage;
+import static com.sternkn.djvu.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.StringUtils.padRight;
 
 public class DjVuModelImpl implements DjVuModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuModelImpl.class);
@@ -78,7 +78,8 @@ public class DjVuModelImpl implements DjVuModel {
         Pixmap background = getColorImage(pageChunks.get(ChunkId.BG44));
         Pixmap foreground = getColorImage(pageChunks.get(ChunkId.FG44));
 
-        Image image = composeImage(mask, background, foreground, info.getHeight(), info.getWidth());
+        Image image = composeImage(mask, background, foreground,
+                info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
         return new Page(image);
     }
 
@@ -173,12 +174,10 @@ public class DjVuModelImpl implements DjVuModel {
 
     private ChunkInfo getIW44ChunkImage(Chunk chunk) {
         List<Chunk> chunks = this.djvuFile.getAllPageChunksWithSameChunkId(chunk);
+        List<byte[]> data = chunks.stream().map(Chunk::getData).toList();
+        IW44Image image = decodeColorImage(data);
 
-        IW44Image image = new IW44Image();
-        chunks.forEach(ch -> image.decode_chunk(ch.getData()));
-        image.close_codec();
         IW44SecondaryHeader header = image.getSecondaryHeader();
-
         Pixmap bitmap = image.get_pixmap();
 
         String text = String.format(
@@ -220,16 +219,11 @@ public class DjVuModelImpl implements DjVuModel {
 
         Chunk chunk = chunks.getFirst();
         Chunk sharedShape = this.djvuFile.findSharedShapeChunk(chunk);
-        JB2Dict dict = null;
-        if (sharedShape != null) {
-            dict = new JB2Dict();
-            JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(sharedShape.getData()));
-            decoder.decode(dict);
-        }
 
-        JB2Image image = new JB2Image(dict);
-        JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(chunk.getData()));
-        decoder.decode(image);
+        byte[] data = chunk.getData();
+        byte[] dict = sharedShape == null ? null : sharedShape.getData();
+
+        JB2Image image = decodeBitonalImage(data, dict);
 
         return image.get_bitmap();
     }
@@ -239,9 +233,8 @@ public class DjVuModelImpl implements DjVuModel {
             return null;
         }
 
-        final IW44Image image = new IW44Image();
-        chunks.forEach(ch -> image.decode_chunk(ch.getData()));
-        image.close_codec();
+        List<byte[]> data = chunks.stream().map(Chunk::getData).toList();
+        IW44Image image = decodeColorImage(data);
 
         return image.get_pixmap();
     }

@@ -31,8 +31,8 @@ import static com.sternkn.djvu.file.coders.BSByteStreamUtils.CTXIDS;
 import static com.sternkn.djvu.file.coders.BSByteStreamUtils.KILOBYTE;
 import static com.sternkn.djvu.file.coders.BSByteStreamUtils.MAX_BLOCK_SIZE;
 import static com.sternkn.djvu.file.coders.BSByteStreamUtils.getXMTF;
-import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedInt;
-import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedByte;
+import static com.sternkn.djvu.utils.NumberUtils.asUnsignedInt;
+import static com.sternkn.djvu.utils.NumberUtils.asUnsignedByte;
 
 /*
 

@@ -18,13 +18,16 @@
 package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.DjVuFileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedInt;
+import static com.sternkn.djvu.utils.NumberUtils.asUnsignedInt;
 
 public class JB2Image extends JB2Dict implements Dict {
+    private static final Logger LOG = LoggerFactory.getLogger(JB2Image.class);
 
     private int width;
     private int height;
@@ -141,7 +144,12 @@ public class JB2Image extends JB2Dict implements Dict {
         GBitmap bm = new GBitmap();
         bm.init(sheight, swidth, border);
         bm.set_grays(1 + subsample * subsample);
-        for (int blitno = 0; blitno < get_blit_count(); blitno++)
+
+        final int blitCount = get_blit_count();
+
+        LOG.debug("blitCount = {}", blitCount);
+
+        for (int blitno = 0; blitno < blitCount; blitno++)
         {
            JB2Blit pblit = get_blit(blitno);
            JB2Shape  pshape = get_shape(pblit.getShapeno());

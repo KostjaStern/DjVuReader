@@ -19,6 +19,7 @@ package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
@@ -47,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static com.sternkn.djvu.utils.utils.ImageUtils.toImage;
+import static com.sternkn.djvu.utils.ImageUtils.toImage;
 
 public class MainViewModel {
     private static final Logger LOG = LoggerFactory.getLogger(MainViewModel.class);
@@ -200,7 +201,7 @@ public class MainViewModel {
             setTextRootNode(textRootNode);
             setShowTextTree(textRootNode != null);
             setTopText(chunkInfo.getTextData());
-            setImage(toImage(chunkInfo.getBitmap()));
+            setImage(toImage(chunkInfo.getBitmap(), ImageRotationType.UPSIDE_DOWN));
             setProgressDone();
         });
 

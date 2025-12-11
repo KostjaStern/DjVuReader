@@ -15,27 +15,21 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.file.utils;
+package com.sternkn.djvu.utils;
 
-import com.sternkn.djvu.utils.utils.StringUtils;
-import org.junit.jupiter.api.Test;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+public final class ExceptionUtils {
 
-public class TestStringUtils {
-
-    @Test
-    public void testPadRight() {
-        assertEquals("12        ", StringUtils.padRight(12, 10));
+    private ExceptionUtils() {
     }
 
-    @Test
-    public void testPadLeft() {
-        assertEquals("        12", StringUtils.padLeft(12, 10));
-    }
-
-    @Test
-    public void testRepeatString() {
-        assertEquals("----------", StringUtils.repeatString("-", 10));
+    public static String getStackTraceAsString(Throwable t) {
+        StringWriter sw = new StringWriter();
+        try (PrintWriter pw = new PrintWriter(sw)) {
+            t.printStackTrace(pw);
+            return sw.toString();
+        }
     }
 }

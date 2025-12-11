@@ -15,9 +15,26 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.utils.utils;
+package com.sternkn.djvu.utils;
 
-public enum ByteOrder {
-    LITTLE_ENDIAN, // Least significant byte first
-    BIG_ENDIAN;    // Most significant byte first
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TestStringUtils {
+
+    @Test
+    public void testPadRight() {
+        assertEquals("12        ", StringUtils.padRight(12, 10));
+    }
+
+    @Test
+    public void testPadLeft() {
+        assertEquals("        12", StringUtils.padLeft(12, 10));
+    }
+
+    @Test
+    public void testRepeatString() {
+        assertEquals("----------", StringUtils.repeatString("-", 10));
+    }
 }

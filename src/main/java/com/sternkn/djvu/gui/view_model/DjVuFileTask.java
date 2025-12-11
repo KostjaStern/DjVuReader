@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
-import static com.sternkn.djvu.utils.utils.ExceptionUtils.getStackTraceAsString;
+import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 
 public class DjVuFileTask extends Task<DjVuFile> {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuFileTask.class);

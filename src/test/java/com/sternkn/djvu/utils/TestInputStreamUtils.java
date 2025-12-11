@@ -15,10 +15,9 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.file.utils;
+package com.sternkn.djvu.utils;
 
 import com.sternkn.djvu.file.DjVuFileException;
-import com.sternkn.djvu.utils.utils.ByteOrder;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -27,11 +26,11 @@ import java.io.InputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.read16;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.read24;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.read32;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.readString;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.readZeroTerminatedString;
+import static com.sternkn.djvu.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.utils.InputStreamUtils.read24;
+import static com.sternkn.djvu.utils.InputStreamUtils.read32;
+import static com.sternkn.djvu.utils.InputStreamUtils.readString;
+import static com.sternkn.djvu.utils.InputStreamUtils.readZeroTerminatedString;
 
 public class TestInputStreamUtils {
 

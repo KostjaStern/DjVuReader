@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import static com.sternkn.djvu.utils.utils.NumberUtils.toInt;
+import static com.sternkn.djvu.utils.NumberUtils.toInt;
 import static com.sternkn.djvu.file.chunks.annotations.ParserUtils.findNodes;
 import static com.sternkn.djvu.file.chunks.annotations.ParserUtils.isTrue;
 import static com.sternkn.djvu.file.chunks.annotations.ParserUtils.parseColorNode;

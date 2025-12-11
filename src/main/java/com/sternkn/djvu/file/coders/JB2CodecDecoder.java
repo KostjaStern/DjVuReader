@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.List;
 
-import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedShort;
+import static com.sternkn.djvu.utils.NumberUtils.asUnsignedShort;
 
 public class JB2CodecDecoder {
     private static final Logger LOG = LoggerFactory.getLogger(JB2CodecDecoder.class);

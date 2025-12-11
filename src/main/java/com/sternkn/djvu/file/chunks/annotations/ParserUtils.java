@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.sternkn.djvu.utils.utils.NumberUtils.hexToInt;
-import static com.sternkn.djvu.utils.utils.NumberUtils.toInt;
+import static com.sternkn.djvu.utils.NumberUtils.hexToInt;
+import static com.sternkn.djvu.utils.NumberUtils.toInt;
 
 public class ParserUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ParserUtils.class);

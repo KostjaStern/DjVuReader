@@ -23,7 +23,7 @@ import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.sternkn.djvu.utils.utils.ExceptionUtils.getStackTraceAsString;
+import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 
 public class ChunkDecodingTask extends Task<ChunkInfo> {
     private static final Logger LOG = LoggerFactory.getLogger(ChunkDecodingTask.class);

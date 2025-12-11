@@ -15,21 +15,29 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.utils.utils;
+package com.sternkn.djvu.utils;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-public final class ExceptionUtils {
-
-    private ExceptionUtils() {
+public final class NumberUtils {
+    private NumberUtils() {
     }
 
-    public static String getStackTraceAsString(Throwable t) {
-        StringWriter sw = new StringWriter();
-        try (PrintWriter pw = new PrintWriter(sw)) {
-            t.printStackTrace(pw);
-            return sw.toString();
-        }
+    public static long asUnsignedInt(long value) {
+        return value & 0xFFFFFFFFL;
+    }
+
+    public static long asUnsignedShort(long value) {
+        return value & 0xFFFFL;
+    }
+
+    public static int asUnsignedByte(byte value) {
+        return value & 0xFF;
+    }
+
+    public static int hexToInt(String hex) {
+        return Integer.parseInt(hex, 16);
+    }
+
+    public static int toInt(String value) {
+        return Integer.parseInt(value);
     }
 }

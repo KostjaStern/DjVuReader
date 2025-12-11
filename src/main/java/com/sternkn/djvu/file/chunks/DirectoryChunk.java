@@ -26,13 +26,13 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.read16;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.read32;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.read24;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.readZeroTerminatedString;
-import static com.sternkn.djvu.utils.utils.StringUtils.NL;
-import static com.sternkn.djvu.utils.utils.StringUtils.padRight;
-import static com.sternkn.djvu.utils.utils.StringUtils.repeatString;
+import static com.sternkn.djvu.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.utils.InputStreamUtils.read32;
+import static com.sternkn.djvu.utils.InputStreamUtils.read24;
+import static com.sternkn.djvu.utils.InputStreamUtils.readZeroTerminatedString;
+import static com.sternkn.djvu.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.StringUtils.padRight;
+import static com.sternkn.djvu.utils.StringUtils.repeatString;
 
 /*
   8.3.2 Directory Chunk: DIRM

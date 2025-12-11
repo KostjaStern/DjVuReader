@@ -28,9 +28,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.read24;
-import static com.sternkn.djvu.utils.utils.InputStreamUtils.readString;
-import static com.sternkn.djvu.utils.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.InputStreamUtils.read24;
+import static com.sternkn.djvu.utils.InputStreamUtils.readString;
+import static com.sternkn.djvu.utils.StringUtils.NL;
 
 public class TextChunk extends Chunk {
     private static final Logger LOG = LoggerFactory.getLogger(TextChunk.class);

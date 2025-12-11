@@ -22,7 +22,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static com.sternkn.djvu.utils.utils.NumberUtils.asUnsignedShort;
+import static com.sternkn.djvu.utils.NumberUtils.asUnsignedShort;
 
 public class GPixmap implements Pixmap {
 
