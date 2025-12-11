@@ -183,7 +183,8 @@ public class TestMainViewModel {
 
         fileTaskFactory = file -> new Task<>() {
             @Override
-            protected DjVuFile call() {
+            protected DjVuFile call() throws InterruptedException {
+                Thread.sleep(500);
                 throw new RuntimeException(errorMessage);
             }
         };
@@ -203,7 +204,7 @@ public class TestMainViewModel {
 
         assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
 
-        assertTrue(finished.await(12, TimeUnit.SECONDS), "failure path didn't finish in time");
+        assertTrue(finished.await(6, TimeUnit.SECONDS), "failure path didn't finish in time");
 
         assertEquals(errorMessage, viewModel.getErrorMessage().get());
         assertEquals(0.0, viewModel.getProgress().get(), DELTA);
