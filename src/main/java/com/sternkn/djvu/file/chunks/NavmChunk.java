@@ -25,11 +25,11 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
-import static com.sternkn.djvu.file.utils.InputStreamUtils.readString;
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
-import static com.sternkn.djvu.file.utils.StringUtils.padRight;
+import static com.sternkn.djvu.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.utils.InputStreamUtils.read24;
+import static com.sternkn.djvu.utils.InputStreamUtils.readString;
+import static com.sternkn.djvu.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.StringUtils.padRight;
 
 public class NavmChunk extends Chunk {
     private static final Logger LOG = LoggerFactory.getLogger(NavmChunk.class);

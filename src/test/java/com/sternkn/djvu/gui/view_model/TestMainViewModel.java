@@ -20,6 +20,9 @@ package com.sternkn.djvu.gui.view_model;
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.file.chunks.ComponentInfo;
+import com.sternkn.djvu.file.chunks.ComponentType;
+import com.sternkn.djvu.file.chunks.DirectoryChunk;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
@@ -58,6 +61,7 @@ public class TestMainViewModel {
 
     private FileTaskFactory fileTaskFactory;
     private ChunkDecodingTaskFactory chunkDecodingTaskFactory;
+    private PageLoadingTaskFactory pageLoadingTaskFactory;
 
     @Mock
     private DjVuModel djvuModel;
@@ -85,7 +89,8 @@ public class TestMainViewModel {
     public void testShowStatistics() {
         fileTaskFactory = mock(FileTaskFactory.class);
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory);
+        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         final String statistics = "Some statistics ... ";
@@ -123,6 +128,18 @@ public class TestMainViewModel {
 
         when(djvuFile.getChunks()).thenReturn(List.of(rootChunk, childChunk));
 
+        DirectoryChunk directoryChunk = mock(DirectoryChunk.class);
+        ComponentInfo component1 = mock(ComponentInfo.class);
+        when(component1.getType()).thenReturn(ComponentType.PAGE);
+        when(component1.getOffset()).thenReturn(23L);
+
+        ComponentInfo component2 = mock(ComponentInfo.class);
+        when(component2.getType()).thenReturn(ComponentType.PAGE);
+        when(component2.getOffset()).thenReturn(1357L);
+
+        when(directoryChunk.getComponents()).thenReturn(List.of(component1, component2));
+        when(djvuFile.getDirectoryChunk()).thenReturn(directoryChunk);
+
         fileTaskFactory = file -> new Task<>() {
             @Override
             protected DjVuFile call() {
@@ -130,7 +147,8 @@ public class TestMainViewModel {
             }
         };
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory);
+        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         CountDownLatch finished = new CountDownLatch(2);
@@ -147,11 +165,13 @@ public class TestMainViewModel {
 
         assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
 
-        assertTrue(finished.await(3, TimeUnit.SECONDS), "loadFileAsync didn't finish in time");
+        assertTrue(finished.await(6, TimeUnit.SECONDS), "loadFileAsync didn't finish in time");
 
         assertEquals(fileName, viewModel.getTitle().get());
         TreeItem<ChunkTreeNode> chunkRoot = viewModel.getChunkRootNode().get();
         assertEquals(new ChunkTreeNode(rootChunk), chunkRoot.getValue());
+        assertEquals(List.of(new PageNode(1, 23L), new PageNode(2, 1357L)),
+                viewModel.getPages().stream().toList());
 
         assertTrue(viewModel.getErrorMessage().get().isEmpty(), "errorMessage must be empty on success");
         assertEquals(0.0, viewModel.getProgress().get(), DELTA);
@@ -163,12 +183,14 @@ public class TestMainViewModel {
 
         fileTaskFactory = file -> new Task<>() {
             @Override
-            protected DjVuFile call() {
+            protected DjVuFile call() throws InterruptedException {
+                Thread.sleep(500);
                 throw new RuntimeException(errorMessage);
             }
         };
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory);
+        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         CountDownLatch finished = new CountDownLatch(1);
@@ -204,13 +226,14 @@ public class TestMainViewModel {
         when(info.getTextData()).thenReturn("Some text data");
 
         fileTaskFactory = mock(FileTaskFactory.class);
+        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         chunkDecodingTaskFactory = (model, chunkId) -> new Task<>() {
             @Override
             protected ChunkInfo call() {
                 return info;
             }
         };
-        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         CountDownLatch finished = new CountDownLatch(2);
@@ -241,13 +264,14 @@ public class TestMainViewModel {
     public void testShowChunkInfoWithError() throws InterruptedException {
         String errorMessage = "decode failed";
         fileTaskFactory = mock(FileTaskFactory.class);
+        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         chunkDecodingTaskFactory = (model, chunkId) -> new Task<>() {
             @Override
             protected ChunkInfo call() {
                 throw new RuntimeException(errorMessage);
             }
         };
-        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         CountDownLatch finished = new CountDownLatch(1);

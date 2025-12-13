@@ -17,6 +17,11 @@
 */
 package com.sternkn.djvu.file.coders;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
 public interface Pixmap {
 
     int getHeight();
@@ -26,4 +31,19 @@ public interface Pixmap {
     int getBorder();
 
     PixelColor getPixel(int x, int y);
+
+    default void save(String filename) throws IOException {
+        BufferedImage buffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                PixelColor pixel = getPixel(x, y);
+
+                int rgb = pixel.getBlue() | (pixel.getGreen() << 8) | (pixel.getRed() << 16);
+                buffer.setRGB(x, y, rgb);
+            }
+        }
+
+        File outputfile = new File(filename);
+        ImageIO.write(buffer, "png", outputfile);
+    }
 }

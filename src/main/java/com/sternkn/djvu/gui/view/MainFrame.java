@@ -25,6 +25,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
 
 public class MainFrame {
     private final static double SCREEN_WIDTH = 800;
@@ -40,13 +41,14 @@ public class MainFrame {
         Parent root = loadRootNode();
 
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
+        scene.getStylesheets().add(getResource("/css/pages.css").toExternalForm());
         stage.titleProperty().bind(viewModel.getTitle());
         stage.setScene(scene);
     }
 
     private Parent loadRootNode() {
         MainFrameController controller = new MainFrameController(viewModel, stage);
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/MainFrame.fxml"));
+        FXMLLoader loader = new FXMLLoader(getResource("/views/MainFrame.fxml"));
         loader.setController(controller);
 
         try {
@@ -55,6 +57,10 @@ public class MainFrame {
         catch (IOException exception) {
             throw new DjVuFileException("Unable to load FXML file for main window", exception);
         }
+    }
+
+    private URL getResource(String name) {
+        return getClass().getResource(name);
     }
 
     public void show() {

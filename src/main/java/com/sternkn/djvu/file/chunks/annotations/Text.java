@@ -21,7 +21,7 @@ import com.sternkn.djvu.file.chunks.Color;
 
 import java.util.Objects;
 
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.StringUtils.NL;
 
 public class Text extends Area {
     private final int xmin;

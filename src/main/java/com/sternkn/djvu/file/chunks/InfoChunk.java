@@ -18,12 +18,12 @@
 package com.sternkn.djvu.file.chunks;
 
 
-import com.sternkn.djvu.file.utils.ByteOrder;
+import com.sternkn.djvu.utils.ByteOrder;
 
 import java.io.ByteArrayInputStream;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.utils.StringUtils.NL;
 
 /*
     As discussed in Single Page Documents, every DjVu image requires an INFO chunk and

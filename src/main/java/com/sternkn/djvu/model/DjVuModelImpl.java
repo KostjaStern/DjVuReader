@@ -18,12 +18,13 @@
 package com.sternkn.djvu.model;
 
 import com.sternkn.djvu.file.DjVuFile;
-import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.AnnotationChunk;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
-import com.sternkn.djvu.file.chunks.DirectoryChunk;
+import com.sternkn.djvu.file.chunks.ComponentInfo;
+import com.sternkn.djvu.file.chunks.ComponentType;
 import com.sternkn.djvu.file.chunks.FGbzChunk;
+import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.chunks.InclChunk;
 import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.LTAnnotationChunk;
@@ -31,14 +32,12 @@ import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.TextChunk;
 import com.sternkn.djvu.file.coders.IW44Image;
 import com.sternkn.djvu.file.coders.IW44SecondaryHeader;
-import com.sternkn.djvu.file.coders.JB2CodecDecoder;
-import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 import com.sternkn.djvu.file.coders.Pixmap;
+import javafx.scene.image.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,8 +46,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
-import static com.sternkn.djvu.file.utils.StringUtils.padRight;
+import static com.sternkn.djvu.utils.ImageUtils.composeImage;
+import static com.sternkn.djvu.utils.ImageUtils.decodeJB2Image;
+import static com.sternkn.djvu.utils.ImageUtils.decodeIW44Image;
+import static com.sternkn.djvu.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.StringUtils.padRight;
 
 public class DjVuModelImpl implements DjVuModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuModelImpl.class);
@@ -60,8 +62,30 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     @Override
+    public List<Long> getPageOffsets() {
+        return this.djvuFile.getDirectoryChunk().getComponents().stream()
+            .filter(c -> c.getType() == ComponentType.PAGE)
+            .map(ComponentInfo::getOffset).toList();
+    }
+
+    public Page getPage(long offset) {
+        Chunk chunk = djvuFile.getChunkByOffset(offset);
+        InfoChunk info = new InfoChunk(chunk);
+
+        Map<ChunkId, List<Chunk>> pageChunks = djvuFile.getAllPageChunks(chunk);
+
+        Pixmap mask = getBitonalImage(pageChunks.get(ChunkId.Sjbz));
+        Pixmap background = getColorImage(pageChunks.get(ChunkId.BG44));
+        Pixmap foreground = getColorImage(pageChunks.get(ChunkId.FG44));
+
+        Image image = composeImage(mask, background, foreground,
+                info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
+        return new Page(image);
+    }
+
+    @Override
     public void saveChunkData(File file, long chunkId) {
-        Chunk chunk = getChunkById(chunkId);
+        Chunk chunk = this.djvuFile.getChunkById(chunkId);
 
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
             outputStream.write(chunk.getData());
@@ -73,7 +97,7 @@ public class DjVuModelImpl implements DjVuModel {
 
     @Override
     public ChunkInfo getChunkInfo(long chunkId) {
-        Chunk chunk = getChunkById(chunkId);
+        Chunk chunk = this.djvuFile.getChunkById(chunkId);
         ChunkId chunkType = chunk.getChunkId();
 
         if (chunkType == ChunkId.Sjbz) {
@@ -89,7 +113,7 @@ public class DjVuModelImpl implements DjVuModel {
         }
 
         Chunk decodedChunk = switch (chunkType) {
-            case ChunkId.DIRM -> new DirectoryChunk(chunk);
+            case ChunkId.DIRM -> this.djvuFile.getDirectoryChunk();
             case ChunkId.INFO -> new InfoChunk(chunk);
             case ChunkId.NAVM -> new NavmChunk(chunk);
             case ChunkId.INCL -> new InclChunk(chunk);
@@ -149,13 +173,11 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     private ChunkInfo getIW44ChunkImage(Chunk chunk) {
-        List<Chunk> chunks = this.djvuFile.getAllImageChunks(chunk);
+        List<Chunk> chunks = this.djvuFile.getAllPageChunksWithSameChunkId(chunk);
+        List<byte[]> data = chunks.stream().map(Chunk::getData).toList();
+        IW44Image image = decodeIW44Image(data);
 
-        IW44Image image = new IW44Image();
-        chunks.forEach(ch -> image.decode_chunk(ch.getData()));
-        image.close_codec();
         IW44SecondaryHeader header = image.getSecondaryHeader();
-
         Pixmap bitmap = image.get_pixmap();
 
         String text = String.format(
@@ -183,37 +205,37 @@ public class DjVuModelImpl implements DjVuModel {
         Methods of Bitonal Image Conversion for Modern and Classic Documents
      */
     private ChunkInfo getBitonalChunkInfo(Chunk chunk) {
-        Chunk sharedShape = this.djvuFile.findSharedShapeChunk(chunk);
-        JB2Dict dict = null;
-        if (sharedShape != null) {
-            dict = new JB2Dict();
-            JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(sharedShape.getData()));
-            decoder.decode(dict);
-        }
-
-        JB2Image image = new JB2Image(dict);
-        JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(chunk.getData()));
-        decoder.decode(image);
-
-        Pixmap bitmap = image.get_bitmap();
+        Pixmap bitmap = getBitonalImage(List.of(chunk));
 
         return new ChunkInfo(chunk.getId())
             .setTextData(chunk.getDataAsText())
             .setBitmap(bitmap);
     }
 
-    private Chunk getChunkById(long chunkId) {
-        List<Chunk> chunks = this.djvuFile.getChunks().stream()
-                .filter(c -> c.getId() == chunkId).toList();
-
-        if (chunks.isEmpty()) {
-            throw new DjVuFileException("Chunk with id " + chunkId + " not found");
+    private Pixmap getBitonalImage(List<Chunk> chunks) {
+        if (chunks == null || chunks.isEmpty()) {
+            return null;
         }
 
-        if (chunks.size() > 1) {
-            LOG.warn("More than one chunk with id {} were found", chunkId);
+        Chunk chunk = chunks.getFirst();
+        Chunk sharedShape = this.djvuFile.findSharedShapeChunk(chunk);
+
+        byte[] data = chunk.getData();
+        byte[] dict = sharedShape == null ? null : sharedShape.getData();
+
+        JB2Image image = decodeJB2Image(data, dict);
+
+        return image.get_bitmap();
+    }
+
+    private Pixmap getColorImage(List<Chunk> chunks) {
+        if (chunks == null || chunks.isEmpty()) {
+            return null;
         }
 
-        return chunks.getFirst();
+        List<byte[]> data = chunks.stream().map(Chunk::getData).toList();
+        IW44Image image = decodeIW44Image(data);
+
+        return image.get_pixmap();
     }
 }

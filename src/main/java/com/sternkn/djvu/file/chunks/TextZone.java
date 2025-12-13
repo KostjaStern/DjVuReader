@@ -24,8 +24,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read16;
-import static com.sternkn.djvu.file.utils.InputStreamUtils.read24;
+import static com.sternkn.djvu.utils.InputStreamUtils.read16;
+import static com.sternkn.djvu.utils.InputStreamUtils.read24;
 
 public class TextZone {
 

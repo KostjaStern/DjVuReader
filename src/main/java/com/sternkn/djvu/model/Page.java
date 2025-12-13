@@ -15,29 +15,18 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.file.utils;
+package com.sternkn.djvu.model;
 
-public final class NumberUtils {
-    private NumberUtils() {
+import javafx.scene.image.Image;
+
+public class Page {
+    private Image image;
+
+    public Page(Image image) {
+        this.image = image;
     }
 
-    public static long asUnsignedInt(long value) {
-        return value & 0xFFFFFFFFL;
-    }
-
-    public static long asUnsignedShort(long value) {
-        return value & 0xFFFFL;
-    }
-
-    public static int asUnsignedByte(byte value) {
-        return value & 0xFF;
-    }
-
-    public static int hexToInt(String hex) {
-        return Integer.parseInt(hex, 16);
-    }
-
-    public static int toInt(String value) {
-        return Integer.parseInt(value);
+    public Image getImage() {
+        return image;
     }
 }

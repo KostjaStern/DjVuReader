@@ -110,17 +110,18 @@ public class TestDjVuModelImpl extends TestSupport {
         File file = new File(tempDir, "chunk.data");
         String data = "Ab0009_0001.djbz";
         byte[] bytes = data.getBytes();
+        long chunkId = 23L;
 
         Chunk chunk = Chunk.builder()
                 .withChunkId(ChunkId.INCL)
-                .withId(23L)
+                .withId(chunkId)
                 .withData(bytes)
                 .withSize(bytes.length)
                 .build();
 
-        when(djvuFile.getChunks()).thenReturn(List.of(chunk));
+        when(djvuFile.getChunkById(chunkId)).thenReturn(chunk);
 
-        model.saveChunkData(file, 23L);
+        model.saveChunkData(file, chunkId);
 
         String actualData = Files.readString(file.toPath());
         assertEquals(data, actualData);
@@ -128,25 +129,29 @@ public class TestDjVuModelImpl extends TestSupport {
 
     @Test
     public void testSaveChunkDataNotFound() {
+        final long chunkId = 23L;
+        final String error = String.format("Chunk with id %s not found", chunkId);
+
+        when(djvuFile.getChunkById(chunkId)).thenThrow(new DjVuFileException(error));
+
         File file = mock(File.class);
-
-        when(djvuFile.getChunks()).thenReturn(List.of());
-
-        Exception exception = assertThrows(DjVuFileException.class, () -> model.saveChunkData(file, 23L));
-        assertEquals("Chunk with id 23 not found", exception.getMessage());
+        Exception exception = assertThrows(DjVuFileException.class, () -> model.saveChunkData(file, chunkId));
+        assertEquals(error, exception.getMessage());
     }
 
     @Test
     public void testGetChunkInfoForIW44Chunk() {
-        Chunk chunk1 = createChunk(1L, ChunkId.BG44, "BG44_test1.data");
+        long chunkId = 1L;
+        Chunk chunk1 = createChunk(chunkId, ChunkId.BG44, "BG44_test1.data");
         Chunk chunk2 = createChunk(2L, ChunkId.BG44, "BG44_test2.data");
         Chunk chunk3 = createChunk(3L, ChunkId.BG44, "BG44_test3.data");
         List<Chunk> chunks = List.of(chunk1, chunk2, chunk3);
 
+        when(djvuFile.getChunkById(chunkId)).thenReturn(chunk1);
         when(djvuFile.getChunks()).thenReturn(chunks);
-        when(djvuFile.getAllImageChunks(chunk1)).thenReturn(chunks);
+        when(djvuFile.getAllPageChunksWithSameChunkId(chunk1)).thenReturn(chunks);
 
-        ChunkInfo chunkInfo = model.getChunkInfo(1L);
+        ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
         GPixmap expectedPixmap = readPixmap("BG44_test.png");
         String expectedTextData = """
           ChunkId: BG44
@@ -163,7 +168,7 @@ public class TestDjVuModelImpl extends TestSupport {
          width = 792
         """;
 
-        assertEquals(1L, chunkInfo.getChunkId());
+        assertEquals(chunkId, chunkInfo.getChunkId());
         assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertNull(chunkInfo.getTextZones());
@@ -172,14 +177,14 @@ public class TestDjVuModelImpl extends TestSupport {
 
     @Test
     public void testGetChunkInfoForBitonalChunk() {
+        long chunkId = 2L;
         Chunk djbz = createChunk(1L, ChunkId.Djbz, "Mozart_Djbz.data");
-        Chunk sjbz = createChunk(2L, ChunkId.Sjbz, "Mozart_Sjbz.data");
-        List<Chunk> chunks = List.of(djbz, sjbz);
+        Chunk sjbz = createChunk(chunkId, ChunkId.Sjbz, "Mozart_Sjbz.data");
 
-        when(djvuFile.getChunks()).thenReturn(chunks);
         when(djvuFile.findSharedShapeChunk(sjbz)).thenReturn(djbz);
+        when(djvuFile.getChunkById(chunkId)).thenReturn(sjbz);
 
-        ChunkInfo chunkInfo = model.getChunkInfo(2L);
+        ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
         GPixmap expectedPixmap = readPixmap("Mozart.png");
         String expectedTextData = """
          ChunkId: Sjbz
@@ -188,7 +193,7 @@ public class TestDjVuModelImpl extends TestSupport {
          Size: 249179
         """;
 
-        assertEquals(2L, chunkInfo.getChunkId());
+        assertEquals(chunkId, chunkInfo.getChunkId());
         assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertNull(chunkInfo.getTextZones());
@@ -197,11 +202,12 @@ public class TestDjVuModelImpl extends TestSupport {
 
     @Test
     public void testGetChunkInfoForTextChunk() {
+        long chunkId = 2L;
         Chunk textChunk = createChunk(2L, ChunkId.TXTz, "TXTz_10.data");
 
-        when(djvuFile.getChunks()).thenReturn(List.of(textChunk));
+        when(djvuFile.getChunkById(chunkId)).thenReturn(textChunk);
 
-        ChunkInfo chunkInfo = model.getChunkInfo(2L);
+        ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
 
         String expectedTextData = """
          ChunkId: TXTz
@@ -225,7 +231,7 @@ public class TestDjVuModelImpl extends TestSupport {
         
         """;
 
-        assertEquals(2L, chunkInfo.getChunkId());
+        assertEquals(chunkId, chunkInfo.getChunkId());
         assertNull(chunkInfo.getBitmap());
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertEquals(1, chunkInfo.getTextZones().size());
@@ -242,17 +248,18 @@ public class TestDjVuModelImpl extends TestSupport {
     public void testGetChunkInfo() {
         String data = "Ab0009_0001.djbz";
         byte[] bytes = data.getBytes();
+        long chunkId = 23;
 
         Chunk chunk = Chunk.builder()
                 .withChunkId(ChunkId.INCL)
-                .withId(23L)
+                .withId(chunkId)
                 .withData(bytes)
                 .withSize(bytes.length)
                 .build();
 
-        when(djvuFile.getChunks()).thenReturn(List.of(chunk));
+        when(djvuFile.getChunkById(chunkId)).thenReturn(chunk);
 
-        ChunkInfo chunkInfo = model.getChunkInfo(23L);
+        ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
 
         String expectedTextData = """
          ChunkId: INCL
@@ -263,7 +270,7 @@ public class TestDjVuModelImpl extends TestSupport {
          Shared component ID: Ab0009_0001.djbz
         """;
 
-        assertEquals(23L, chunkInfo.getChunkId());
+        assertEquals(chunkId, chunkInfo.getChunkId());
         assertNull(chunkInfo.getBitmap());
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertNull(chunkInfo.getTextZones());

@@ -1,0 +1,57 @@
+/*
+    Copyright (C) 2025 Kostya Stern
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation; either version 2 of the License, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc., 51
+    Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+*/
+
+.list-view.pages {
+    -fx-background-insets: 0;
+    -fx-background-color: linear-gradient(to bottom, #e5e5e5, #cfcfcf);
+    -fx-padding: 8 0 8 0;
+}
+
+.list-view.pages .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.page-cell {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-padding: 4;
+}
+
+.page-cell:selected {
+    -fx-background-color: #2f6df6;
+    -fx-background-radius: 12;
+}
+
+.page-number {
+    -fx-text-fill: #555;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-alignment: center;
+    -fx-min-width: 30;
+}
+.page-cell:selected .page-number {
+    -fx-text-fill: white;
+}
+
+.list-view.pages .list-cell:filled:hover .page-cell {
+    -fx-background-color: rgba(0,0,0,0.06);
+}
+.list-view.pages .list-cell:filled:hover .page-cell:selected {
+    -fx-background-color: #2a62de;
+}

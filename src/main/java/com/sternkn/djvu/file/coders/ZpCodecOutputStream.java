@@ -22,7 +22,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedShort;
+import static com.sternkn.djvu.utils.NumberUtils.asUnsignedShort;
 
 public class ZpCodecOutputStream implements ZPCodecEncoder {
 

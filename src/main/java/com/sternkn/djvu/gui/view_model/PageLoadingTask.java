@@ -18,28 +18,28 @@
 package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.model.DjVuModel;
-import com.sternkn.djvu.model.ChunkInfo;
+import com.sternkn.djvu.model.Page;
 import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 
-public class ChunkDecodingTask extends Task<ChunkInfo> {
-    private static final Logger LOG = LoggerFactory.getLogger(ChunkDecodingTask.class);
+public class PageLoadingTask extends Task<Page> {
+    private static final Logger LOG = LoggerFactory.getLogger(PageLoadingTask.class);
 
     private final DjVuModel djvuModel;
-    private final long chunkId;
+    private final long offset;
 
-    public ChunkDecodingTask(DjVuModel djvuModel, long chunkId) {
+    public PageLoadingTask(DjVuModel djvuModel, long offset) {
         this.djvuModel = djvuModel;
-        this.chunkId = chunkId;
+        this.offset = offset;
     }
 
     @Override
-    protected ChunkInfo call() {
+    protected Page call() {
         try {
-            return djvuModel.getChunkInfo(chunkId);
+            return djvuModel.getPage(offset);
         }
         catch (Exception e) {
             LOG.error(getStackTraceAsString(e));

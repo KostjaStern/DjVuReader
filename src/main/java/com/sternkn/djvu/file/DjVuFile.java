@@ -19,120 +19,65 @@ package com.sternkn.djvu.file;
 
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
-import com.sternkn.djvu.file.chunks.ComponentInfo;
-import com.sternkn.djvu.file.chunks.ComponentType;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
-import com.sternkn.djvu.file.chunks.InclChunk;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-
-public class DjVuFile {
-    private static final Logger LOG = LoggerFactory.getLogger(DjVuFile.class);
-
-    private static final int OFFSET_ALIGNMENT = 20;
-
-    private final MagicHeader header;
-    private final List<Chunk> chunks;
-    private final long fileSize;
-    private final DirectoryChunk directoryChunk;
-
-    public DjVuFile() {
-        this(MagicHeader.AT_T, List.of(), 0L);
-    }
-
-    public DjVuFile(MagicHeader header, List<Chunk> chunks, long fileSize) {
-        this.header = header;
-        this.chunks = chunks;
-        this.fileSize = fileSize;
-        this.directoryChunk = findDirectory(chunks);
-    }
-
-    public MagicHeader getHeader() {
-        return header;
-    }
-
-    public List<Chunk> getChunks() {
-        return chunks;
-    }
-
-    public long getFileSize() {
-        return fileSize;
-    }
-
-    public DirectoryChunk getDirectoryChunk() {
-        return directoryChunk;
-    }
-
-    private DirectoryChunk findDirectory(List<Chunk> chunks) {
-        return chunks.stream().filter(chunk -> chunk.getChunkId() == ChunkId.DIRM)
-                .findFirst()
-                .map(DirectoryChunk::new)
-                .orElse(null);
-    }
-
-    public List<Chunk> getAllImageChunks(Chunk chunk) {
-        Chunk parent = chunk.getParent();
-        return this.chunks.stream()
-            .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
-            .filter(c -> c.getChunkId() == chunk.getChunkId())
-            .toList();
-    }
+public interface DjVuFile {
 
     /**
+     * Returns all chunks in the DjVu file.
      *
-     * @param chunk - Sjbz chunk
-     * @return related Djbz chunk
+     * @return a list of all chunks in the DjVu file
      */
-    public Chunk findSharedShapeChunk(Chunk chunk) {
+    List<Chunk> getChunks();
 
-        if (chunk.getChunkId() != ChunkId.Sjbz) {
-            throw new IllegalArgumentException("Chunk id " + chunk.getChunkId() + " is not a JB2 bitonal data chunk");
-        }
+    /**
+     * Returns the DjVu file directory chunk (DIRM).
+     *
+     * @return the DIRM (directory) chunk of the DjVu file
+     */
+    DirectoryChunk getDirectoryChunk();
 
-        final List<String> sharedComponentIDs = getSharedComponentIDs(chunk);
-        if (sharedComponentIDs.isEmpty()) {
-            LOG.debug("No shared component ID found for chunk - {}", chunk);
-            return null;
-        }
+    /**
+     * Returns the chunk with the given ID.
+     *
+     * @param chunkId the chunk ID
+     * @return the chunk with the given ID
+     */
+    Chunk getChunkById(long chunkId);
 
-        List<ComponentInfo> components = directoryChunk.getComponents().stream()
-            .filter(c -> sharedComponentIDs.contains(c.getId()))
-            .filter(c -> c.getType() == ComponentType.INCLUDED)
-            .toList();
+    /**
+     * Returns the chunk with the given offset.
+     *
+     * @param offset the chunk offset
+     * @return the chunk with the given offset
+     */
+    Chunk getChunkByOffset(long offset);
 
-        if (components.isEmpty()) {
-            LOG.warn("We can not find component for shared component IDs: {}", sharedComponentIDs);
-            return null;
-        }
+    /**
+     * Returns a map of chunk lists for the page that contains the given chunk, grouped by chunk ID.
+     *
+     * @param chunk a chunk from the {@code FORM:DJVU} container used to identify the page
+     * @return a map where each key is a chunk ID and each value is the list of chunks with that ID on the page
+     */
+    Map<ChunkId, List<Chunk>> getAllPageChunks(Chunk chunk);
 
-        Set<Long> offsets = components.stream()
-            .map(c -> c.getOffset() + OFFSET_ALIGNMENT)
-            .collect(Collectors.toSet());
+    /**
+     * Returns the list of chunks on the page that contains the given chunk and that share its chunk ID.
+     *
+     * @param chunk the reference chunk
+     * @return a list of chunks on the same page with the same parent and chunk ID as the given chunk
+     */
+    List<Chunk> getAllPageChunksWithSameChunkId(Chunk chunk);
 
-        final Chunk sharedShapeChunk = this.chunks.stream()
-            .filter(c -> c.getChunkId() == ChunkId.Djbz)
-            .filter(c -> offsets.contains(c.getOffsetStart()))
-            .findFirst().orElse(null);
-
-        if (sharedShapeChunk == null) {
-            LOG.debug("No shared shape chunk found for chunk - {}", chunk);
-        }
-
-        return sharedShapeChunk;
-    }
-
-    private List<String> getSharedComponentIDs(Chunk chunk) {
-        Chunk parent = chunk.getParent();
-        return this.chunks.stream()
-                .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
-                .filter(c -> c.getChunkId() == ChunkId.INCL)
-                .map(InclChunk::new)
-                .map(InclChunk::getSharedComponentID)
-                .toList();
-    }
+    /**
+     * Returns the shared-shape chunk ({@code Djbz}) for the given bitonal-mask chunk ({@code Sjbz}).
+     *
+     * @param chunk the bitonal-mask chunk ({@code Sjbz})
+     * @return the shared-shape chunk ({@code Djbz})
+     * @throws IllegalArgumentException if the given chunk is not an {@code Sjbz} chunk
+     */
+    Chunk findSharedShapeChunk(Chunk chunk);
 }

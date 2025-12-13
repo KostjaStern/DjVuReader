@@ -20,9 +20,15 @@ package com.sternkn.djvu.gui.view_model;
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.DjVuFileReader;
 import javafx.concurrent.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 
+import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
+
 public class DjVuFileTask extends Task<DjVuFile> {
+    private static final Logger LOG = LoggerFactory.getLogger(DjVuFileTask.class);
 
     private final File file;
 
@@ -31,9 +37,15 @@ public class DjVuFileTask extends Task<DjVuFile> {
     }
 
     @Override
-    protected DjVuFile call() throws Exception {
+    protected DjVuFile call() {
         try (DjVuFileReader reader = new DjVuFileReader(file)) {
-            return reader.readFile();
+            try {
+                return reader.readFile();
+            }
+            catch (Exception e) {
+                LOG.error(getStackTraceAsString(e));
+                throw e;
+            }
         }
     }
 }

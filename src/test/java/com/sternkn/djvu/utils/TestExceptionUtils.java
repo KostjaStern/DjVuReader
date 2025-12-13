@@ -15,9 +15,24 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.file.utils;
+package com.sternkn.djvu.utils;
 
-public enum ByteOrder {
-    LITTLE_ENDIAN, // Least significant byte first
-    BIG_ENDIAN;    // Most significant byte first
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+
+import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class TestExceptionUtils {
+
+    @Test
+    public void testGetStackTraceAsString() {
+        RuntimeException exception = new RuntimeException("Runtime exception wrapper",
+                new IOException("File test_file.log not found"));
+
+        String stackTrace = getStackTraceAsString(exception);
+        assertTrue(stackTrace.contains("java.lang.RuntimeException: Runtime exception wrapper"));
+        assertTrue(stackTrace.contains("Caused by: java.io.IOException: File test_file.log not found"));
+    }
 }

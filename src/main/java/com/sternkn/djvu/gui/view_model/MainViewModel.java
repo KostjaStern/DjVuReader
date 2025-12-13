@@ -19,33 +19,36 @@ package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.chunks.TextZone;
-import com.sternkn.djvu.file.coders.PixelColor;
-import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.DjVuModelImpl;
+import com.sternkn.djvu.model.Page;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
-import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+
+import static com.sternkn.djvu.utils.ImageUtils.toImage;
 
 public class MainViewModel {
     private static final Logger LOG = LoggerFactory.getLogger(MainViewModel.class);
@@ -55,6 +58,7 @@ public class MainViewModel {
 
     private final FileTaskFactory fileTaskFactory;
     private final ChunkDecodingTaskFactory chunkDecodingTaskFactory;
+    private final PageLoadingTaskFactory pageLoadingTaskFactory;
 
     private DjVuModel djvuModel;
 
@@ -64,6 +68,8 @@ public class MainViewModel {
 
     private DoubleProperty fitWidth;
 
+    private ListProperty<PageNode> pages;
+
     // left chunk tree
     private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
 
@@ -72,27 +78,32 @@ public class MainViewModel {
     private ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
     private BooleanProperty showTextTree;
     private ObjectProperty<Image> image;
+    private ObjectProperty<Image> pageImage;
 
     // the latest error message
     private StringProperty errorMessage;
 
     public MainViewModel() {
-        this(DjVuFileTask::new, ChunkDecodingTask::new);
+        this(DjVuFileTask::new, ChunkDecodingTask::new, PageLoadingTask::new);
     }
 
     public MainViewModel(FileTaskFactory fileTaskFactory,
-                         ChunkDecodingTaskFactory chunkDecodingTaskFactory) {
+                         ChunkDecodingTaskFactory chunkDecodingTaskFactory,
+                         PageLoadingTaskFactory pageLoadingTaskFactory) {
         this.fileTaskFactory = fileTaskFactory;
         this.chunkDecodingTaskFactory = chunkDecodingTaskFactory;
+        this.pageLoadingTaskFactory = pageLoadingTaskFactory;
 
         title = new SimpleStringProperty(APP_TITLE);
         errorMessage  = new SimpleStringProperty("");
         topText = new SimpleStringProperty("");
 
+        pages = new SimpleListProperty<>();
         textRootNode = new SimpleObjectProperty<>();
         showTextTree  = new SimpleBooleanProperty(false);
         chunkRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
+        pageImage  = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
         fitWidth = new SimpleDoubleProperty(-1);
     }
@@ -110,13 +121,46 @@ public class MainViewModel {
             TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
 
             setChunkRootNode(rootNode);
-            setDjvuModel(new DjVuModelImpl(djvFile));
+
+            DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
+            setDjvuModel(djvuModel);
+            setPages(djvuModel.getPageOffsets());
+
             setTitle(file.getName());
             setProgressDone();
         });
 
         task.setOnFailed(event -> {
             setErrorMessage(task.getException().getMessage());
+            setProgressDone();
+        });
+
+        new Thread(task).start();
+    }
+
+    public void loadPageAsync(PageNode page) {
+
+        if (page.isLoaded()) {
+            LOG.info("Update page view {}", page);
+            setPageImage(page.getImage());
+            return;
+        }
+
+        LOG.info("Loading page {}", page);
+        setInProgress();
+
+        Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getOffset());
+        task.setOnSucceeded(event -> {
+            Page p = task.getValue();
+
+            setPageImage(p.getImage());
+            setProgressDone();
+        });
+
+        task.setOnFailed(event -> {
+            String errorMessage = task.getException().getMessage();
+            setErrorMessage(errorMessage);
+            LOG.debug("Failed to load page: {}", errorMessage);
             setProgressDone();
         });
 
@@ -157,7 +201,7 @@ public class MainViewModel {
             setTextRootNode(textRootNode);
             setShowTextTree(textRootNode != null);
             setTopText(chunkInfo.getTextData());
-            setImage(getImage(chunkInfo.getBitmap()));
+            setImage(toImage(chunkInfo.getBitmap(), ImageRotationType.UPSIDE_DOWN));
             setProgressDone();
         });
 
@@ -201,32 +245,20 @@ public class MainViewModel {
         }
     }
 
-    private Image getImage(Pixmap bitmap) {
-        if (bitmap == null) {
-            return null;
-        }
-
-        int height = bitmap.getHeight();
-        int width = bitmap.getWidth();
-        LOG.debug("bitmap: border = {}, height = {}, width = {}", bitmap.getBorder(), height,  width);
-
-
-        WritableImage image = new WritableImage(width, height);
-        PixelWriter pixelWriter = image.getPixelWriter();
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                PixelColor pixel = bitmap.getPixel(x, y);
-                Color color = Color.rgb(pixel.getRed(), pixel.getGreen(), pixel.getBlue());
-                pixelWriter.setColor(x, height - y - 1, color);
-            }
-        }
-
-        return image;
-    }
-
     public void saveChunkData(File file, long chunkId) {
         djvuModel.saveChunkData(file, chunkId);
+    }
+
+    public ListProperty<PageNode> getPages() {
+        return pages;
+    }
+    public void setPages(List<Long> offsets) {
+        List<PageNode> pgs = IntStream.range(0, offsets.size())
+            .mapToObj(index -> new PageNode(index + 1, offsets.get(index)))
+            .toList();
+
+        var list = FXCollections.observableList(pgs);
+        pages.setValue(list);
     }
 
     public StringProperty getTitle() {
@@ -300,6 +332,13 @@ public class MainViewModel {
     }
     public void setImage(Image img) {
         this.image.set(img);
+    }
+
+    public ObjectProperty<Image> getPageImage() {
+        return pageImage;
+    }
+    public void setPageImage(Image pageImage) {
+        this.pageImage.set(pageImage);
     }
 
     public void setDjvuModel(DjVuModel djvuModel) {

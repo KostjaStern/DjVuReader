@@ -55,9 +55,9 @@ public class DjVuFileReader implements Closeable {
     }
 
     public DjVuFile readFile() {
-        final MagicHeader header = readHeader();
+        readHeader();
         final List<Chunk> chunks = readChunks();
-        return new DjVuFile(header, chunks, fileSize);
+        return new DjVuFileImpl(chunks);
     }
 
     private List<Chunk> readChunks() {
@@ -201,12 +201,10 @@ public class DjVuFileReader implements Closeable {
         if (result < 0) {
             this.isEndOfFile = true;
             LOG.debug("readBytes: It's end of file.");
-            // throw new DjVuFileException("There is no more data because the end of the stream has been reached.");
         }
         else {
             this.rawOffset += result;
             this.isEndOfFile = false;
-            // LOG.debug("Current offset: {}, {} bytes were read", this.position, result);
         }
         return result;
     }
@@ -216,14 +214,12 @@ public class DjVuFileReader implements Closeable {
             int result = inputStream.readInt();
             this.rawOffset += 4;
             this.isEndOfFile = false;
-            // LOG.debug("Current offset: {}, 4 bytes were read", this.position);
             return result;
         }
         catch (EOFException eof) {
             this.isEndOfFile = true;
             LOG.debug("readInt: It's end of file.");
             return 0;
-            // throw new DjVuFileException("Int32 reading problem (end of file)", eof);
         }
         catch (IOException io) {
             throw new DjVuFileException("Int32 reading problem", io);

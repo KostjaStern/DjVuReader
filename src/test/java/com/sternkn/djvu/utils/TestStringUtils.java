@@ -15,13 +15,26 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.file.coders;
+package com.sternkn.djvu.utils;
 
-public interface Dict {
+import org.junit.jupiter.api.Test;
 
-    int get_shape_count();
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    int add_shape(JB2Shape shape);
+public class TestStringUtils {
 
-    JB2Shape get_shape(int shapeno);
+    @Test
+    public void testPadRight() {
+        assertEquals("12        ", StringUtils.padRight(12, 10));
+    }
+
+    @Test
+    public void testPadLeft() {
+        assertEquals("        12", StringUtils.padLeft(12, 10));
+    }
+
+    @Test
+    public void testRepeatString() {
+        assertEquals("----------", StringUtils.repeatString("-", 10));
+    }
 }

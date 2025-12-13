@@ -15,13 +15,21 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.file.coders;
+package com.sternkn.djvu.utils;
 
-public interface Dict {
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
-    int get_shape_count();
+public final class ExceptionUtils {
 
-    int add_shape(JB2Shape shape);
+    private ExceptionUtils() {
+    }
 
-    JB2Shape get_shape(int shapeno);
+    public static String getStackTraceAsString(Throwable t) {
+        StringWriter sw = new StringWriter();
+        try (PrintWriter pw = new PrintWriter(sw)) {
+            t.printStackTrace(pw);
+            return sw.toString();
+        }
+    }
 }

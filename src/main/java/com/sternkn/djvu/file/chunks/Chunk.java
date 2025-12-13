@@ -19,7 +19,7 @@ package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.DjVuFileException;
 
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.StringUtils.NL;
 
 public class Chunk {
 

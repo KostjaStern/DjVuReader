@@ -22,10 +22,12 @@ import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
+import com.sternkn.djvu.gui.view_model.PageNode;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TreeItem;
+import javafx.scene.input.KeyCode;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,7 @@ import org.testfx.framework.junit5.Start;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.testfx.api.FxAssert.verifyThat;
 import static org.testfx.matcher.control.TextInputControlMatchers.hasText;
@@ -195,5 +198,39 @@ public class TestMainFrameController {
 
         verify(controller.saveChunkDataDialog(), times(1)).setInitialFileName(fileName);
         verify(viewModel, times(1)).saveChunkData(fakeFile,  childNode.getChunkId());
+    }
+
+    @Test
+    public void testSelectPage(FxRobot robot) {
+        List<Long> offsets = List.of(1L, 25L, 37L);
+
+        PageNode page2 = new PageNode(2, 25L);
+        doNothing().when(viewModel).loadPageAsync(page2);
+
+        robot.interact(() -> viewModel.setPages(offsets));
+
+        robot.clickOn("Pages");
+        robot.clickOn("2");
+
+        verify(viewModel, times(1)).loadPageAsync(page2);
+    }
+
+    @Test
+    public void testSelectPageByKeyPress(FxRobot robot) {
+        List<Long> offsets = List.of(1L, 25L, 37L);
+
+        PageNode page2 = new PageNode(2, 25L);
+        PageNode page3 = new PageNode(3, 37L);
+        doNothing().when(viewModel).loadPageAsync(page2);
+        doNothing().when(viewModel).loadPageAsync(page3);
+
+        robot.interact(() -> viewModel.setPages(offsets));
+
+        robot.clickOn("Pages");
+        robot.clickOn("2");
+        robot.press(KeyCode.DOWN);
+
+        verify(viewModel, times(1)).loadPageAsync(page2);
+        verify(viewModel, times(1)).loadPageAsync(page3);
     }
 }

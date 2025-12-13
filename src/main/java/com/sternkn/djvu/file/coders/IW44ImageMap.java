@@ -22,7 +22,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.sternkn.djvu.file.utils.NumberUtils.asUnsignedInt;
+import static com.sternkn.djvu.utils.NumberUtils.asUnsignedInt;
 
 /*
     Represents all the blocks of an image

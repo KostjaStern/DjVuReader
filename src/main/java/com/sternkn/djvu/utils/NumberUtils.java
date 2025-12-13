@@ -15,13 +15,29 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.file.coders;
+package com.sternkn.djvu.utils;
 
-public interface Dict {
+public final class NumberUtils {
+    private NumberUtils() {
+    }
 
-    int get_shape_count();
+    public static long asUnsignedInt(long value) {
+        return value & 0xFFFFFFFFL;
+    }
 
-    int add_shape(JB2Shape shape);
+    public static long asUnsignedShort(long value) {
+        return value & 0xFFFFL;
+    }
 
-    JB2Shape get_shape(int shapeno);
+    public static int asUnsignedByte(byte value) {
+        return value & 0xFF;
+    }
+
+    public static int hexToInt(String hex) {
+        return Integer.parseInt(hex, 16);
+    }
+
+    public static int toInt(String value) {
+        return Integer.parseInt(value);
+    }
 }

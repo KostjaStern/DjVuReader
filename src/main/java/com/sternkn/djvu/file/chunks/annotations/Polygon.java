@@ -20,7 +20,7 @@ package com.sternkn.djvu.file.chunks.annotations;
 import java.util.List;
 import java.util.Objects;
 
-import static com.sternkn.djvu.file.utils.StringUtils.NL;
+import static com.sternkn.djvu.utils.StringUtils.NL;
 
 public class Polygon extends Area {
 
