@@ -45,6 +45,13 @@ public final class ImageUtils {
     private ImageUtils() {
     }
 
+    /**
+     * Converts a bitmap to an image, applying the specified rotation.
+     *
+     * @param bitmap the source bitmap
+     * @param rotationType the rotation to apply
+     * @return the rotated image
+     */
     public static Image toImage(Pixmap bitmap, ImageRotationType rotationType) {
         if (bitmap == null) {
             return null;
@@ -104,33 +111,65 @@ public final class ImageUtils {
         };
     }
 
-    public static Image composeImage(Pixmap m, Pixmap b, Pixmap f, int height, int width) {
-        return composeImage(m, b, f, height, width, ImageRotationType.NO_ROTATION);
+    /**
+     * Returns a composite image rendered by painting the foreground color image over the background color image,
+     * using the foreground mask as a stencil.
+     *
+     * @param mask the foreground bitonal mask; may be {@code null}
+     * @param background the background color image; may be {@code null}
+     * @param foreground the foreground color image; may be {@code null}
+     * @param height the height of the output image; if {@code mask} is not {@code null},
+     *               the mask’s height must equal this value
+     * @param width  the width of the output image; if {@code mask} is not {@code null},
+     *               the mask’s width must equal this value
+     * @return the composite image
+     */
+    public static Image composeImage(Pixmap mask, Pixmap background, Pixmap foreground, int height, int width) {
+        return composeImage(mask, background, foreground, height, width, ImageRotationType.NO_ROTATION);
     }
 
-    public static Image composeImage(Pixmap m, Pixmap b, Pixmap f, int height, int width, ImageRotationType rotationType) {
-        Image mask = toImage(m, rotationType);
-        Image background = toImage(b, rotationType);
+    /**
+     * Returns a composite image created by painting the foreground color image over the background color image
+     * using the foreground mask as a stencil, then applying the specified rotation.
+     *
+     * @param mask the foreground bitonal mask; may be {@code null}
+     * @param background the background color image; may be {@code null}
+     * @param foreground the foreground color image; may be {@code null}
+     * @param height the height of the output image; if {@code mask} is not {@code null},
+     *               the mask’s height must equal this value
+     * @param width  the width of the output image; if {@code mask} is not {@code null},
+     *               the mask’s width must equal this value
+     * @param rotationType the rotation to apply
+     * @return the rotated composite image
+     */
+    public static Image composeImage(Pixmap mask,
+                                     Pixmap background,
+                                     Pixmap foreground,
+                                     int height,
+                                     int width,
+                                     ImageRotationType rotationType) {
+        Image imageMask = toImage(mask, rotationType);
+        Image imageBackground = toImage(background, rotationType);
 
-        if (background == null) {
-            return mask;
+        if (imageBackground == null) {
+            return imageMask;
         }
-        if (mask == null) {
-            return background;
+        if (imageMask == null) {
+            return imageBackground;
         }
 
-        Image foreground = toImage(f, rotationType);
+        Image imageForeground = toImage(foreground, rotationType);
 
-        double bgScale = background.getWidth() / width;
-        double fgScale = foreground != null ? (foreground.getWidth() / width) : -1;
+        double bgScale = imageBackground.getWidth() / width;
+        double fgScale = imageForeground != null ? (imageForeground.getWidth() / width) : -1;
         LOG.debug("bgScale = {}", bgScale);
         LOG.debug("fgScale = {}", fgScale);
 
         WritableImage image = new WritableImage(width, height);
         PixelWriter writer = image.getPixelWriter();
-        PixelReader maskReader = mask.getPixelReader();
-        PixelReader fgReader = foreground == null ? null : foreground.getPixelReader();
-        PixelReader bgReader = background.getPixelReader();
+        PixelReader maskReader = imageMask.getPixelReader();
+        PixelReader fgReader = imageForeground == null ? null : imageForeground.getPixelReader();
+        PixelReader bgReader = imageBackground.getPixelReader();
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -138,14 +177,14 @@ public final class ImageUtils {
 
                 Color resultColor = null;
                 if (Color.WHITE.equals(color)) {
-                    int srcX = Math.min((int) (x * bgScale), (int)(background.getWidth() - 1));
-                    int srcY = Math.min((int) (y * bgScale), (int)(background.getHeight() - 1));
+                    int srcX = Math.min((int) (x * bgScale), (int)(imageBackground.getWidth() - 1));
+                    int srcY = Math.min((int) (y * bgScale), (int)(imageBackground.getHeight() - 1));
                     resultColor = bgReader.getColor(srcX, srcY);
                 }
                 else {
                     if (fgReader != null) {
-                        int srcX = Math.min((int) (x * fgScale), (int)(foreground.getWidth() - 1));
-                        int srcY = Math.min((int) (y * fgScale), (int)(foreground.getHeight() - 1));
+                        int srcX = Math.min((int) (x * fgScale), (int)(imageForeground.getWidth() - 1));
+                        int srcY = Math.min((int) (y * fgScale), (int)(imageForeground.getHeight() - 1));
                         resultColor = fgReader.getColor(srcX, srcY);
                     }
                     else {
@@ -160,7 +199,14 @@ public final class ImageUtils {
         return image;
     }
 
-    public static JB2Image decodeBitonalImage(byte[] data, byte[] dict) {
+    /**
+     * Returns a JB2-decoded image
+     *
+     * @param data the {@code Sjbz} chunk data
+     * @param dict the {@code Djbz} chunk (shape dictionary) data; may be {@code null}
+     * @return the JB2-decoded image
+     */
+    public static JB2Image decodeJB2Image(byte[] data, byte[] dict) {
         JB2Dict dictionary = null;
         if (dict != null) {
             dictionary = new JB2Dict();
@@ -175,7 +221,14 @@ public final class ImageUtils {
         return image;
     }
 
-    public static IW44Image decodeColorImage(List<byte[]> data) {
+    /**
+     * Returns an IW44-decoded image
+     *
+     * @param data a list of IW44 chunk data that belong to the same parent chunk and have the same IW44 chunk ID
+     *             (e.g., {@code BG44}, {@code FG44}, {@code PM44}, {@code BM44}, {@code TH44})
+     * @return an IW44-decoded image
+     */
+    public static IW44Image decodeIW44Image(List<byte[]> data) {
         final IW44Image image = new IW44Image();
         data.forEach(image::decode_chunk);
         image.close_codec();
@@ -183,6 +236,12 @@ public final class ImageUtils {
         return image;
     }
 
+    /**
+     * Saves the image to a PNG file.
+     *
+     * @param image the image to save
+     * @param filename the output file name (PNG)
+     */
     public static void saveAsFile(Image image, String filename) {
 
         int width = (int) image.getWidth();

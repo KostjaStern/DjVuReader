@@ -47,8 +47,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
-import static com.sternkn.djvu.utils.ImageUtils.decodeBitonalImage;
-import static com.sternkn.djvu.utils.ImageUtils.decodeColorImage;
+import static com.sternkn.djvu.utils.ImageUtils.decodeJB2Image;
+import static com.sternkn.djvu.utils.ImageUtils.decodeIW44Image;
 import static com.sternkn.djvu.utils.StringUtils.NL;
 import static com.sternkn.djvu.utils.StringUtils.padRight;
 
@@ -175,7 +175,7 @@ public class DjVuModelImpl implements DjVuModel {
     private ChunkInfo getIW44ChunkImage(Chunk chunk) {
         List<Chunk> chunks = this.djvuFile.getAllPageChunksWithSameChunkId(chunk);
         List<byte[]> data = chunks.stream().map(Chunk::getData).toList();
-        IW44Image image = decodeColorImage(data);
+        IW44Image image = decodeIW44Image(data);
 
         IW44SecondaryHeader header = image.getSecondaryHeader();
         Pixmap bitmap = image.get_pixmap();
@@ -223,7 +223,7 @@ public class DjVuModelImpl implements DjVuModel {
         byte[] data = chunk.getData();
         byte[] dict = sharedShape == null ? null : sharedShape.getData();
 
-        JB2Image image = decodeBitonalImage(data, dict);
+        JB2Image image = decodeJB2Image(data, dict);
 
         return image.get_bitmap();
     }
@@ -234,7 +234,7 @@ public class DjVuModelImpl implements DjVuModel {
         }
 
         List<byte[]> data = chunks.stream().map(Chunk::getData).toList();
-        IW44Image image = decodeColorImage(data);
+        IW44Image image = decodeIW44Image(data);
 
         return image.get_pixmap();
     }
