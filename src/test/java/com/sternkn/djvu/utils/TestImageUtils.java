@@ -18,14 +18,18 @@
 package com.sternkn.djvu.utils;
 
 import com.sternkn.djvu.file.chunks.ImageRotationType;
+import com.sternkn.djvu.file.coders.IW44Image;
 import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
 import javafx.scene.image.Image;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.List;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
+import static com.sternkn.djvu.utils.ImageUtils.decodeIW44Image;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -76,6 +80,17 @@ public class TestImageUtils extends TestSupport {
         Pixmap expected = createPixmap("Dudaev.png");
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testDecodeGrayscaleIW44Image() {
+        byte[] data = readByteBuffer("BG44_grayscale.data");
+
+        IW44Image image = decodeIW44Image(List.of(data));
+        Pixmap actual = image.get_pixmap();
+        Pixmap expected = createPixmap("BG44_grayscale.png");
+
+        assertPixmapEquals(expected, actual);
     }
 
     private PNGPixmap createPixmap(String filename) {
