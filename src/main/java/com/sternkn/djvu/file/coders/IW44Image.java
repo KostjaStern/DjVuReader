@@ -86,18 +86,17 @@ public class IW44Image {
         {
             YCbCr_to_RGB(ppm);
         }
-//        else
-//        {
-//            for (int i = 0; i < h; i++)
-//            {
-//                // GPixel *pixrow = (*ppm)[i];
-//                ArrayPointer<PixelColor> pixrow = new ArrayPointer<>(ppm.getPixels(), i * ppm.getColumns());
-//                for (int j = 0; j < w; j++, pixrow++) {
-//                    pixrow -> b = pixrow -> g = pixrow -> r
-//                            = 127 - (int) (((signed char*)pixrow)[0]);
-//                }
-//            }
-//        }
+        else
+        {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    PixelColor color = ppm.getPixel(x, y);
+                    int grey = 127 - color.getBlue();
+                    PixelColor greyColor = new PixelColor(grey, grey, grey);
+                    ppm.setPixel(x, y, greyColor);
+                }
+            }
+        }
 
         return ppm;
     }
