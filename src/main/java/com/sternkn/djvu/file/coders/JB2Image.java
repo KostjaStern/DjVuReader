@@ -18,6 +18,8 @@
 package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.DjVuFileException;
+import com.sternkn.djvu.file.chunks.Color;
+import com.sternkn.djvu.file.chunks.FGbzChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,10 +130,14 @@ public class JB2Image extends JB2Dict implements Dict {
     }
 
     public GBitmap get_bitmap() {
-        return this.get_bitmap(1, 1);
+        return this.get_bitmap(1, 1, null);
     }
 
-    public GBitmap get_bitmap(int subsample, int align) {
+    public GBitmap get_bitmap(FGbzChunk foregroundColors) {
+        return this.get_bitmap(1, 1, foregroundColors);
+    }
+
+    public GBitmap get_bitmap(int subsample, int align, FGbzChunk foregroundColors) {
         if (this.width == 0 || this.height == 0) {
             throw new DjVuFileException("JB2Image.cant_create");
         }
@@ -140,22 +146,34 @@ public class JB2Image extends JB2Dict implements Dict {
         int sheight = (height + subsample - 1) / subsample;
         int border = ((swidth + align - 1) & -align) - swidth;
 
+        final int blitCount = get_blit_count();
+        LOG.debug("blitCount = {}", blitCount);
 
-        GBitmap bm = new GBitmap();
+        List<Color> paletteColors = null;
+        if (foregroundColors != null
+                && foregroundColors.getIndexes().size() == blitCount) {
+            paletteColors = foregroundColors.getColors();
+        }
+
+        GBitmap bm = new GBitmap(paletteColors);
         bm.init(sheight, swidth, border);
         bm.set_grays(1 + subsample * subsample);
-
-        final int blitCount = get_blit_count();
-
-        LOG.debug("blitCount = {}", blitCount);
 
         for (int blitno = 0; blitno < blitCount; blitno++)
         {
            JB2Blit pblit = get_blit(blitno);
            JB2Shape  pshape = get_shape(pblit.getShapeno());
             GBitmap pshapeBits = pshape.getBits();
+
             if (pshapeBits != null) {
-                bm.blit(pshapeBits, pblit.getLeft(), pblit.getBottom(), subsample);
+                Integer colorIndex = null;
+                if (foregroundColors != null
+                    && foregroundColors.getIndexes() != null
+                    && foregroundColors.getIndexes().size() == blitCount) {
+                    colorIndex = foregroundColors.getIndexes().get(blitno);
+                }
+
+                bm.blit(pshapeBits, pblit.getLeft(), pblit.getBottom(), subsample, colorIndex);
             }
         }
         return bm;

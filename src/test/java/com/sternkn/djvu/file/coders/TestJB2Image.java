@@ -17,8 +17,15 @@
 */
 package com.sternkn.djvu.file.coders;
 
+import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.file.chunks.FGbzChunk;
+import com.sternkn.djvu.file.chunks.ImageRotationType;
+import com.sternkn.djvu.utils.PNGPixmap;
+import javafx.scene.image.Image;
 import org.junit.jupiter.api.Test;
 
+import static com.sternkn.djvu.utils.ImageUtils.toImage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestJB2Image extends TestSupport {
@@ -50,6 +57,22 @@ public class TestJB2Image extends TestSupport {
         Pixmap actualPixmap = image.get_bitmap();
         Pixmap expectedPixmap = readPixmap("Sjbz_out_ddd.png");
 
+        assertPixmapEquals(expectedPixmap, actualPixmap);
+    }
+
+    @Test
+    public void testJB2ImageWithForegroundColors() {
+        JB2Image jb2Image = readImage("Yunger_Sjbz.data");
+
+        Chunk chunk = readChunk("Yunger_FGbz.data", ChunkId.FGbz);
+        FGbzChunk foregroundColorsChunk = new FGbzChunk(chunk);
+
+        Pixmap pixmap = jb2Image.get_bitmap(foregroundColorsChunk);
+        Image image = toImage(pixmap, ImageRotationType.UPSIDE_DOWN);
+
+        Pixmap actualPixmap = new PNGPixmap(image);
+
+        Pixmap expectedPixmap = readPixmap("Yunger.png");
         assertPixmapEquals(expectedPixmap, actualPixmap);
     }
 }

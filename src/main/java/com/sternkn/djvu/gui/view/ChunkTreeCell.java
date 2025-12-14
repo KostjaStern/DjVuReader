@@ -26,6 +26,8 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
@@ -35,6 +37,8 @@ import java.util.Objects;
     https://openjfx.io/javadoc/23/javafx.controls/javafx/scene/control/Cell.html
  */
 public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
+    private static final Logger LOG = LoggerFactory.getLogger(ChunkTreeCell.class);
+
     final static String SAVE_CHUNK_DATA = "Save chunk data as ...";
 
     private final ImageView imageView;
@@ -103,7 +107,7 @@ public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
         setGraphic(imageView);
     }
 
-    private void addContextMenu() {
+    private ContextMenu getChunkContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
         MenuItem saveChunk = new MenuItem(SAVE_CHUNK_DATA);
         contextMenu.getItems().addAll(saveChunk);
@@ -120,14 +124,22 @@ public class ChunkTreeCell extends TreeCell<ChunkTreeNode> {
             }
         });
 
+        return contextMenu;
+    }
+
+    private void addContextMenu() {
         emptyProperty().addListener((obs, wasEmpty, isEmpty) -> {
             ChunkTreeNode chunkNode = this.getItem();
-            if (!isEmpty && !chunkNode.isComposite()) {
+
+            if (!isEmpty && chunkNode != null && !chunkNode.isComposite()) {
+                LOG.debug("Chunk context menu: chunkNode = {}", chunkNode);
+
+                ContextMenu contextMenu = getChunkContextMenu();
                 setContextMenu(contextMenu);
+                return;
             }
-            else {
-                setContextMenu(null);
-            }
+
+            setContextMenu(null);
         });
     }
 }
