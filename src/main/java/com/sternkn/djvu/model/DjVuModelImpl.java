@@ -72,15 +72,30 @@ public class DjVuModelImpl implements DjVuModel {
         Chunk chunk = djvuFile.getChunkByOffset(offset);
         InfoChunk info = new InfoChunk(chunk);
 
+        LOG.debug("Page offset = {}, info = {}", offset, info);
+
         Map<ChunkId, List<Chunk>> pageChunks = djvuFile.getAllPageChunks(chunk);
 
-        Pixmap mask = getBitonalImage(pageChunks.get(ChunkId.Sjbz));
+        Chunk sjbz = getChunk(pageChunks, ChunkId.Sjbz);
+        Chunk fgbz = getChunk(pageChunks, ChunkId.FGbz);
+        FGbzChunk foregroundColors = fgbz == null ? null : new FGbzChunk(fgbz);
+
+        Pixmap mask = getBitonalImage(sjbz, foregroundColors);
         Pixmap background = getColorImage(pageChunks.get(ChunkId.BG44));
         Pixmap foreground = getColorImage(pageChunks.get(ChunkId.FG44));
 
         Image image = composeImage(mask, background, foreground,
                 info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
         return new Page(image);
+    }
+
+    private Chunk getChunk(Map<ChunkId, List<Chunk>> pageChunks, ChunkId chunkId) {
+        List<Chunk> chunks = pageChunks.get(chunkId);
+        if (chunks == null) {
+            return null;
+        }
+
+        return chunks.stream().findFirst().orElse(null);
     }
 
     @Override
@@ -205,27 +220,26 @@ public class DjVuModelImpl implements DjVuModel {
         Methods of Bitonal Image Conversion for Modern and Classic Documents
      */
     private ChunkInfo getBitonalChunkInfo(Chunk chunk) {
-        Pixmap bitmap = getBitonalImage(List.of(chunk));
+        Pixmap bitmap = getBitonalImage(chunk, null);
 
         return new ChunkInfo(chunk.getId())
             .setTextData(chunk.getDataAsText())
             .setBitmap(bitmap);
     }
 
-    private Pixmap getBitonalImage(List<Chunk> chunks) {
-        if (chunks == null || chunks.isEmpty()) {
+    private Pixmap getBitonalImage(Chunk bitonalMask, FGbzChunk foregroundColors) {
+        if (bitonalMask == null) {
             return null;
         }
 
-        Chunk chunk = chunks.getFirst();
-        Chunk sharedShape = this.djvuFile.findSharedShapeChunk(chunk);
+        Chunk sharedShape = this.djvuFile.findSharedShapeChunk(bitonalMask);
 
-        byte[] data = chunk.getData();
+        byte[] data = bitonalMask.getData();
         byte[] dict = sharedShape == null ? null : sharedShape.getData();
 
         JB2Image image = decodeJB2Image(data, dict);
 
-        return image.get_bitmap();
+        return foregroundColors == null ? image.get_bitmap() : image.get_bitmap(foregroundColors);
     }
 
     private Pixmap getColorImage(List<Chunk> chunks) {

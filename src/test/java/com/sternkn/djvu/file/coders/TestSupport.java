@@ -19,9 +19,11 @@ package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.utils.PNGPixmap;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -34,6 +36,9 @@ public class TestSupport {
 
     private final ClassLoader classLoader = getClass().getClassLoader();
 
+    public PNGPixmap createPixmap(String filename) {
+        return new PNGPixmap(new File("src/test/resources/test_images/" + filename));
+    }
 
     public GPixmap readPixmap(String fileName) {
         try (InputStream inputStream = classLoader.getResourceAsStream(PATH_IMAGES + fileName)) {

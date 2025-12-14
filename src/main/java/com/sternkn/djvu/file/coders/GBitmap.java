@@ -18,6 +18,10 @@
 package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.DjVuFileException;
+import com.sternkn.djvu.file.chunks.Color;
+
+import java.util.List;
+
 import static com.sternkn.djvu.utils.NumberUtils.asUnsignedShort;
 
 public class GBitmap implements Pixmap {
@@ -27,6 +31,7 @@ public class GBitmap implements Pixmap {
     private int border;
     private int bytes_per_row;
     private int grays;
+    private List<Color> paletteColors;
 
     private int[] bytes_data;
     private int[] zero_buffer;
@@ -38,6 +43,14 @@ public class GBitmap implements Pixmap {
         this.bytes_per_row = 0;
         this.grays = 0;
         this.bytes_data = null;
+        this.paletteColors = null;
+    }
+
+    public GBitmap(List<Color> paletteColors) {
+        this();
+        if (paletteColors != null) {
+            this.paletteColors = List.copyOf(paletteColors);
+        }
     }
 
     public GBitmap(GBitmap ref, int border) {
@@ -84,7 +97,18 @@ public class GBitmap implements Pixmap {
     public PixelColor getPixel(int x, int y) {
         int index = y * bytes_per_row + border + x;
         int value = bytes_data[index];
-        return value == 0 ? PixelColor.WHITE : PixelColor.BLACK;
+
+        if (value == 0) {
+            return PixelColor.WHITE;
+        }
+
+        if (this.paletteColors == null) {
+            return PixelColor.BLACK;
+        }
+
+        Color color = this.paletteColors.get(value - 1);
+
+        return new PixelColor(color.getBlue(), color.getGreen(), color.getRed());
     }
 
     public void check_border() {
@@ -188,7 +212,7 @@ public class GBitmap implements Pixmap {
 //        }
     }
 
-    void blit(GBitmap bm, int x, int y) {
+    void blit(GBitmap bm, int x, int y, Integer colorIndex) {
         // Check boundaries
         if ((x >= columns)         ||
             (y >= rows)            ||
@@ -218,6 +242,11 @@ public class GBitmap implements Pixmap {
                     while (sc < sc1)
                     {
                         int newDrowValue = drow.getValue(sc) + srow.getValue(sc);
+
+                        if (this.paletteColors != null && colorIndex != null && newDrowValue == 1) {
+                            newDrowValue += colorIndex;
+                        }
+
                         drow.setValue(sc, newDrowValue); // drow[sc] += srow[sc];
                         sc += 1;
                     }
@@ -264,11 +293,11 @@ public class GBitmap implements Pixmap {
 //        }
     }
 
-    public void blit(GBitmap bm, int xh, int yh, int subsample) {
+    public void blit(GBitmap bm, int xh, int yh, int subsample, Integer colorIndex) {
         // Use code when no subsampling is necessary
         if (subsample == 1)
         {
-            blit(bm, xh, yh);
+            blit(bm, xh, yh, colorIndex);
             return;
         }
 

@@ -22,10 +22,8 @@ import com.sternkn.djvu.file.coders.IW44Image;
 import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
 import javafx.scene.image.Image;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.List;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
@@ -91,9 +89,5 @@ public class TestImageUtils extends TestSupport {
         Pixmap expected = createPixmap("BG44_grayscale.png");
 
         assertPixmapEquals(expected, actual);
-    }
-
-    private PNGPixmap createPixmap(String filename) {
-        return new PNGPixmap(new File("src/test/resources/test_images/" + filename));
     }
 }

@@ -26,7 +26,9 @@ import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.file.chunks.TextZoneType;
 import com.sternkn.djvu.file.coders.GPixmap;
+import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
+import com.sternkn.djvu.utils.PNGPixmap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -275,6 +278,28 @@ public class TestDjVuModelImpl extends TestSupport {
         assertEquals(expectedTextData, chunkInfo.getTextData());
         assertNull(chunkInfo.getTextZones());
         assertEquals(0, chunkInfo.getTextZoneCount());
+    }
+
+    @Test
+    public void testGetPageWithBackgroundAndForegroundColors() {
+        final long offset = 2798L;
+        Chunk info = createChunk(1L, ChunkId.INFO, "Yunger_revolution_INFO.data");
+        when(djvuFile.getChunkByOffset(offset)).thenReturn(info);
+
+        when(djvuFile.getAllPageChunks(info)).thenReturn(
+            Map.of(ChunkId.Sjbz, List.of(createChunk(2L, ChunkId.Sjbz, "Yunger_revolution_Sjbz.data")),
+                   ChunkId.FGbz, List.of(createChunk(3L, ChunkId.FGbz, "Yunger_revolution_FGbz.data")),
+                   ChunkId.BG44, List.of(createChunk(4L, ChunkId.BG44, "Yunger_revolution_BG44_1.data"),
+                                         createChunk(5L, ChunkId.BG44, "Yunger_revolution_BG44_2.data"),
+                                         createChunk(6L, ChunkId.BG44, "Yunger_revolution_BG44_3.data"),
+                                         createChunk(7L, ChunkId.BG44, "Yunger_revolution_BG44_4.data"))
+        ));
+
+        Page page = model.getPage(offset);
+
+        Pixmap actual = new PNGPixmap(page.getImage());
+        Pixmap expected = createPixmap("Yunger_revolution.png");
+        assertEquals(expected, actual);
     }
 
     private Chunk createCompositeChunk(long id, SecondaryChunkId secondaryChunkId) {
