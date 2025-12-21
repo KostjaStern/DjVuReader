@@ -37,7 +37,7 @@ public class DjVuFileTask extends Task<DjVuFile> {
     }
 
     @Override
-    protected DjVuFile call() {
+    public DjVuFile call() {
         try (DjVuFileReader reader = new DjVuFileReader(file)) {
             try {
                 return reader.readFile();

@@ -37,7 +37,7 @@ public class ChunkDecodingTask extends Task<ChunkInfo> {
     }
 
     @Override
-    protected ChunkInfo call() {
+    public ChunkInfo call() {
         try {
             return djvuModel.getChunkInfo(chunkId);
         }

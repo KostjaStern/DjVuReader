@@ -24,6 +24,8 @@ import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 import com.sternkn.djvu.file.coders.PixelColor;
 import com.sternkn.djvu.file.coders.Pixmap;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
@@ -109,6 +111,24 @@ public final class ImageUtils {
             case COUNTER_CLOCKWISE_90 -> height - x - 1;
             default -> y;
         };
+    }
+
+    public static Image toThumbnail(Image src, int targetW, int targetH) {
+        double srcW = src.getWidth();
+        double srcH = src.getHeight();
+
+        double scale = Math.min(targetW / srcW, targetH / srcH);
+        int w = (int) Math.round(srcW * scale);
+        int h = (int) Math.round(srcH * scale);
+
+        Canvas canvas = new Canvas(w, h);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setImageSmoothing(true);
+        gc.drawImage(src, 0, 0, w, h);
+
+        WritableImage out = new WritableImage(w, h);
+        canvas.snapshot(null, out);
+        return out;
     }
 
     /**

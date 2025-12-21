@@ -59,10 +59,13 @@ public class MainViewModel {
     private final FileTaskFactory fileTaskFactory;
     private final ChunkDecodingTaskFactory chunkDecodingTaskFactory;
     private final PageLoadingTaskFactory pageLoadingTaskFactory;
+    private final ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory;
 
     private DjVuModel djvuModel;
 
     private StringProperty title;
+
+    private StringProperty progressMessage;
 
     private DoubleProperty progress;
 
@@ -80,22 +83,21 @@ public class MainViewModel {
     private ObjectProperty<Image> image;
     private ObjectProperty<Image> pageImage;
 
-    // the latest error message
-    private StringProperty errorMessage;
-
     public MainViewModel() {
-        this(DjVuFileTask::new, ChunkDecodingTask::new, PageLoadingTask::new);
+        this(DjVuFileTask::new, ChunkDecodingTask::new, PageLoadingTask::new, ThumbnailLoadingTask::new);
     }
 
     public MainViewModel(FileTaskFactory fileTaskFactory,
                          ChunkDecodingTaskFactory chunkDecodingTaskFactory,
-                         PageLoadingTaskFactory pageLoadingTaskFactory) {
+                         PageLoadingTaskFactory pageLoadingTaskFactory,
+                         ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory) {
         this.fileTaskFactory = fileTaskFactory;
         this.chunkDecodingTaskFactory = chunkDecodingTaskFactory;
         this.pageLoadingTaskFactory = pageLoadingTaskFactory;
+        this.thumbnailLoadingTaskFactory = thumbnailLoadingTaskFactory;
 
         title = new SimpleStringProperty(APP_TITLE);
-        errorMessage  = new SimpleStringProperty("");
+        progressMessage  = new SimpleStringProperty("");
         topText = new SimpleStringProperty("");
 
         pages = new SimpleListProperty<>();
@@ -114,6 +116,7 @@ public class MainViewModel {
 
     public void loadFileAsync(File file) {
         setInProgress();
+        setProgressMessage("Loading " + file.getName() + " ...");
 
         Task<DjVuFile> task = fileTaskFactory.create(file);
         task.setOnSucceeded(event -> {
@@ -127,11 +130,12 @@ public class MainViewModel {
             setPages(djvuModel.getPageOffsets());
 
             setTitle(file.getName());
-            setProgressDone();
+
+            loadingPageThumbnail();
         });
 
         task.setOnFailed(event -> {
-            setErrorMessage(task.getException().getMessage());
+            setProgressMessage(task.getException().getMessage());
             setProgressDone();
         });
 
@@ -139,19 +143,14 @@ public class MainViewModel {
     }
 
     public void loadPageAsync(PageNode page) {
-
-        if (page.isLoaded()) {
-            LOG.info("Update page view {}", page);
-            setPageImage(page.getImage());
-            return;
-        }
-
         LOG.info("Loading page {}", page);
         setInProgress();
+        setProgressMessage("Loading page ...");
 
         Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getOffset());
         task.setOnSucceeded(event -> {
             Page p = task.getValue();
+            setProgressMessage("");
 
             setPageImage(p.getImage());
             setProgressDone();
@@ -159,7 +158,7 @@ public class MainViewModel {
 
         task.setOnFailed(event -> {
             String errorMessage = task.getException().getMessage();
-            setErrorMessage(errorMessage);
+            setProgressMessage(errorMessage);
             LOG.debug("Failed to load page: {}", errorMessage);
             setProgressDone();
         });
@@ -192,9 +191,11 @@ public class MainViewModel {
 
     public void showChunkInfo(long chunkId) {
         setInProgress();
+        setProgressMessage("Decoding chunk ...");
 
         Task<ChunkInfo> task = chunkDecodingTaskFactory.create(djvuModel, chunkId);
         task.setOnSucceeded(event -> {
+            setProgressMessage("");
             ChunkInfo chunkInfo = task.getValue();
 
             TreeItem<TextZoneNode> textRootNode = getTextRootNode(chunkInfo, chunkId);
@@ -206,7 +207,7 @@ public class MainViewModel {
         });
 
         task.setOnFailed(event -> {
-            setErrorMessage(task.getException().getMessage());
+            setProgressMessage(task.getException().getMessage());
             setProgressDone();
         });
 
@@ -261,6 +262,20 @@ public class MainViewModel {
         pages.setValue(list);
     }
 
+    public void loadingPageThumbnail() {
+        LOG.debug("Loading page thumbnails ...");
+
+        Task<Void> task = this.thumbnailLoadingTaskFactory.create(this, djvuModel);
+
+        task.setOnFailed(e -> {
+            progress.set(0);
+            Throwable ex = task.getException();
+            setProgressMessage(ex != null ? ex.getMessage() : "Unknown error");
+        });
+
+        new Thread(task).start();
+    }
+
     public StringProperty getTitle() {
         return title;
     }
@@ -298,12 +313,12 @@ public class MainViewModel {
         this.topText.set(topText);
     }
 
-    public StringProperty getErrorMessage() {
-        return errorMessage;
+    public StringProperty getProgressMessage() {
+        return progressMessage;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage.set(errorMessage);
+    public void setProgressMessage(String progressMessage) {
+        this.progressMessage.set(progressMessage);
     }
 
     public ObjectProperty<TreeItem<ChunkTreeNode>> getChunkRootNode() {
@@ -350,6 +365,9 @@ public class MainViewModel {
     }
     public void setInProgress() {
         this.progress.set(ProgressBar.INDETERMINATE_PROGRESS);
+    }
+    public void setProgress(double value) {
+        this.progress.set(value);
     }
     public void setProgressDone() {
         this.progress.set(0);
