@@ -21,16 +21,26 @@ import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.coders.IW44Image;
 import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
+import com.sternkn.djvu.gui.view_model.PageNode;
 import javafx.scene.image.Image;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.testfx.framework.junit5.ApplicationExtension;
 
 import java.util.List;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
 import static com.sternkn.djvu.utils.ImageUtils.decodeIW44Image;
+import static com.sternkn.djvu.utils.ImageUtils.resizeImage;
+import static com.sternkn.djvu.utils.ImageUtils.resize;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.testfx.util.WaitForAsyncUtils.asyncFx;
+import static org.testfx.util.WaitForAsyncUtils.waitForFxEvents;
+
+@ExtendWith(ApplicationExtension.class)
 public class TestImageUtils extends TestSupport {
 
     @Test
@@ -78,6 +88,66 @@ public class TestImageUtils extends TestSupport {
         Pixmap expected = createPixmap("Dudaev.png");
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testResizeImage() {
+        asyncFx(() -> {
+            Image src = toImage(createPixmap("Yunger_revolution.png"), ImageRotationType.NO_ROTATION);
+            Image image = resizeImage(src, PageNode.WIDTH, PageNode.HEIGHT);
+
+            Pixmap actual = new PNGPixmap(image);
+            Pixmap expected = createPixmap("Yunger_revolution_resizeImage.png");
+
+            assertEquals(expected, actual);
+        });
+
+        waitForFxEvents();
+    }
+
+    @Test
+    public void testResizeImageParametersValidation() {
+        Image src = toImage(createPixmap("Yunger_revolution.png"), ImageRotationType.NO_ROTATION);
+
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> resizeImage(null, PageNode.WIDTH, PageNode.HEIGHT));
+        assertEquals("src is null", exception.getMessage());
+
+        exception = assertThrows(IllegalArgumentException.class,
+                () -> resizeImage(src, -1, PageNode.HEIGHT));
+        assertEquals("Invalid size", exception.getMessage());
+
+        exception = assertThrows(IllegalArgumentException.class,
+                () -> resizeImage(src, PageNode.WIDTH, 0));
+        assertEquals("Invalid size", exception.getMessage());
+    }
+
+    @Test
+    public void testResize() {
+        Image src = toImage(createPixmap("Yunger_revolution.png"), ImageRotationType.NO_ROTATION);
+        Image image = resize(src, PageNode.WIDTH, PageNode.HEIGHT);
+
+        Pixmap actual = new PNGPixmap(image);
+        Pixmap expected = createPixmap("Yunger_revolution_resize.png");
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testResizeParametersValidation() {
+        Image src = toImage(createPixmap("Yunger_revolution.png"), ImageRotationType.NO_ROTATION);
+
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> resize(null, PageNode.WIDTH, PageNode.HEIGHT));
+        assertEquals("src is null", exception.getMessage());
+
+        exception = assertThrows(IllegalArgumentException.class,
+                () -> resize(src, -1, PageNode.HEIGHT));
+        assertEquals("Invalid size", exception.getMessage());
+
+        exception = assertThrows(IllegalArgumentException.class,
+                () -> resize(src, PageNode.WIDTH, 0));
+        assertEquals("Invalid size", exception.getMessage());
     }
 
     @Test

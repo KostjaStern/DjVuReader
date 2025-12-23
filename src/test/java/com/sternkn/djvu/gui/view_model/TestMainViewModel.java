@@ -27,23 +27,17 @@ import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.testfx.framework.junit5.ApplicationExtension;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,8 +49,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testfx.util.WaitForAsyncUtils.waitForFxEvents;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, ApplicationExtension.class})
 public class TestMainViewModel {
     private static final double DELTA = 1e-9;
 
@@ -69,23 +64,6 @@ public class TestMainViewModel {
     private DjVuModel djvuModel;
 
     private MainViewModel viewModel;
-
-    @BeforeAll
-    public static void beforeAll() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.startup(latch::countDown);
-        assertTrue(latch.await(5, TimeUnit.SECONDS), "JavaFX Platform didn't start");
-    }
-
-    @BeforeEach
-    public void setUp() {
-
-    }
-
-    @AfterEach
-    public void tearDown() {
-
-    }
 
     @Test
     public void testShowStatistics() {
@@ -116,10 +94,8 @@ public class TestMainViewModel {
         verify(djvuModel, times(1)).getChunkStatistics();
     }
 
-    @Disabled
     @Test
-    public void testLoadFileAsyncSuccessCase() throws InterruptedException {
-
+    public void testLoadFileAsyncSuccessCase() {
         DjVuFile djvuFile = mock(DjVuFile.class);
         Chunk rootChunk = Chunk.builder()
             .withChunkId(ChunkId.FORM)
@@ -145,23 +121,27 @@ public class TestMainViewModel {
         when(directoryChunk.getComponents()).thenReturn(List.of(component1, component2));
         when(djvuFile.getDirectoryChunk()).thenReturn(directoryChunk);
 
+        chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
+        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
+
         fileTaskFactory = file -> new Task<>() {
             @Override
-            protected DjVuFile call() {
+            public DjVuFile call() {
                 return djvuFile;
             }
         };
-        chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
-        thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
-        viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
-        viewModel.setDjvuModel(djvuModel);
+        thumbnailLoadingTaskFactory = (MainViewModel mod, DjVuModel djvuMod) -> new Task<>() {
+            @Override
+            public Void call() {
+                mod.setProgressMessage("");
+                mod.setProgress(0);
+                return null;
+            }
+        };
 
-        CountDownLatch finished = new CountDownLatch(2);
-        viewModel.getProgress().addListener((obs, oldV, newV) -> {
-            finished.countDown();
-        });
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory,
+                pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
+        viewModel.setDjvuModel(djvuModel);
 
         assertEquals(0.0, viewModel.getProgress().get(), DELTA);
 
@@ -170,9 +150,7 @@ public class TestMainViewModel {
 
         viewModel.loadFileAsync(file);
 
-        assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
-
-        assertTrue(finished.await(6, TimeUnit.SECONDS), "loadFileAsync didn't finish in time");
+        waitForFxEvents();
 
         assertEquals(fileName, viewModel.getTitle().get());
         TreeItem<ChunkTreeNode> chunkRoot = viewModel.getChunkRootNode().get();
@@ -185,13 +163,12 @@ public class TestMainViewModel {
     }
 
     @Test
-    public void testLoadFileAsyncErrorCase() throws InterruptedException {
+    public void testLoadFileAsyncErrorCase() {
         final String errorMessage = "boom!";
 
         fileTaskFactory = file -> new Task<>() {
             @Override
-            protected DjVuFile call() throws InterruptedException {
-                Thread.sleep(500);
+            public DjVuFile call() {
                 throw new RuntimeException(errorMessage);
             }
         };
@@ -202,28 +179,19 @@ public class TestMainViewModel {
             fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
-        CountDownLatch finished = new CountDownLatch(1);
-        viewModel.getProgressMessage().addListener((obs, ov, nv) -> {
-            if (nv != null && !nv.isEmpty()) {
-                finished.countDown();
-            }
-        });
-
         viewModel.loadFileAsync(new File("bad.djvu"));
 
         assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
 
-        assertTrue(finished.await(6, TimeUnit.SECONDS), "failure path didn't finish in time");
+        waitForFxEvents();
 
-        assertEquals("Loading bad.djvu ...", viewModel.getProgressMessage().get());
-        // assertEquals(0.0, viewModel.getProgress().get(), DELTA);
-
+        assertEquals(errorMessage, viewModel.getProgressMessage().get());
         assertEquals(MainViewModel.APP_TITLE, viewModel.getTitle().get());
         assertNull(viewModel.getChunkRootNode().get());
     }
 
     @Test
-    public void testShowChunkInfoWithTextZones() throws InterruptedException {
+    public void testShowChunkInfoWithTextZones() {
         ChunkInfo info = mock(ChunkInfo.class);
 
         TextZone root = mock(TextZone.class);
@@ -247,16 +215,11 @@ public class TestMainViewModel {
             fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
-        CountDownLatch finished = new CountDownLatch(2);
-        viewModel.getProgress().addListener((obs, ov, nv) -> {
-            finished.countDown();
-        });
-
         viewModel.showChunkInfo(42L);
 
         assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
 
-        assertTrue(finished.await(3, TimeUnit.SECONDS), "showChunkInfo didn't finish in time");
+        waitForFxEvents();
 
         assertEquals("Some text data", viewModel.getTopText().get(), "topText must be set");
         assertTrue(viewModel.getShowTextTree().get(), "showTextTree must be true when zones exist");
@@ -272,7 +235,7 @@ public class TestMainViewModel {
     }
 
     @Test
-    public void testShowChunkInfoWithError() throws InterruptedException {
+    public void testShowChunkInfoWithError() {
         String errorMessage = "decode failed";
         fileTaskFactory = mock(FileTaskFactory.class);
         pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
@@ -287,19 +250,14 @@ public class TestMainViewModel {
             fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
-        CountDownLatch finished = new CountDownLatch(1);
-        viewModel.getProgressMessage().addListener((obs, ov, nv) -> {
-            finished.countDown();
-        });
-
         viewModel.showChunkInfo(7L);
 
         assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
-        assertTrue(finished.await(3, TimeUnit.SECONDS), "failure path didn't finish in time");
 
-        // assertEquals(errorMessage, viewModel.getProgressMessage().get());
-        // assertEquals(0.0, viewModel.getProgress().get(), DELTA);
+        waitForFxEvents();
 
+        assertEquals(errorMessage, viewModel.getProgressMessage().get());
+        assertEquals(0.0, viewModel.getProgress().get(), DELTA);
         assertNull(viewModel.getTextRootNode().get());
         assertNull(viewModel.getImage().get());
     }

@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
-import static com.sternkn.djvu.utils.ImageUtils.toThumbnail;
+import static com.sternkn.djvu.utils.ImageUtils.resize;
 
 public class ThumbnailLoadingTask extends Task<Void> {
     private static final Logger LOG = LoggerFactory.getLogger(ThumbnailLoadingTask.class);
@@ -62,9 +62,9 @@ public class ThumbnailLoadingTask extends Task<Void> {
                 final PageNode pageNode = pages.get(index);
                 final double progress = (double) pageNumber / pageCount;
                 Page page = djvuModel.getPage(pageNode.getOffset());
+                Image thumbnail = resize(page.getImage(), PageNode.WIDTH, PageNode.HEIGHT);
 
                 Platform.runLater(() -> {
-                    Image thumbnail = toThumbnail(page.getImage(), PageNode.WIDTH, PageNode.HEIGHT);
                     pageNode.setThumbnail(thumbnail);
                     model.setProgress(progress);
                     model.setProgressMessage("Loading page thumbnail (page " + pageNumber + ") ...");
