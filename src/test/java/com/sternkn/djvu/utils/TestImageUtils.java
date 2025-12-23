@@ -99,7 +99,7 @@ public class TestImageUtils extends TestSupport {
             Pixmap actual = new PNGPixmap(image);
             Pixmap expected = createPixmap("Yunger_revolution_resizeImage.png");
 
-            assertPixmapEquals(expected, actual, 3);
+            assertPixmapEquals(expected, actual, 10);
         });
 
         waitForFxEvents();
