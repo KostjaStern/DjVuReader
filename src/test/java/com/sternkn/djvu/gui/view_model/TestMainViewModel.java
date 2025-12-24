@@ -186,6 +186,7 @@ public class TestMainViewModel {
         waitForFxEvents();
 
         assertEquals(errorMessage, viewModel.getProgressMessage().get());
+        assertEquals(0.0, viewModel.getProgress().get(), DELTA);
         assertEquals(MainViewModel.APP_TITLE, viewModel.getTitle().get());
         assertNull(viewModel.getChunkRootNode().get());
     }

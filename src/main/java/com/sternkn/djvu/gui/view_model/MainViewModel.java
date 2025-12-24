@@ -131,7 +131,7 @@ public class MainViewModel {
 
             setTitle(file.getName());
 
-            loadingPageThumbnail();
+            loadingPageThumbnails();
         });
 
         task.setOnFailed(event -> {
@@ -262,7 +262,7 @@ public class MainViewModel {
         pages.setValue(list);
     }
 
-    public void loadingPageThumbnail() {
+    public void loadingPageThumbnails() {
         LOG.debug("Loading page thumbnails ...");
 
         Task<Void> task = this.thumbnailLoadingTaskFactory.create(this, djvuModel);
