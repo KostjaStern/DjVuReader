@@ -100,7 +100,8 @@
 
     <bottom>
         <HBox spacing="10" style="-fx-padding: 5; -fx-border-color: #ccc; -fx-border-width: 1 0 0 0;">
-            <ProgressBar fx:id="progressBar" prefWidth="150"/>
+            <ProgressBar fx:id="progressBar" prefWidth="300"/>
+            <Label fx:id="progressMessage"/>
         </HBox>
     </bottom>
 </BorderPane>

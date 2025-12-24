@@ -26,6 +26,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SplitPane;
@@ -49,6 +50,9 @@ public class MainFrameController {
 
     @FXML
     private ProgressBar progressBar;
+
+    @FXML
+    private Label progressMessage;
 
     @FXML
     private TreeView<ChunkTreeNode> chunkTree;
@@ -111,6 +115,8 @@ public class MainFrameController {
         pageList.getStyleClass().add("pages");
         pageList.itemsProperty().bind(viewModel.getPages());
         pageList.setCellFactory(v -> new PageCell(viewModel));
+
+        progressMessage.textProperty().bind(viewModel.getProgressMessage());
 
         bindDivider(chunksSplitPane);
         bindDivider(pagesSplitPane);

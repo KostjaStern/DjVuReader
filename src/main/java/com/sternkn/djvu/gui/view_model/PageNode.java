@@ -17,22 +17,25 @@
 */
 package com.sternkn.djvu.gui.view_model;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 
 import java.util.Objects;
 
 public class PageNode {
-    private int page;
-    private Long offset;
-    private Image image;
-    private boolean loaded;
+    public static final int WIDTH = 200;
+    public static final int HEIGHT = 260;
+
+    private final int page;
+    private final Long offset;
+    private final ObjectProperty<Image> thumbnail;
 
     public PageNode(int page, Long offset) {
         this.page = page;
         this.offset = offset;
-        image = emptyImage();
-        loaded = false;
+        thumbnail = new SimpleObjectProperty<>(emptyImage());
     }
 
     public int getPage() {
@@ -43,16 +46,16 @@ public class PageNode {
         return offset;
     }
 
-    public boolean isLoaded() {
-        return loaded;
+    public void setThumbnail(Image image) {
+        this.thumbnail.set(image);
     }
 
-    public Image getImage() {
-        return image;
+    public ObjectProperty<Image> thumbnailProperty() {
+        return thumbnail;
     }
 
     private Image emptyImage() {
-        return new WritableImage(200, 260);
+        return new WritableImage(WIDTH, HEIGHT);
     }
 
     @Override
@@ -61,13 +64,12 @@ public class PageNode {
             return false;
         }
         return Objects.equals(page, other.page)
-            && Objects.equals(offset, other.offset)
-            && Objects.equals(loaded, other.loaded);
+            && Objects.equals(offset, other.offset);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(page, offset, loaded);
+        return Objects.hash(page, offset);
     }
 
     @Override
@@ -77,8 +79,6 @@ public class PageNode {
         buffer.append(page);
         buffer.append(" , ");
         buffer.append(offset);
-        buffer.append(" , ");
-        buffer.append(loaded);
         buffer.append("}");
 
         return buffer.toString();

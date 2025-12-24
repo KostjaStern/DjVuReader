@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestSupport {
     private static final String PATH_CHUNKS = "test_chunks/";
@@ -72,6 +73,24 @@ public class TestSupport {
         for (int y = 0; y < actual.getHeight(); y++) {
             for (int x = 0; x < actual.getWidth(); x++) {
                 assertEquals(expected.getPixel(x, y), actual.getPixel(x, y));
+            }
+        }
+    }
+
+    public void assertPixmapEquals(Pixmap expected, Pixmap actual, int colorDelta) {
+        assertEquals(expected.getWidth(), actual.getWidth());
+        assertEquals(expected.getHeight(), actual.getHeight());
+        for (int y = 0; y < actual.getHeight(); y++) {
+            for (int x = 0; x < actual.getWidth(); x++) {
+                PixelColor expectedColor = expected.getPixel(x, y);
+                PixelColor actualColor = actual.getPixel(x, y);
+                boolean isColorsEquals = (Math.abs(actualColor.getBlue() - expectedColor.getBlue()) <= colorDelta)
+                        && (Math.abs(actualColor.getGreen() - expectedColor.getGreen()) <= colorDelta)
+                        && (Math.abs(actualColor.getRed() - expectedColor.getRed()) <= colorDelta);
+
+                assertTrue(isColorsEquals,
+                        "Colors are not equal[expectedColor = " + expectedColor +
+                                ", actualColor = " + actualColor + "]");
             }
         }
     }

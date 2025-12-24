@@ -24,6 +24,8 @@ import com.sternkn.djvu.file.coders.JB2Dict;
 import com.sternkn.djvu.file.coders.JB2Image;
 import com.sternkn.djvu.file.coders.PixelColor;
 import com.sternkn.djvu.file.coders.Pixmap;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
@@ -109,6 +111,76 @@ public final class ImageUtils {
             case COUNTER_CLOCKWISE_90 -> height - x - 1;
             default -> y;
         };
+    }
+
+    /**
+     * Returns an image at the maximum size that fits within a {@code targetWidth} × {@code targetHeight} rectangle.
+     * This method can be called only from the FX application thread.
+     *
+     * @param src          the source image
+     * @param targetWidth  the target rectangle width (in pixels)
+     * @param targetHeight the target rectangle height (in pixels)
+     * @return the resized image
+     */
+    public static Image resizeImage(Image src, int targetWidth, int targetHeight) {
+        if (src == null) {
+            throw new IllegalArgumentException("src is null");
+        }
+        if (targetWidth <= 0 || targetHeight <= 0) {
+            throw new IllegalArgumentException("Invalid size");
+        }
+
+        final double srcWidth = src.getWidth();
+        final double srcHeight = src.getHeight();
+        final double scale = Math.min(targetWidth / srcWidth, targetHeight / srcHeight);
+        int width = (int) Math.round(srcWidth * scale);
+        int height = (int) Math.round(srcHeight * scale);
+
+        Canvas canvas = new Canvas(width, height);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setImageSmoothing(true);
+        gc.drawImage(src, 0, 0, width, height);
+
+        WritableImage image = new WritableImage(width, height);
+        canvas.snapshot(null, image);
+        return image;
+    }
+
+    /**
+     * Returns an image at the maximum size that fits within a {@code targetWidth} × {@code targetHeight} rectangle.
+     * Resizes using nearest-neighbor interpolation. This method may be called from a non-FX application thread.
+     *
+     * @param src          the source image
+     * @param targetWidth  the target rectangle width (in pixels)
+     * @param targetHeight the target rectangle height (in pixels)
+     * @return the resized image
+     */
+    public static Image resize(Image src, int targetWidth, int targetHeight) {
+        if (src == null) {
+            throw new IllegalArgumentException("src is null");
+        }
+        if (targetWidth <= 0 || targetHeight <= 0) {
+            throw new IllegalArgumentException("Invalid size");
+        }
+
+        PixelReader reader = src.getPixelReader();
+
+        WritableImage image = new WritableImage(targetWidth, targetHeight);
+        PixelWriter writer = image.getPixelWriter();
+
+        final double srcWidth = src.getWidth();
+        final double srcHeight = src.getHeight();
+        final double scale = Math.min(srcWidth / targetWidth, srcHeight / targetHeight);
+
+        for (int y = 0; y < targetHeight; y++) {
+            int srcY = Math.min((int) (y * scale), (int) srcHeight - 1);
+
+            for (int x = 0; x < targetWidth; x++) {
+                int srcX = Math.min((int) (x * scale), (int) srcWidth - 1);
+                writer.setArgb(x, y, reader.getArgb(srcX, srcY));
+            }
+        }
+        return image;
     }
 
     /**

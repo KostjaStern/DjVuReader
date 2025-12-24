@@ -19,12 +19,15 @@ package com.sternkn.djvu.file.coders;
 
 import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 import static com.sternkn.djvu.utils.NumberUtils.asUnsignedShort;
 
 public class GBitmap implements Pixmap {
+    private static final Logger LOG = LoggerFactory.getLogger(GBitmap.class);
 
     private int rows;
     private int columns;
@@ -106,7 +109,22 @@ public class GBitmap implements Pixmap {
             return PixelColor.BLACK;
         }
 
-        Color color = this.paletteColors.get(value - 1);
+        Color color = null;
+        final int paletteIndex = value - 1;
+
+        try {
+            color = this.paletteColors.get(paletteIndex);
+        }
+        catch (IndexOutOfBoundsException e) {
+            LOG.warn("GBitmap.getPixel({}, {}): palette paletteIndex = {}, palette size = {}",
+                     x, y, paletteIndex, this.paletteColors.size());
+            return PixelColor.BLACK;
+        }
+
+        if (color == null) {
+            LOG.warn("GBitmap.getPixel({}, {}): color({}) is null ", x, y, paletteIndex);
+            return PixelColor.BLACK;
+        }
 
         return new PixelColor(color.getBlue(), color.getGreen(), color.getRed());
     }

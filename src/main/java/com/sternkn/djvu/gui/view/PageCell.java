@@ -85,13 +85,15 @@ public class PageCell extends ListCell<PageNode> {
     }
 
     @Override
-    protected void updateItem(PageNode page, boolean empty) {
+    public void updateItem(PageNode page, boolean empty) {
         super.updateItem(page, empty);
         if (empty || page == null) {
+            thumb.imageProperty().unbind();
             setGraphic(null);
         }
         else {
-            thumb.setImage(page.getImage());
+            thumb.imageProperty().unbind();
+            thumb.imageProperty().bind(page.thumbnailProperty());
             number.setText(Integer.toString(page.getPage()));
             setGraphic(pane);
         }
