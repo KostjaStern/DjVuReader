@@ -47,6 +47,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
+import static com.sternkn.djvu.utils.ImageUtils.createBlank;
 import static com.sternkn.djvu.utils.ImageUtils.decodeJB2Image;
 import static com.sternkn.djvu.utils.ImageUtils.decodeIW44Image;
 import static com.sternkn.djvu.utils.StringUtils.NL;
@@ -86,6 +87,10 @@ public class DjVuModelImpl implements DjVuModel {
 
         Image image = composeImage(mask, background, foreground,
                 info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
+        if (image == null) {
+            image = createBlank(info.getWidth(), info.getHeight());
+        }
+
         return new Page(image);
     }
 
