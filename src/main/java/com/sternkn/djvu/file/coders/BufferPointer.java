@@ -41,6 +41,14 @@ public class BufferPointer {
         return buffer[pointer + offset];
     }
 
+    public int getPointer() {
+        return pointer;
+    }
+
+    public int[] getBuffer() {
+        return buffer;
+    }
+
     public int getCurrentValue() {
         return buffer[pointer];
     }
@@ -71,5 +79,11 @@ public class BufferPointer {
             throw new IllegalArgumentException("Buffer pointers must point to the same buffer.");
         }
         return this.pointer < p.pointer;
+    }
+
+    public static void copy(BufferPointer dst, BufferPointer src, int count) {
+        for (int index = 0; index < count; index++) {
+            dst.setValue(index, src.getValue(index));
+        }
     }
 }

@@ -112,4 +112,9 @@ public class LibRect {
     public void setBottom(int bottom) {
         this.bottom = bottom;
     }
+
+    @Override
+    public String toString() {
+        return "LibRect{top: " + top + ",  left: " + left + ",  right: " + right + ",  bottom: " + bottom + "}";
+    }
 }

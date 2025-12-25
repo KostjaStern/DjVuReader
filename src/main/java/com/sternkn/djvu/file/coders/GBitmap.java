@@ -165,6 +165,11 @@ public class GBitmap implements Pixmap {
         if (this != ref) {
             init(ref.rows, ref.columns, aborder);
             grays = ref.grays;
+
+            BufferPointer row = new BufferPointer(this.bytes_data, this.border);
+            for (int n = 0; n < rows; n++, row = row.shiftPointer(this.bytes_per_row)) {
+                BufferPointer.copy(row, ref.getRow(n), this.columns);
+            }
         }
         else if (aborder > border)
         {
@@ -178,12 +183,16 @@ public class GBitmap implements Pixmap {
      * The number of gray levels is initialized to {2}.
      */
     public void init(int arows, int acolumns, int aborder) {
+        init(arows, acolumns, aborder, null, null);
+    }
+
+    void init(int arows, int acolumns, int aborder, int[] bytes, int[] buffer) {
         final int total_size = arows * (acolumns + aborder) + aborder;
 
         if (arows != asUnsignedShort(arows) ||
-            acolumns != asUnsignedShort(acolumns) ||
-            acolumns + aborder != asUnsignedShort(acolumns + aborder) ||
-            (arows > 0 && (total_size - aborder)/arows != (acolumns + aborder)) ) {
+                acolumns != asUnsignedShort(acolumns) ||
+                acolumns + aborder != asUnsignedShort(acolumns + aborder) ||
+                (arows > 0 && (total_size - aborder)/arows != (acolumns + aborder)) ) {
             throw new DjVuFileException("GBitmap: image size exceeds maximum (corrupted file?)");
         }
 
@@ -193,8 +202,28 @@ public class GBitmap implements Pixmap {
         border = aborder;
         bytes_per_row = columns + border;
 
-        this.bytes_data = new int[total_size];
-        this.zero_buffer = new int[bytes_per_row + border];
+        if (bytes == null) {
+            this.bytes_data = new int[total_size];
+        }
+        else {
+            if (bytes.length != total_size) {
+                throw new DjVuFileException("GBitmap: invalid bytes_data size (expected: "
+                        + total_size + ", but was " + bytes.length + " )");
+            }
+            this.bytes_data = bytes;
+        }
+
+        final int zero_buffer_size = bytes_per_row + border;
+        if (buffer == null) {
+            this.zero_buffer = new int[zero_buffer_size];
+        }
+        else {
+            if (buffer.length != zero_buffer_size) {
+                throw new DjVuFileException("GBitmap: invalid zero_buffer size (expected: "
+                        + zero_buffer_size + ", but was " + buffer.length + " )");
+            }
+            this.zero_buffer = buffer;
+        }
     }
 
     public void compress() {
@@ -208,11 +237,9 @@ public class GBitmap implements Pixmap {
 
         if (bytes_data != null) {
             GBitmap tmp = new GBitmap(this, minimum);
-            // GBitmap tmp(*this, minimum);
             bytes_per_row = tmp.bytes_per_row;
-            // tmp.gbytes_data.swap(gbytes_data); ???
-            // bytes = bytes_data;
-            // tmp.bytes = 0;
+            bytes_data = tmp.bytes_data;
+            tmp.bytes_data = null;
         }
 
         border = minimum;
