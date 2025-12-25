@@ -41,6 +41,14 @@ public class BufferPointer {
         return buffer[pointer + offset];
     }
 
+    public int getPointer() {
+        return pointer;
+    }
+
+    public int[] getBuffer() {
+        return buffer;
+    }
+
     public int getCurrentValue() {
         return buffer[pointer];
     }
