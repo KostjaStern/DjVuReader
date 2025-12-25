@@ -72,4 +72,10 @@ public class BufferPointer {
         }
         return this.pointer < p.pointer;
     }
+
+    public static void copy(BufferPointer dst, BufferPointer src, int count) {
+        for (int index = 0; index < count; index++) {
+            dst.setValue(index, src.getValue(index));
+        }
+    }
 }

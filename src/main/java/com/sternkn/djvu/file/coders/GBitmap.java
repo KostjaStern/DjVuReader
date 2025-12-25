@@ -165,6 +165,11 @@ public class GBitmap implements Pixmap {
         if (this != ref) {
             init(ref.rows, ref.columns, aborder);
             grays = ref.grays;
+
+            BufferPointer row = new BufferPointer(this.bytes_data, this.border);
+            for (int n = 0; n < rows; n++, row = row.shiftPointer(this.bytes_per_row)) {
+                BufferPointer.copy(row, ref.getRow(n), this.columns);
+            }
         }
         else if (aborder > border)
         {
@@ -210,6 +215,8 @@ public class GBitmap implements Pixmap {
             GBitmap tmp = new GBitmap(this, minimum);
             // GBitmap tmp(*this, minimum);
             bytes_per_row = tmp.bytes_per_row;
+            bytes_data = tmp.bytes_data;
+            tmp.bytes_data = null;
             // tmp.gbytes_data.swap(gbytes_data); ???
             // bytes = bytes_data;
             // tmp.bytes = 0;
