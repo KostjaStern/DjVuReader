@@ -22,6 +22,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.GRect;
+import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.file.chunks.TextZoneType;
@@ -40,6 +41,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
+import static com.sternkn.djvu.utils.ImageUtils.createBlank;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -299,6 +301,23 @@ public class TestDjVuModelImpl extends TestSupport {
 
         Pixmap actual = new PNGPixmap(page.getImage());
         Pixmap expected = createPixmap("Yunger_revolution.png");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetPageBlankWhitePageForInfoChunkOnlyCase() {
+        final long offset = 89512L;
+        Chunk info = createChunk(1L, ChunkId.INFO, "Kagan_INFO.data");
+        when(djvuFile.getChunkByOffset(offset)).thenReturn(info);
+        when(djvuFile.getAllPageChunks(info)).thenReturn(Map.of());
+
+        Page page = model.getPage(offset);
+
+        Pixmap actual = new PNGPixmap(page.getImage());
+
+        InfoChunk infoChunk = new InfoChunk(info);
+        Pixmap expected = new PNGPixmap(createBlank(infoChunk.getWidth(), infoChunk.getHeight()));
+
         assertEquals(expected, actual);
     }
 

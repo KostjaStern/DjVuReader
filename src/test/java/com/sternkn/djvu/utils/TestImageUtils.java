@@ -23,6 +23,8 @@ import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
+import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +33,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import java.util.List;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
+import static com.sternkn.djvu.utils.ImageUtils.createBlank;
 import static com.sternkn.djvu.utils.ImageUtils.decodeIW44Image;
 import static com.sternkn.djvu.utils.ImageUtils.resizeImage;
 import static com.sternkn.djvu.utils.ImageUtils.resize;
@@ -153,6 +156,18 @@ public class TestImageUtils extends TestSupport {
         exception = assertThrows(IllegalArgumentException.class,
                 () -> resize(src, PageNode.WIDTH, 0));
         assertEquals("Invalid size", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateBlank() {
+        Image image = createBlank(PageNode.WIDTH, PageNode.HEIGHT);
+        PixelReader reader = image.getPixelReader();
+
+        for (int x = 0; x < PageNode.WIDTH; x++) {
+            for (int y = 0; y < PageNode.HEIGHT; y++) {
+                assertEquals(Color.WHITE, reader.getColor(x, y));
+            }
+        }
     }
 
     @Test
