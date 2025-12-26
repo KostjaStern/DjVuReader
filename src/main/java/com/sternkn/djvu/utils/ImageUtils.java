@@ -184,6 +184,26 @@ public final class ImageUtils {
     }
 
     /**
+     * Returns a blank white image with the specified {@code width} and {@code height}.
+     *
+     * @param width  the image width
+     * @param height the image height
+     * @return a white image of size {@code width} × {@code height}
+     */
+    public static Image createBlank(int width, int height) {
+        WritableImage image = new WritableImage(width, height);
+        PixelWriter pixelWriter = image.getPixelWriter();
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                pixelWriter.setColor(x, y, Color.WHITE);
+            }
+        }
+
+        return image;
+    }
+
+    /**
      * Returns a composite image rendered by painting the foreground color image over the background color image,
      * using the foreground mask as a stencil.
      *
