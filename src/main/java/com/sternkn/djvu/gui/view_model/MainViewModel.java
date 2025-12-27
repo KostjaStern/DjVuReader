@@ -83,6 +83,8 @@ public class MainViewModel {
     private ObjectProperty<Image> image;
     private ObjectProperty<Image> pageImage;
 
+    private Task<Void> thumbnailLoadingTask;
+
     public MainViewModel() {
         this(DjVuFileTask::new, ChunkDecodingTask::new, PageLoadingTask::new, ThumbnailLoadingTask::new);
     }
@@ -97,17 +99,35 @@ public class MainViewModel {
         this.thumbnailLoadingTaskFactory = thumbnailLoadingTaskFactory;
 
         title = new SimpleStringProperty(APP_TITLE);
-        progressMessage  = new SimpleStringProperty("");
+        progressMessage = new SimpleStringProperty("");
         topText = new SimpleStringProperty("");
 
         pages = new SimpleListProperty<>();
         textRootNode = new SimpleObjectProperty<>();
-        showTextTree  = new SimpleBooleanProperty(false);
+        showTextTree = new SimpleBooleanProperty(false);
         chunkRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
-        pageImage  = new SimpleObjectProperty<>();
+        pageImage = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
         fitWidth = new SimpleDoubleProperty(-1);
+    }
+
+    private void resetState() {
+        if (thumbnailLoadingTask != null && thumbnailLoadingTask.isRunning()) {
+            LOG.debug("We are cancelling the thumbnail loading task ...");
+            thumbnailLoadingTask.cancel();
+        }
+
+        title.setValue(APP_TITLE);
+        progressMessage.setValue("");
+        topText.setValue("");
+
+        pages.setValue(null);
+        textRootNode.setValue(null);
+        showTextTree.setValue(false);
+        chunkRootNode.setValue(null);
+        image.setValue(null);
+        pageImage.setValue(null);
     }
 
     public void showStatistics() {
@@ -115,6 +135,7 @@ public class MainViewModel {
     }
 
     public void loadFileAsync(File file) {
+        resetState();
         setInProgress();
         setProgressMessage("Loading " + file.getName() + " ...");
 
@@ -265,15 +286,15 @@ public class MainViewModel {
     public void loadingPageThumbnails() {
         LOG.debug("Loading page thumbnails ...");
 
-        Task<Void> task = this.thumbnailLoadingTaskFactory.create(this, djvuModel);
+        thumbnailLoadingTask = this.thumbnailLoadingTaskFactory.create(this, djvuModel);
 
-        task.setOnFailed(e -> {
+        thumbnailLoadingTask.setOnFailed(e -> {
             progress.set(0);
-            Throwable ex = task.getException();
+            Throwable ex = thumbnailLoadingTask.getException();
             setProgressMessage(ex != null ? ex.getMessage() : "Unknown error");
         });
 
-        new Thread(task).start();
+        new Thread(thumbnailLoadingTask).start();
     }
 
     public StringProperty getTitle() {
