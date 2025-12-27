@@ -58,6 +58,10 @@ public class ThumbnailLoadingTask extends Task<Void> {
             });
 
             for (int index = 0; index < pageCount; index++) {
+                if (this.isCancelled()) {
+                    break;
+                }
+
                 final int pageNumber = index + 1;
                 final PageNode pageNode = pages.get(index);
                 final double progress = (double) pageNumber / pageCount;
