@@ -66,6 +66,22 @@ public class TestDjVuFileImpl extends TestSupport {
     }
 
     @Test
+    public void testFindSiblingSharedShapeChunk() {
+        Chunk root = createChunk(1L, ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
+        Chunk dir = readChunk(2L, "Akunin_DIRM.data", ChunkId.DIRM, root, 24L);
+
+        Chunk formPage = createChunk(3L, ChunkId.FORM, SecondaryChunkId.DJVU, root, 1746L);
+        Chunk dict = createChunk(4L, ChunkId.Djbz, null, formPage, 1776L);
+        Chunk page = createChunk(5L, ChunkId.Sjbz, null, formPage, 6152L);
+
+        List<Chunk> chunks = List.of(root,  dir, formPage, dict, page);
+        DjVuFile file = new DjVuFileImpl(chunks);
+
+        Chunk chunk = file.findSharedShapeChunk(page);
+        assertEquals(dict,  chunk);
+    }
+
+    @Test
     public void testFindSharedShapeChunkForMultipleInclCase() {
         Chunk root = createChunk(1L, ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
         Chunk dir = readChunk(2L, "DIRM_mult_INCL_case.data", ChunkId.DIRM, root, 24L);
