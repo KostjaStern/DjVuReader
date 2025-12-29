@@ -135,9 +135,15 @@ public class DjVuFileImpl implements DjVuFile {
         }
 
         final List<String> sharedComponentIDs = getSharedComponentIDs(chunk);
-        if (sharedComponentIDs.isEmpty()) {
+        final List<Chunk>  sharedShapeChunks = getSiblingDictionaryChunks(chunk);
+        if (sharedComponentIDs.isEmpty() && sharedShapeChunks.isEmpty()) {
             LOG.debug("No shared component ID found for chunk - {}", chunk);
             return null;
+        }
+
+        if (!sharedShapeChunks.isEmpty()) {
+            return listToOne(sharedShapeChunks, "This is not a valid case!",
+                "We have more than one shared chunks for chunk id " + chunk.getChunkId());
         }
 
         List<ComponentInfo> components = directoryChunk.getComponents().stream()
@@ -176,6 +182,14 @@ public class DjVuFileImpl implements DjVuFile {
         }
 
         return list.getFirst();
+    }
+
+    private List<Chunk> getSiblingDictionaryChunks(Chunk chunk) {
+        Chunk parent = chunk.getParent();
+        return this.chunks.stream()
+                .filter(c -> c.getParent() != null && c.getParent().getId() == parent.getId())
+                .filter(c -> c.getChunkId() == ChunkId.Djbz)
+                .toList();
     }
 
     private List<String> getSharedComponentIDs(Chunk chunk) {
