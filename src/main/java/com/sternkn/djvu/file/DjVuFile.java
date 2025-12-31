@@ -20,9 +20,11 @@ package com.sternkn.djvu.file;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
+import com.sternkn.djvu.file.chunks.NavmChunk;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface DjVuFile {
 
@@ -39,6 +41,14 @@ public interface DjVuFile {
      * @return the DIRM (directory) chunk of the DjVu file
      */
     DirectoryChunk getDirectoryChunk();
+
+    /**
+     * Returns the DjVu file bookmark information (NAVM chunk).
+     * This information / chunk is optional.
+     *
+     * @return the bookmark information if present
+     */
+    Optional<NavmChunk> getNavigationMenu();
 
     /**
      * Returns the chunk with the given ID.
