@@ -23,11 +23,13 @@ import com.sternkn.djvu.file.chunks.ComponentInfo;
 import com.sternkn.djvu.file.chunks.ComponentType;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
 import com.sternkn.djvu.file.chunks.InclChunk;
+import com.sternkn.djvu.file.chunks.NavmChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,10 +41,12 @@ public class DjVuFileImpl implements DjVuFile {
 
     private final List<Chunk> chunks;
     private final DirectoryChunk directoryChunk;
+    private final Optional<NavmChunk> navigationMenu;
 
     public DjVuFileImpl(List<Chunk> chunks) {
         this.chunks = chunks;
         this.directoryChunk = findDirectory();
+        this.navigationMenu = findNavigationMenu();
     }
 
     /**
@@ -59,6 +63,29 @@ public class DjVuFileImpl implements DjVuFile {
     @Override
     public DirectoryChunk getDirectoryChunk() {
         return directoryChunk;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<NavmChunk> getNavigationMenu() {
+        return navigationMenu;
+    }
+
+    private Optional<NavmChunk> findNavigationMenu() {
+        List<Chunk> cks = this.chunks.stream()
+                .filter(c -> c.getChunkId() == ChunkId.NAVM).toList();
+
+        if (cks.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final String emptyError = "This is impossible case!";
+        final String manyWarning = String.format("Multiple NAVM chunks were found (%d).", cks.size());
+
+        Chunk chunk = listToOne(cks, emptyError, manyWarning);
+        return Optional.of(new NavmChunk(chunk));
     }
 
     private DirectoryChunk findDirectory() {

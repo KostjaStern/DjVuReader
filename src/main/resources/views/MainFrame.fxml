@@ -34,6 +34,9 @@
                     <MenuItem fx:id="showStatistics" text="Show statistics" onAction="#onShowStatistics"/>
                 </Menu>
 
+                <Menu fx:id="navigationMenu" text="Navigation">
+                </Menu>
+
                 <Menu text="Help">
                     <MenuItem text="About" onAction="#onAbout"/>
                 </Menu>
