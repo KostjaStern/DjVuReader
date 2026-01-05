@@ -65,27 +65,29 @@ public class MainViewModel {
 
     private DjVuModel djvuModel;
 
-    private StringProperty title;
+    private final StringProperty title;
 
-    private StringProperty progressMessage;
+    private final StringProperty progressMessage;
 
-    private DoubleProperty progress;
+    private final DoubleProperty progress;
 
-    private DoubleProperty fitWidth;
+    private final DoubleProperty fitWidth;
 
-    private ListProperty<PageNode> pages;
+    private final ListProperty<PageNode> pages;
 
     // left chunk tree
-    private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
+    private final ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
 
-    private ObjectProperty<TreeItem<MenuNode>> menuRootNode;
+    private final ObjectProperty<TreeItem<MenuNode>> menuRootNode;
 
     // controls on right panel
-    private StringProperty topText;
-    private ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
-    private BooleanProperty showTextTree;
-    private ObjectProperty<Image> image;
-    private ObjectProperty<Image> pageImage;
+    private final StringProperty topText;
+    private final ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
+    private final BooleanProperty showTextTree;
+    private final BooleanProperty navigationMenu;
+    private final BooleanProperty showStatisticsMenu;
+    private final ObjectProperty<Image> image;
+    private final ObjectProperty<Image> pageImage;
 
     private Task<Void> thumbnailLoadingTask;
 
@@ -109,6 +111,8 @@ public class MainViewModel {
         pages = new SimpleListProperty<>();
         textRootNode = new SimpleObjectProperty<>();
         showTextTree = new SimpleBooleanProperty(false);
+        navigationMenu = new SimpleBooleanProperty(true);
+        showStatisticsMenu = new SimpleBooleanProperty(true);
         chunkRootNode = new SimpleObjectProperty<>();
         menuRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
@@ -154,6 +158,8 @@ public class MainViewModel {
 
             TreeItem<MenuNode> menuNode = getMenuRootNode(djvFile);
             setMenuRootNode(menuNode);
+            navigationMenu.set(djvFile.getNavigationMenu().isEmpty());
+            showStatisticsMenu.set(false);
 
             DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             setDjvuModel(djvuModel);
@@ -413,6 +419,17 @@ public class MainViewModel {
     }
     public void setMenuRootNode(TreeItem<MenuNode> rootNode) {
         menuRootNode.set(rootNode);
+    }
+
+    public BooleanProperty getNavigationMenu() {
+        return navigationMenu;
+    }
+
+    public BooleanProperty getShowStatisticsMenu() {
+        return showStatisticsMenu;
+    }
+    public void setShowStatisticsMenu(Boolean value) {
+        showStatisticsMenu.set(value);
     }
 
     public BooleanProperty getShowTextTree() {

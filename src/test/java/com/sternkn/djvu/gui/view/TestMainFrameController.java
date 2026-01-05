@@ -157,9 +157,10 @@ public class TestMainFrameController {
             """;
 
         doNothing().when(viewModel).showStatistics();
+        robot.interact(() -> viewModel.setShowStatisticsMenu(false));
 
         robot.clickOn("View");
-        robot.clickOn("#showStatistics");
+        robot.clickOn("#showStatisticsMenu");
         robot.interact(() -> viewModel.setTopText(statistics));
 
         verify(viewModel, times(1)).showStatistics();

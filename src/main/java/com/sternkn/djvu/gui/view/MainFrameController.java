@@ -26,11 +26,11 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
@@ -88,6 +88,12 @@ public class MainFrameController {
     @FXML
     private ListView<PageNode> pageList;
 
+    @FXML
+    private MenuItem navigationMenu;
+
+    @FXML
+    private MenuItem showStatisticsMenu;
+
     private final DoubleProperty sharedPos;
 
     public MainFrameController(MainViewModel viewModel, Stage stage) {
@@ -122,6 +128,9 @@ public class MainFrameController {
         pageList.getStyleClass().add("pages");
         pageList.itemsProperty().bind(viewModel.getPages());
         pageList.setCellFactory(v -> new PageCell(viewModel));
+
+        navigationMenu.disableProperty().bind(viewModel.getNavigationMenu());
+        showStatisticsMenu.disableProperty().bind(viewModel.getShowStatisticsMenu());
 
         progressMessage.textProperty().bind(viewModel.getProgressMessage());
 
@@ -193,7 +202,7 @@ public class MainFrameController {
             final Stage dialogStage = new Stage();
             dialogStage.setTitle("Table of Contents");
             dialogStage.initOwner(stage);
-            dialogStage.initModality(Modality.NONE); // Modality.WINDOW_MODAL
+            dialogStage.initModality(Modality.NONE);
 
             TableOfContentsDialogController controller = new TableOfContentsDialogController(
                     viewModel, pageList, dialogStage);
