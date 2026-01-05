@@ -18,15 +18,51 @@
 package com.sternkn.djvu.model;
 
 import javafx.scene.image.Image;
+import java.util.Objects;
 
 public class Page {
+    private final int index;
+    private final Long offset;
+    private final String id;
     private Image image;
 
-    public Page(Image image) {
-        this.image = image;
+    public Page(int index, Long offset, String id) {
+        this.index = index;
+        this.offset = offset;
+        this.id = id;
+        this.image = null;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public Long getOffset() {
+        return offset;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public Image getImage() {
         return image;
+    }
+    public void setImage(Image image) {
+        this.image = image;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Page other)) {
+            return false;
+        }
+        return Objects.equals(offset, other.offset)
+                && Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(offset, id);
     }
 }

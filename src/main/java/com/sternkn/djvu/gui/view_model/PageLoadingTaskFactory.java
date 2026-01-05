@@ -5,5 +5,5 @@ import com.sternkn.djvu.model.Page;
 import javafx.concurrent.Task;
 
 public interface PageLoadingTaskFactory {
-    Task<Page> create(DjVuModel djvuModel, long offset);
+    Task<Page> create(DjVuModel djvuModel, Page page);
 }

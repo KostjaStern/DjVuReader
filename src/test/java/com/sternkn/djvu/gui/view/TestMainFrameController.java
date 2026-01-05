@@ -23,6 +23,7 @@ import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
 import com.sternkn.djvu.gui.view_model.PageNode;
+import com.sternkn.djvu.model.Page;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -202,12 +203,15 @@ public class TestMainFrameController {
 
     @Test
     public void testSelectPage(FxRobot robot) {
-        List<Long> offsets = List.of(1L, 25L, 37L);
+        List<Page> pages = List.of(
+                new Page(1, 1L, "nb0001.djvu"),
+                new Page(2, 25L, "nb0002.djvu"),
+                new Page(3, 37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(2, 25L);
+        PageNode page2 = new PageNode(pages.get(1));
         doNothing().when(viewModel).loadPageAsync(page2);
 
-        robot.interact(() -> viewModel.setPages(offsets));
+        robot.interact(() -> viewModel.setPages(pages));
 
         robot.clickOn("Pages");
         robot.clickOn("2");
@@ -217,14 +221,17 @@ public class TestMainFrameController {
 
     @Test
     public void testSelectPageByKeyPress(FxRobot robot) {
-        List<Long> offsets = List.of(1L, 25L, 37L);
+        List<Page> pages = List.of(
+                new Page(1, 1L, "nb0001.djvu"),
+                new Page(2, 25L, "nb0002.djvu"),
+                new Page(3, 37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(2, 25L);
-        PageNode page3 = new PageNode(3, 37L);
+        PageNode page2 = new PageNode(pages.get(1));
+        PageNode page3 = new PageNode(pages.get(2));
         doNothing().when(viewModel).loadPageAsync(page2);
         doNothing().when(viewModel).loadPageAsync(page3);
 
-        robot.interact(() -> viewModel.setPages(offsets));
+        robot.interact(() -> viewModel.setPages(pages));
 
         robot.clickOn("Pages");
         robot.clickOn("2");

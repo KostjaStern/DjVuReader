@@ -32,9 +32,7 @@
 
                 <Menu text="View">
                     <MenuItem fx:id="showStatistics" text="Show statistics" onAction="#onShowStatistics"/>
-                </Menu>
-
-                <Menu fx:id="navigationMenu" text="Navigation">
+                    <MenuItem fx:id="navigationMenu" text="Navigation" onAction="#onOpenNavigation"/>
                 </Menu>
 
                 <Menu text="Help">

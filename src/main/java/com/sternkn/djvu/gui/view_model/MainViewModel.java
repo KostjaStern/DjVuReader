@@ -18,8 +18,10 @@
 package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.DjVuFile;
+import com.sternkn.djvu.file.chunks.Bookmark;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ImageRotationType;
+import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
@@ -46,7 +48,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.Optional;
 
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
 
@@ -75,6 +77,8 @@ public class MainViewModel {
 
     // left chunk tree
     private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
+
+    private ObjectProperty<TreeItem<MenuNode>> menuRootNode;
 
     // controls on right panel
     private StringProperty topText;
@@ -106,6 +110,7 @@ public class MainViewModel {
         textRootNode = new SimpleObjectProperty<>();
         showTextTree = new SimpleBooleanProperty(false);
         chunkRootNode = new SimpleObjectProperty<>();
+        menuRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
         pageImage = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
@@ -126,6 +131,7 @@ public class MainViewModel {
         textRootNode.setValue(null);
         showTextTree.setValue(false);
         chunkRootNode.setValue(null);
+        menuRootNode.setValue(null);
         image.setValue(null);
         pageImage.setValue(null);
     }
@@ -142,16 +148,21 @@ public class MainViewModel {
         Task<DjVuFile> task = fileTaskFactory.create(file);
         task.setOnSucceeded(event -> {
             DjVuFile djvFile = task.getValue();
-            TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
 
+            TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
             setChunkRootNode(rootNode);
+
+            TreeItem<MenuNode> menuNode = getMenuRootNode(djvFile);
+            setMenuRootNode(menuNode);
 
             DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             setDjvuModel(djvuModel);
-            setPages(djvuModel.getPageOffsets());
+            setPages(djvuModel.getPages());
 
             setTitle(file.getName());
 
+            setProgressMessage("");
+            setProgress(0);
             loadingPageThumbnails();
         });
 
@@ -168,7 +179,7 @@ public class MainViewModel {
         setInProgress();
         setProgressMessage("Loading page ...");
 
-        Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getOffset());
+        Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getPage());
         task.setOnSucceeded(event -> {
             Page p = task.getValue();
             setProgressMessage("");
@@ -208,6 +219,56 @@ public class MainViewModel {
         }
 
         return root;
+    }
+
+    private TreeItem<MenuNode> getMenuRootNode(DjVuFile djvuFile) {
+        Optional<NavmChunk> menu = djvuFile.getNavigationMenu();
+
+        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root"));
+        root.setExpanded(true);
+
+        if (menu.isEmpty()) {
+            return root;
+        }
+
+        NavmChunk navMenu = menu.get();
+        List<Bookmark> bookmarks = navMenu.getBookmarks();
+        final int bookmarksCount = bookmarks.size();
+
+        int index = 0;
+
+        while (index < bookmarksCount) {
+            Bookmark bookmark = bookmarks.get(index);
+
+            TreeItem<MenuNode> node = new TreeItem<>(new MenuNode(bookmark));
+            root.getChildren().add(node);
+            index++;
+
+            if (bookmark.nChildren() != 0) {
+                index =  readChildren(node, bookmarks, index, bookmark.nChildren());
+            }
+        }
+
+        return root;
+    }
+
+    private int readChildren(TreeItem<MenuNode> parentNode, List<Bookmark> bookmarks, int currentIndex, int nChildren) {
+        int index = currentIndex;
+        int counter = 0;
+        while (counter < nChildren) {
+            Bookmark bookmark = bookmarks.get(index);
+            TreeItem<MenuNode> node = new TreeItem<>(new MenuNode(bookmark));
+            parentNode.getChildren().add(node);
+
+            index++;
+            counter++;
+
+            if (bookmark.nChildren() != 0) {
+                index =  readChildren(node, bookmarks, index, bookmark.nChildren());
+            }
+        }
+
+        return index;
     }
 
     public void showChunkInfo(long chunkId) {
@@ -274,10 +335,8 @@ public class MainViewModel {
     public ListProperty<PageNode> getPages() {
         return pages;
     }
-    public void setPages(List<Long> offsets) {
-        List<PageNode> pgs = IntStream.range(0, offsets.size())
-            .mapToObj(index -> new PageNode(index + 1, offsets.get(index)))
-            .toList();
+    public void setPages(List<Page> p) {
+        List<PageNode> pgs = p.stream().map(PageNode::new).toList();
 
         var list = FXCollections.observableList(pgs);
         pages.setValue(list);
@@ -347,6 +406,13 @@ public class MainViewModel {
     }
     public void setChunkRootNode(TreeItem<ChunkTreeNode> rootNode) {
         chunkRootNode.set(rootNode);
+    }
+
+    public ObjectProperty<TreeItem<MenuNode>> getMenuRootNode() {
+        return menuRootNode;
+    }
+    public void setMenuRootNode(TreeItem<MenuNode> rootNode) {
+        menuRootNode.set(rootNode);
     }
 
     public BooleanProperty getShowTextTree() {

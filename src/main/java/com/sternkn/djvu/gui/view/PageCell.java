@@ -94,7 +94,7 @@ public class PageCell extends ListCell<PageNode> {
         else {
             thumb.imageProperty().unbind();
             thumb.imageProperty().bind(page.thumbnailProperty());
-            number.setText(Integer.toString(page.getPage()));
+            number.setText(Integer.toString(page.getPage().getIndex()));
             setGraphic(pane);
         }
     }

@@ -65,8 +65,9 @@ public class ThumbnailLoadingTask extends Task<Void> {
                 final int pageNumber = index + 1;
                 final PageNode pageNode = pages.get(index);
                 final double progress = (double) pageNumber / pageCount;
-                Page page = djvuModel.getPage(pageNode.getOffset());
+                Page page = djvuModel.getPage(pageNode.getPage());
                 Image thumbnail = resize(page.getImage(), PageNode.WIDTH, PageNode.HEIGHT);
+                page.setImage(null);
 
                 Platform.runLater(() -> {
                     pageNode.setThumbnail(thumbnail);

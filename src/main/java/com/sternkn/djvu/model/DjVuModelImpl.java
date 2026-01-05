@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -63,17 +64,27 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     @Override
-    public List<Long> getPageOffsets() {
-        return this.djvuFile.getDirectoryChunk().getComponents().stream()
-            .filter(c -> c.getType() == ComponentType.PAGE)
-            .map(ComponentInfo::getOffset).toList();
+    public List<Page> getPages() {
+        int index = 1;
+        final List<Page> pages = new ArrayList<>();
+
+        for (ComponentInfo component : djvuFile.getDirectoryChunk().getComponents()) {
+            if (component.getType() == ComponentType.PAGE) {
+                Page page = new Page(index, component.getOffset(), component.getId());
+                pages.add(page);
+                index++;
+            }
+        }
+
+        return pages;
     }
 
-    public Page getPage(long offset) {
-        Chunk chunk = djvuFile.getChunkByOffset(offset);
+    @Override
+    public Page getPage(Page page) {
+        Chunk chunk = djvuFile.getChunkByOffset(page.getOffset());
         InfoChunk info = new InfoChunk(chunk);
 
-        LOG.debug("Page offset = {}, info = {}", offset, info);
+        LOG.debug("Page offset = {}, info = {}", page.getOffset(), info);
 
         Map<ChunkId, List<Chunk>> pageChunks = djvuFile.getAllPageChunks(chunk);
 
@@ -91,7 +102,8 @@ public class DjVuModelImpl implements DjVuModel {
             image = createBlank(info.getWidth(), info.getHeight());
         }
 
-        return new Page(image);
+        page.setImage(image);
+        return page;
     }
 
     private Chunk getChunk(Map<ChunkId, List<Chunk>> pageChunks, ChunkId chunkId) {

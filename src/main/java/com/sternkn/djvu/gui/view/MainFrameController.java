@@ -25,6 +25,9 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -35,10 +38,14 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
+import java.io.IOException;
+
+import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 
 
 public class MainFrameController {
@@ -174,6 +181,32 @@ public class MainFrameController {
     @FXML
     private void onShowStatistics() {
         viewModel.showStatistics();
+    }
+
+    @FXML
+    private void onOpenNavigation() {
+        LOG.debug("Opening navigation ...");
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/TableOfContentsDialog.fxml"));
+
+            final Stage dialogStage = new Stage();
+            dialogStage.setTitle("Table of Contents");
+            dialogStage.initOwner(stage);
+            dialogStage.initModality(Modality.NONE); // Modality.WINDOW_MODAL
+
+            TableOfContentsDialogController controller = new TableOfContentsDialogController(
+                    viewModel, pageList, dialogStage);
+            loader.setController(controller);
+
+            Scene scene = new Scene(loader.load());
+            dialogStage.setScene(scene);
+            dialogStage.showAndWait();
+        }
+        catch (IOException e) {
+            LOG.error(getStackTraceAsString(e));
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML
