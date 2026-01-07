@@ -7,37 +7,32 @@ import javafx.scene.control.TreeCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Objects;
 
-
 public class MenuTreeCell extends TreeCell<MenuNode> {
-    private static final Logger LOG = LoggerFactory.getLogger(MenuTreeCell.class);
 
-    private TableOfContentsDialogController controller;
+    private final TableOfContentsDialogController controller;
 
     private final Label titleLabel;
     private final Label pageLabel;
-    private final Region spacer;
     private final HBox box;
 
     public MenuTreeCell(TableOfContentsDialogController controller) {
         this.controller = controller;
-        this.titleLabel = new Label();
-        this.pageLabel = new Label();
-        this.spacer = new Region();
-        this.box = new HBox(8, titleLabel, spacer, pageLabel);
 
+        this.titleLabel = new Label();
+        titleLabel.setMaxWidth(Double.MAX_VALUE);
+
+        this.pageLabel = new Label();
+
+        Region spacer = new Region();
+        this.box = new HBox(8, titleLabel, spacer, pageLabel);
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         pageLabel.setAlignment(Pos.CENTER_RIGHT);
         pageLabel.setMinWidth(50);
         pageLabel.setPrefWidth(50);
-
         pageLabel.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
-        titleLabel.setMaxWidth(Double.MAX_VALUE);
 
         this.selectedProperty().addListener((observable, oldValue, isSelected) -> {
             if (isSelected) {

@@ -19,15 +19,18 @@ package com.sternkn.djvu.file;
 
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.coders.TestSupport;
 import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDjVuFileImpl extends TestSupport {
 
@@ -188,6 +191,36 @@ public class TestDjVuFileImpl extends TestSupport {
 
         Exception exception = assertThrows(DjVuFileException.class, () -> file.getChunkByOffset(offset));
         assertEquals(error, exception.getMessage());
+    }
+
+    @Test
+    public void testGetNavigationMenuEmpty() {
+        Chunk root = createChunk(1L, ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
+        Chunk dir = readChunk(2L, "DIRM_with_shared_annotation.data", ChunkId.DIRM, root, 24L);
+        Chunk formDict = createChunk(3L, ChunkId.FORM, SecondaryChunkId.DJVI, root, 6312L);
+
+        List<Chunk> chunks = List.of(root,  dir, formDict);
+        DjVuFile file = new DjVuFileImpl(chunks);
+
+        Optional<NavmChunk> navMenu = file.getNavigationMenu();
+
+        assertTrue(navMenu.isEmpty());
+    }
+
+    @Test
+    public void testGetNavigationMenu() {
+        Chunk root = createChunk(1L, ChunkId.FORM, SecondaryChunkId.DJVM, 12L);
+        Chunk dir = readChunk(2L, "DIRM_with_shared_annotation.data", ChunkId.DIRM, root, 24L);
+        Chunk nav = readChunk(3L, "Tanimura_NAVM.data", ChunkId.NAVM, root, 24L);
+        Chunk formDict = createChunk(4L, ChunkId.FORM, SecondaryChunkId.DJVI, root, 6312L);
+
+        List<Chunk> chunks = List.of(root,  dir, nav, formDict);
+        DjVuFile file = new DjVuFileImpl(chunks);
+
+        Optional<NavmChunk> navMenu = file.getNavigationMenu();
+
+        assertTrue(navMenu.isPresent());
+        assertEquals(new NavmChunk(nav), navMenu.get());
     }
 
     @Test
