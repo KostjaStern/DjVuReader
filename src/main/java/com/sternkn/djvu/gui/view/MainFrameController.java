@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 
@@ -128,9 +129,16 @@ public class MainFrameController {
         pageList.getStyleClass().add("pages");
         pageList.itemsProperty().bind(viewModel.getPages());
         pageList.setCellFactory(v -> new PageCell(viewModel));
+        pageList.getSelectionModel().selectedItemProperty()
+                .addListener((obs, old, current) -> {
+            if (current != null && !Objects.equals(current, old)) {
+                LOG.debug("Page clicked: {}", current);
+                viewModel.loadPageAsync(current);
+            }
+        });
 
-        navigationMenu.disableProperty().bind(viewModel.getNavigationMenu());
-        showStatisticsMenu.disableProperty().bind(viewModel.getShowStatisticsMenu());
+        navigationMenu.disableProperty().bind(viewModel.disableNavigationMenu());
+        showStatisticsMenu.disableProperty().bind(viewModel.disableStatisticsMenu());
 
         progressMessage.textProperty().bind(viewModel.getProgressMessage());
 
@@ -205,7 +213,7 @@ public class MainFrameController {
             dialogStage.initModality(Modality.NONE);
 
             TableOfContentsDialogController controller = new TableOfContentsDialogController(
-                    viewModel, pageList, dialogStage);
+                    viewModel, pageList);
             loader.setController(controller);
 
             Scene scene = new Scene(loader.load());

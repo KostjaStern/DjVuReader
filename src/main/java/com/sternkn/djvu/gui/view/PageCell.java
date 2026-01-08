@@ -32,12 +32,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
 import javafx.scene.paint.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PageCell extends ListCell<PageNode> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PageCell.class);
     private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
 
     private final ImageView thumb = new ImageView();
@@ -69,13 +66,6 @@ public class PageCell extends ListCell<PageNode> {
 
         selectedProperty().addListener((obs, was, is) -> {
             pane.pseudoClassStateChanged(SELECTED, is);
-
-            if (is) {
-                PageNode page = getItem();
-                LOG.debug("Page clicked: {}", page);
-
-                viewModel.loadPageAsync(page);
-            }
         });
 
         setGraphic(pane);

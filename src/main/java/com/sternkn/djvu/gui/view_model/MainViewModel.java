@@ -84,8 +84,8 @@ public class MainViewModel {
     private final StringProperty topText;
     private final ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
     private final BooleanProperty showTextTree;
-    private final BooleanProperty navigationMenu;
-    private final BooleanProperty showStatisticsMenu;
+    private final BooleanProperty disableNavigationMenu;
+    private final BooleanProperty disableStatisticsMenu;
     private final ObjectProperty<Image> image;
     private final ObjectProperty<Image> pageImage;
 
@@ -111,8 +111,8 @@ public class MainViewModel {
         pages = new SimpleListProperty<>();
         textRootNode = new SimpleObjectProperty<>();
         showTextTree = new SimpleBooleanProperty(false);
-        navigationMenu = new SimpleBooleanProperty(true);
-        showStatisticsMenu = new SimpleBooleanProperty(true);
+        disableNavigationMenu = new SimpleBooleanProperty(true);
+        disableStatisticsMenu = new SimpleBooleanProperty(true);
         chunkRootNode = new SimpleObjectProperty<>();
         menuRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
@@ -158,8 +158,8 @@ public class MainViewModel {
 
             TreeItem<MenuNode> menuNode = getMenuRootNode(djvFile);
             setMenuRootNode(menuNode);
-            navigationMenu.set(djvFile.getNavigationMenu().isEmpty());
-            showStatisticsMenu.set(false);
+            setDisableNavigationMenu(djvFile.getNavigationMenu().isEmpty());
+            setDisableStatisticsMenu(false);
 
             DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             setDjvuModel(djvuModel);
@@ -421,15 +421,18 @@ public class MainViewModel {
         menuRootNode.set(rootNode);
     }
 
-    public BooleanProperty getNavigationMenu() {
-        return navigationMenu;
+    public BooleanProperty disableNavigationMenu() {
+        return disableNavigationMenu;
+    }
+    public void setDisableNavigationMenu(Boolean value) {
+        this.disableNavigationMenu.set(value);
     }
 
-    public BooleanProperty getShowStatisticsMenu() {
-        return showStatisticsMenu;
+    public BooleanProperty disableStatisticsMenu() {
+        return disableStatisticsMenu;
     }
-    public void setShowStatisticsMenu(Boolean value) {
-        showStatisticsMenu.set(value);
+    public void setDisableStatisticsMenu(Boolean value) {
+        disableStatisticsMenu.set(value);
     }
 
     public BooleanProperty getShowTextTree() {

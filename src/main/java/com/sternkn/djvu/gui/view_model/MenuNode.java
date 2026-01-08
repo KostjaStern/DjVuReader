@@ -1,3 +1,20 @@
+/*
+    Copyright (C) 2025 Kostya Stern
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation; either version 2 of the License, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc., 51
+    Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+*/
 package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.chunks.Bookmark;
@@ -13,8 +30,12 @@ public class MenuNode {
     private Integer page;
 
     public MenuNode(Bookmark bookmark) {
-        this.nodeName = bookmark.sDesc();
-        this.url = bookmark.sURL();
+        this(bookmark.sURL(), bookmark.sDesc());
+    }
+
+    public MenuNode(String url, String desc) {
+        this.nodeName = desc;
+        this.url = url;
 
         if (url != null && url.length() > 1) {
             pageId = url.substring(1);
@@ -23,7 +44,7 @@ public class MenuNode {
                 page = Integer.parseInt(pageId);
             }
             catch (NumberFormatException e) {
-                LOG.warn("Invalid page number: {} for bookmark: {}", pageId, bookmark);
+                LOG.warn("Invalid page number: {}", pageId);
                 page = null;
             }
         }

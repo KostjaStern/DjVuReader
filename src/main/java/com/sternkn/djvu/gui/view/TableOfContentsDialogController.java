@@ -1,3 +1,20 @@
+/*
+    Copyright (C) 2025 Kostya Stern
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation; either version 2 of the License, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc., 51
+    Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+*/
 package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.gui.view_model.MainViewModel;
@@ -7,7 +24,6 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TreeView;
-import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +34,6 @@ public class TableOfContentsDialogController {
 
     private static final Logger LOG = LoggerFactory.getLogger(TableOfContentsDialogController.class);
 
-    private final Stage stage;
     private final MainViewModel viewModel;
 
     @FXML
@@ -26,10 +41,9 @@ public class TableOfContentsDialogController {
 
     private final ListView<PageNode> pageList;
 
-    public TableOfContentsDialogController(MainViewModel viewModel, ListView<PageNode> pageList, Stage stage) {
+    public TableOfContentsDialogController(MainViewModel viewModel, ListView<PageNode> pageList) {
         this.viewModel = viewModel;
         this.pageList = pageList;
-        this.stage = stage;
     }
 
     @FXML
@@ -38,6 +52,12 @@ public class TableOfContentsDialogController {
 
         menuTree.rootProperty().bind(viewModel.getMenuRootNode());
         menuTree.setCellFactory(tv -> new MenuTreeCell(this));
+        menuTree.getSelectionModel().selectedItemProperty()
+            .addListener((obs, old, current) -> {
+            if (current != null && !Objects.equals(current, old)) {
+                scrollToPage(current.getValue());
+            }
+        });
     }
 
     public ListView<PageNode> getPageList() {
