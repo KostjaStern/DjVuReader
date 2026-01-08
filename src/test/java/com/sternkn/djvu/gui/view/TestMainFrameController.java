@@ -289,11 +289,11 @@ public class TestMainFrameController {
                 new Page(12, 137L, "nb0012.djvu"));
 
         TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root"));
-        createMenuNode(root, "Content", "#nb0003.djvu");
-        TreeItem<MenuNode> node = createMenuNode(root, "Preface", "#nb0005.djvu");
-        createMenuNode(node, "Conventional designations", "#nb0006.djvu");
-        createMenuNode(node, "Using code examples", "#nb0009.djvu");
-        createMenuNode(node, "Acknowledgments", "#nb0012.djvu");
+        createMenuNode(root, "Content", "#3");
+        TreeItem<MenuNode> node = createMenuNode(root, "Preface", "#5");
+        createMenuNode(node, "Conventional designations", "#6");
+        createMenuNode(node, "Using code examples", "#9");
+        createMenuNode(node, "Acknowledgments", "#12");
 
         PageNode page = new PageNode(pages.get(11));
 
