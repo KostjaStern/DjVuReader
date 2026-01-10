@@ -18,14 +18,13 @@
 package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.DjVuFile;
-import com.sternkn.djvu.file.chunks.Bookmark;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ImageRotationType;
-import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.DjVuModelImpl;
+import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.model.Page;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -48,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
 
@@ -156,13 +154,19 @@ public class MainViewModel {
             TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
             setChunkRootNode(rootNode);
 
-            TreeItem<MenuNode> menuNode = getMenuRootNode(djvFile);
-            setMenuRootNode(menuNode);
-            setDisableNavigationMenu(djvFile.getNavigationMenu().isEmpty());
-            setDisableStatisticsMenu(false);
-
             DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             setDjvuModel(djvuModel);
+
+            boolean isMenuEmpty = djvuModel.getMenuNodes().isEmpty();
+            setDisableNavigationMenu(isMenuEmpty);
+            setDisableStatisticsMenu(false);
+
+            if (!isMenuEmpty) {
+                MenuNode rootMenuNode = djvuModel.getMenuNodes().getFirst();
+                setMenuRootNode(new MenuTreeItem(rootMenuNode));
+            }
+
+
             setPages(djvuModel.getPages());
 
             setTitle(file.getName());
@@ -225,56 +229,6 @@ public class MainViewModel {
         }
 
         return root;
-    }
-
-    private TreeItem<MenuNode> getMenuRootNode(DjVuFile djvuFile) {
-        Optional<NavmChunk> menu = djvuFile.getNavigationMenu();
-
-        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root"));
-        root.setExpanded(true);
-
-        if (menu.isEmpty()) {
-            return root;
-        }
-
-        NavmChunk navMenu = menu.get();
-        List<Bookmark> bookmarks = navMenu.getBookmarks();
-        final int bookmarksCount = bookmarks.size();
-
-        int index = 0;
-
-        while (index < bookmarksCount) {
-            Bookmark bookmark = bookmarks.get(index);
-
-            TreeItem<MenuNode> node = new TreeItem<>(new MenuNode(bookmark));
-            root.getChildren().add(node);
-            index++;
-
-            if (bookmark.nChildren() != 0) {
-                index =  readChildren(node, bookmarks, index, bookmark.nChildren());
-            }
-        }
-
-        return root;
-    }
-
-    private int readChildren(TreeItem<MenuNode> parentNode, List<Bookmark> bookmarks, int currentIndex, int nChildren) {
-        int index = currentIndex;
-        int counter = 0;
-        while (counter < nChildren) {
-            Bookmark bookmark = bookmarks.get(index);
-            TreeItem<MenuNode> node = new TreeItem<>(new MenuNode(bookmark));
-            parentNode.getChildren().add(node);
-
-            index++;
-            counter++;
-
-            if (bookmark.nChildren() != 0) {
-                index =  readChildren(node, bookmarks, index, bookmark.nChildren());
-            }
-        }
-
-        return index;
     }
 
     public void showChunkInfo(long chunkId) {

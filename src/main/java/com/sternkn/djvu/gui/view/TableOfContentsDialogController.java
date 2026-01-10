@@ -18,7 +18,7 @@
 package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.gui.view_model.MainViewModel;
-import com.sternkn.djvu.gui.view_model.MenuNode;
+import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public class TableOfContentsDialogController {
 
@@ -51,7 +50,7 @@ public class TableOfContentsDialogController {
         LOG.info("Initializing TableOfContentsDialogController ...");
 
         menuTree.rootProperty().bind(viewModel.getMenuRootNode());
-        menuTree.setCellFactory(tv -> new MenuTreeCell(this));
+        menuTree.setCellFactory(tv -> new MenuTreeCell());
         menuTree.getSelectionModel().selectedItemProperty()
             .addListener((obs, old, current) -> {
             if (current != null && !Objects.equals(current, old)) {
@@ -65,24 +64,15 @@ public class TableOfContentsDialogController {
     }
 
     public void scrollToPage(MenuNode menuNode) {
-        if (menuNode == null) {
+        if (menuNode == null || menuNode.getPageNumber() == null) {
             return;
         }
 
-        Optional<PageNode> pageNode = pageList.itemsProperty().getValue().stream()
-            .filter(p -> Objects.equals(p.getPage().getId(), menuNode.getPageId())
-                                   || Objects.equals(p.getPage().getIndex(), menuNode.getPage()))
-            .findFirst();
-
-        if (pageNode.isEmpty()) {
-            return;
-        }
-
-        PageNode node = pageNode.get();
+        int number = menuNode.getPageNumber() - 1;
 
         Platform.runLater(() -> {
-            pageList.getSelectionModel().select(node);
-            pageList.scrollTo(node);
+            pageList.getSelectionModel().select(number);
+            pageList.scrollTo(number);
         });
     }
 }

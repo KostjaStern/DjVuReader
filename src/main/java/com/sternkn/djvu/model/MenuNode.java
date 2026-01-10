@@ -17,20 +17,35 @@
 */
 package com.sternkn.djvu.model;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
-public interface DjVuModel {
+public class MenuNode {
 
-    void saveChunkData(File file, long chunkId);
+    private final String title;
+    private final Integer pageNumber;
+    private final List<MenuNode> children;
 
-    List<Page> getPages();
+    public MenuNode(String title, Integer pageNumber) {
+        this.title = title;
+        this.pageNumber = pageNumber;
+        this.children = new ArrayList<>();
+    }
 
-    List<MenuNode> getMenuNodes();
+    public String getTitle() {
+        return title;
+    }
 
-    Page getPage(Page page);
+    public Integer getPageNumber() {
+        return pageNumber;
+    }
 
-    ChunkInfo getChunkInfo(long chunkId);
+    public List<MenuNode> getChildren() {
+        return children;
+    }
 
-    String getChunkStatistics();
+    @Override
+    public String toString() {
+        return title;
+    }
 }

@@ -17,26 +17,21 @@
 */
 package com.sternkn.djvu.gui.view;
 
-import com.sternkn.djvu.gui.view_model.MenuNode;
+import com.sternkn.djvu.model.MenuNode;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TreeCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import java.util.Objects;
 
 public class MenuTreeCell extends TreeCell<MenuNode> {
-
-    private final TableOfContentsDialogController controller;
 
     private final Label titleLabel;
     private final Label pageLabel;
     private final HBox box;
 
-    public MenuTreeCell(TableOfContentsDialogController controller) {
-        this.controller = controller;
-
+    public MenuTreeCell() {
         this.titleLabel = new Label();
         titleLabel.setMaxWidth(Double.MAX_VALUE);
 
@@ -61,22 +56,12 @@ public class MenuTreeCell extends TreeCell<MenuNode> {
             setGraphic(null);
         }
         else {
-            titleLabel.setText(item.getNodeName());
-            pageLabel.setText(getPageNumber(item));
+            titleLabel.setText(item.getTitle());
+
+            String number = item.getPageNumber() == null ? "" : item.getPageNumber().toString();
+            pageLabel.setText(number);
             setText(null);
             setGraphic(box);
         }
-    }
-
-    private String getPageNumber(MenuNode menuNode) {
-        if (menuNode.getPage() != null) {
-            return menuNode.getPageId();
-        }
-
-        return controller.getPageList().itemsProperty().getValue().stream()
-            .filter(p -> Objects.equals(p.getPage().getId(), menuNode.getPageId()))
-            .map(node -> Integer.toString(node.getPage().getIndex()))
-            .findFirst()
-            .orElse("");
     }
 }

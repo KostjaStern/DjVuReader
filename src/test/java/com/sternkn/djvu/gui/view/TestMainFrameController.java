@@ -22,7 +22,7 @@ import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
-import com.sternkn.djvu.gui.view_model.MenuNode;
+import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import com.sternkn.djvu.model.Page;
 import javafx.fxml.FXMLLoader;
@@ -253,9 +253,9 @@ public class TestMainFrameController {
                 new Page(5, 51L, "nb0005.djvu"),
                 new Page(6, 63L, "nb0006.djvu"));
 
-        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root"));
-        createMenuNode(root, "Content", "#nb0003.djvu");
-        createMenuNode(root, "Preface", "#nb0005.djvu");
+        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root", null));
+        createMenuNode(root, "Content", 3);
+        createMenuNode(root, "Preface", 5);
 
         PageNode page = new PageNode(pages.get(4));
         doNothing().when(viewModel).loadPageAsync(page);
@@ -288,12 +288,12 @@ public class TestMainFrameController {
                 new Page(11, 119L, "nb0011.djvu"),
                 new Page(12, 137L, "nb0012.djvu"));
 
-        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root"));
-        createMenuNode(root, "Content", "#3");
-        TreeItem<MenuNode> node = createMenuNode(root, "Preface", "#5");
-        createMenuNode(node, "Conventional designations", "#6");
-        createMenuNode(node, "Using code examples", "#9");
-        createMenuNode(node, "Acknowledgments", "#12");
+        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root", null));
+        createMenuNode(root, "Content", 3);
+        TreeItem<MenuNode> node = createMenuNode(root, "Preface", 4);
+        createMenuNode(node, "Conventional designations", 5);
+        createMenuNode(node, "Using code examples", 9);
+        createMenuNode(node, "Acknowledgments", 12);
 
         PageNode page = new PageNode(pages.get(11));
 
@@ -314,8 +314,8 @@ public class TestMainFrameController {
         verify(viewModel, times(1)).loadPageAsync(page);
     }
 
-    private TreeItem<MenuNode> createMenuNode(TreeItem<MenuNode> parent, String name, String url) {
-        TreeItem<MenuNode> node = new TreeItem<>(new MenuNode(url, name));
+    private TreeItem<MenuNode> createMenuNode(TreeItem<MenuNode> parent, String title, Integer number) {
+        TreeItem<MenuNode> node = new TreeItem<>(new MenuNode(title, number));
         parent.getChildren().add(node);
 
         return node;

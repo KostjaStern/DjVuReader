@@ -19,9 +19,9 @@ package com.sternkn.djvu.model;
 
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.AnnotationChunk;
+import com.sternkn.djvu.file.chunks.Bookmark;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
-import com.sternkn.djvu.file.chunks.ComponentInfo;
 import com.sternkn.djvu.file.chunks.ComponentType;
 import com.sternkn.djvu.file.chunks.FGbzChunk;
 import com.sternkn.djvu.file.chunks.ImageRotationType;
@@ -44,6 +44,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -58,25 +61,110 @@ public class DjVuModelImpl implements DjVuModel {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuModelImpl.class);
 
     private final DjVuFile djvuFile;
+    private List<Page> pages;
+    private List<MenuNode> menuNodes;
 
     public DjVuModelImpl(DjVuFile djvuFile) {
         this.djvuFile = djvuFile;
+        pages = null;
+        menuNodes = null;
+    }
+
+    private List<Page> calculatePages() {
+        AtomicInteger idx = new AtomicInteger(1);
+        return djvuFile.getDirectoryChunk().getComponents().stream()
+            .filter(c -> c.getType() == ComponentType.PAGE)
+            .map(c -> new Page(idx.getAndIncrement(), c.getOffset(), c.getId()))
+            .toList();
+    }
+
+    private List<MenuNode> calculateMenuNodes() {
+        List<MenuNode> nodes = new ArrayList<>();
+        Optional<NavmChunk> menu = djvuFile.getNavigationMenu();
+        if (menu.isEmpty()) {
+            return nodes;
+        }
+
+        MenuNode root = new MenuNode("Root", null);
+        nodes.add(root);
+        List<Bookmark> bookmarks = menu.get().getBookmarks();
+        final int bookmarksCount = bookmarks.size();
+
+        int index = 0;
+
+        while (index < bookmarksCount) {
+            Bookmark bookmark = bookmarks.get(index);
+            Integer pageNumber = calculatePageNumber(bookmark.sURL());
+
+            MenuNode node = new MenuNode(bookmark.sDesc(), pageNumber);
+            root.getChildren().add(node);
+            nodes.add(node);
+            index++;
+
+            if (bookmark.nChildren() != 0) {
+                index =  readChildren(node, nodes, bookmarks, index, bookmark.nChildren());
+            }
+        }
+
+        return nodes;
+    }
+
+    private int readChildren(MenuNode parentNode, List<MenuNode> nodes, List<Bookmark> bookmarks, int currentIndex, int nChildren) {
+        int index = currentIndex;
+        int counter = 0;
+        while (counter < nChildren) {
+            Bookmark bookmark = bookmarks.get(index);
+            Integer pageNumber = calculatePageNumber(bookmark.sURL());
+            MenuNode node = new MenuNode(bookmark.sDesc(), pageNumber);
+            nodes.add(node);
+            parentNode.getChildren().add(node);
+
+            index++;
+            counter++;
+
+            if (bookmark.nChildren() != 0) {
+                index =  readChildren(node, nodes, bookmarks, index, bookmark.nChildren());
+            }
+        }
+
+        return index;
+    }
+
+    private Integer calculatePageNumber(String url) {
+        if (url == null || url.isEmpty()) {
+            return null;
+        }
+
+        final String pageId = url.substring(1);
+
+        try {
+            return Integer.parseInt(pageId);
+        }
+        catch (NumberFormatException e) {
+            return getPages().stream()
+                    .filter(p -> Objects.equals(p.getId(), pageId))
+                    .map(Page::getIndex)
+                    .findFirst()
+                    .orElse(null);
+        }
     }
 
     @Override
     public List<Page> getPages() {
-        int index = 1;
-        final List<Page> pages = new ArrayList<>();
-
-        for (ComponentInfo component : djvuFile.getDirectoryChunk().getComponents()) {
-            if (component.getType() == ComponentType.PAGE) {
-                Page page = new Page(index, component.getOffset(), component.getId());
-                pages.add(page);
-                index++;
-            }
+        if (pages == null) {
+            pages = calculatePages();
         }
 
         return pages;
+    }
+
+    @Override
+    public List<MenuNode> getMenuNodes() {
+        if (menuNodes == null) {
+            menuNodes = calculateMenuNodes();
+        }
+
+        return menuNodes;
     }
 
     @Override
