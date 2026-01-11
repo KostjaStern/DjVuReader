@@ -137,7 +137,7 @@ public class TestMainViewModel {
             @Override
             public Void call() {
                 mod.setProgressMessage("");
-                mod.setProgress(0);
+                mod.setProgressDone();
                 return null;
             }
         };

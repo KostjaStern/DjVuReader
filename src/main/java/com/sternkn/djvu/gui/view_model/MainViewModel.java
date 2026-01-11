@@ -48,6 +48,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
 
 public class MainViewModel {
@@ -172,12 +173,15 @@ public class MainViewModel {
             setTitle(file.getName());
 
             setProgressMessage("");
-            setProgress(0);
+            setProgressDone();
             loadingPageThumbnails();
         });
 
         task.setOnFailed(event -> {
-            setProgressMessage(task.getException().getMessage());
+            Throwable exception = task.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            setProgressMessage(exception.getMessage());
             setProgressDone();
         });
 
@@ -199,9 +203,11 @@ public class MainViewModel {
         });
 
         task.setOnFailed(event -> {
-            String errorMessage = task.getException().getMessage();
+            Throwable exception = task.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            String errorMessage = exception.getMessage();
             setProgressMessage(errorMessage);
-            LOG.debug("Failed to load page: {}", errorMessage);
             setProgressDone();
         });
 
@@ -249,7 +255,10 @@ public class MainViewModel {
         });
 
         task.setOnFailed(event -> {
-            setProgressMessage(task.getException().getMessage());
+            Throwable exception = task.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            setProgressMessage(exception.getMessage());
             setProgressDone();
         });
 
@@ -308,9 +317,11 @@ public class MainViewModel {
         thumbnailLoadingTask = this.thumbnailLoadingTaskFactory.create(this, djvuModel);
 
         thumbnailLoadingTask.setOnFailed(e -> {
-            progress.set(0);
-            Throwable ex = thumbnailLoadingTask.getException();
-            setProgressMessage(ex != null ? ex.getMessage() : "Unknown error");
+            Throwable exception = thumbnailLoadingTask.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            setProgressDone();
+            setProgressMessage(exception.getMessage());
         });
 
         new Thread(thumbnailLoadingTask).start();

@@ -54,7 +54,7 @@ public class ThumbnailLoadingTask extends Task<Void> {
 
             Platform.runLater(() -> {
                 model.setProgressMessage("Loading page thumbnail ...");
-                model.setProgress(0);
+                model.setProgressDone();
             });
 
             for (int index = 0; index < pageCount; index++) {
@@ -78,7 +78,7 @@ public class ThumbnailLoadingTask extends Task<Void> {
 
             Platform.runLater(() -> {
                 model.setProgressMessage("");
-                model.setProgress(0);
+                model.setProgressDone();
             });
             return null;
         }

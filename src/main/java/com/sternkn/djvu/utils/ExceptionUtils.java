@@ -25,10 +25,10 @@ public final class ExceptionUtils {
     private ExceptionUtils() {
     }
 
-    public static String getStackTraceAsString(Throwable t) {
+    public static String getStackTraceAsString(Throwable exception) {
         StringWriter sw = new StringWriter();
         try (PrintWriter pw = new PrintWriter(sw)) {
-            t.printStackTrace(pw);
+            exception.printStackTrace(pw);
             return sw.toString();
         }
     }
