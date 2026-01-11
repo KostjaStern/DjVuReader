@@ -47,7 +47,7 @@ public class TableOfContentsDialogController {
 
     @FXML
     private void initialize() {
-        LOG.info("Initializing TableOfContentsDialogController ...");
+        LOG.debug("Initializing TableOfContentsDialogController ...");
 
         menuTree.rootProperty().bind(viewModel.getMenuRootNode());
         menuTree.setCellFactory(tv -> new MenuTreeCell());
@@ -59,16 +59,13 @@ public class TableOfContentsDialogController {
         });
     }
 
-    public ListView<PageNode> getPageList() {
-        return pageList;
-    }
-
     public void scrollToPage(MenuNode menuNode) {
         if (menuNode == null || menuNode.getPageNumber() == null) {
             return;
         }
 
-        int number = menuNode.getPageNumber() - 1;
+        final int number = menuNode.getPageNumber() - 1;
+        LOG.debug("scroll to page {}", number);
 
         Platform.runLater(() -> {
             pageList.getSelectionModel().select(number);

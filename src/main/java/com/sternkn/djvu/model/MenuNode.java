@@ -19,6 +19,7 @@ package com.sternkn.djvu.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MenuNode {
 
@@ -27,9 +28,13 @@ public class MenuNode {
     private final List<MenuNode> children;
 
     public MenuNode(String title, Integer pageNumber) {
+        this(title, pageNumber, new ArrayList<>());
+    }
+
+    public MenuNode(String title, Integer pageNumber, List<MenuNode> children) {
         this.title = title;
         this.pageNumber = pageNumber;
-        this.children = new ArrayList<>();
+        this.children = children;
     }
 
     public String getTitle() {
@@ -42,6 +47,21 @@ public class MenuNode {
 
     public List<MenuNode> getChildren() {
         return children;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof MenuNode other)) {
+            return false;
+        }
+        return Objects.equals(title, other.title)
+                && Objects.equals(pageNumber, other.pageNumber)
+                && Objects.equals(children, other.children);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, pageNumber, children);
     }
 
     @Override

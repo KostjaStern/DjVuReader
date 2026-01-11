@@ -57,12 +57,18 @@ public class Page {
         if (!(obj instanceof Page other)) {
             return false;
         }
-        return Objects.equals(offset, other.offset)
+        return Objects.equals(index, other.index)
+                && Objects.equals(offset, other.offset)
                 && Objects.equals(id, other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(offset, id);
+        return Objects.hash(index, offset, id);
+    }
+
+    @Override
+    public String toString() {
+        return "Page{index: " + index + ", offset: " + offset + ", id: '" + id + "'}";
     }
 }

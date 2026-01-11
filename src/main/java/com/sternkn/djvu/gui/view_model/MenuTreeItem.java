@@ -21,8 +21,6 @@ import com.sternkn.djvu.model.MenuNode;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
-import java.util.stream.Collectors;
-
 public class MenuTreeItem extends TreeItem<MenuNode> {
     private boolean childrenLoaded = false;
 
@@ -35,11 +33,12 @@ public class MenuTreeItem extends TreeItem<MenuNode> {
         if (!childrenLoaded) {
             childrenLoaded = true;
             super.getChildren().setAll(
-                    getValue().getChildren().stream()
-                            .map(MenuTreeItem::new)
-                            .collect(Collectors.toList())
+                getValue().getChildren().stream()
+                    .map(MenuTreeItem::new)
+                    .toList()
             );
         }
+
         return super.getChildren();
     }
 
