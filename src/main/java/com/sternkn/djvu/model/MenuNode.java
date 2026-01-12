@@ -17,58 +17,55 @@
 */
 package com.sternkn.djvu.model;
 
-import javafx.scene.image.Image;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-public class Page {
-    private final int index;
-    private final Long offset;
-    private final String id;
-    private Image image;
+public class MenuNode {
 
-    public Page(int index, Long offset, String id) {
-        this.index = index;
-        this.offset = offset;
-        this.id = id;
-        this.image = null;
+    private final String title;
+    private final Integer pageNumber;
+    private final List<MenuNode> children;
+
+    public MenuNode(String title, Integer pageNumber) {
+        this(title, pageNumber, new ArrayList<>());
     }
 
-    public int getIndex() {
-        return index;
+    public MenuNode(String title, Integer pageNumber, List<MenuNode> children) {
+        this.title = title;
+        this.pageNumber = pageNumber;
+        this.children = children;
     }
 
-    public Long getOffset() {
-        return offset;
+    public String getTitle() {
+        return title;
     }
 
-    public String getId() {
-        return id;
+    public Integer getPageNumber() {
+        return pageNumber;
     }
 
-    public Image getImage() {
-        return image;
-    }
-    public void setImage(Image image) {
-        this.image = image;
+    public List<MenuNode> getChildren() {
+        return children;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Page other)) {
+        if (!(obj instanceof MenuNode other)) {
             return false;
         }
-        return Objects.equals(index, other.index)
-                && Objects.equals(offset, other.offset)
-                && Objects.equals(id, other.id);
+        return Objects.equals(title, other.title)
+                && Objects.equals(pageNumber, other.pageNumber)
+                && Objects.equals(children, other.children);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, offset, id);
+        return Objects.hash(title, pageNumber, children);
     }
 
     @Override
     public String toString() {
-        return "Page{index: " + index + ", offset: " + offset + ", id: '" + id + "'}";
+        return title;
     }
 }

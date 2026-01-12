@@ -22,7 +22,9 @@ import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
+import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.gui.view_model.PageNode;
+import com.sternkn.djvu.model.Page;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -156,9 +158,10 @@ public class TestMainFrameController {
             """;
 
         doNothing().when(viewModel).showStatistics();
+        robot.interact(() -> viewModel.setDisableStatisticsMenu(false));
 
         robot.clickOn("View");
-        robot.clickOn("#showStatistics");
+        robot.clickOn("#showStatisticsMenu");
         robot.interact(() -> viewModel.setTopText(statistics));
 
         verify(viewModel, times(1)).showStatistics();
@@ -202,12 +205,15 @@ public class TestMainFrameController {
 
     @Test
     public void testSelectPage(FxRobot robot) {
-        List<Long> offsets = List.of(1L, 25L, 37L);
+        List<Page> pages = List.of(
+                new Page(1, 1L, "nb0001.djvu"),
+                new Page(2, 25L, "nb0002.djvu"),
+                new Page(3, 37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(2, 25L);
+        PageNode page2 = new PageNode(pages.get(1));
         doNothing().when(viewModel).loadPageAsync(page2);
 
-        robot.interact(() -> viewModel.setPages(offsets));
+        robot.interact(() -> viewModel.setPages(pages));
 
         robot.clickOn("Pages");
         robot.clickOn("2");
@@ -217,14 +223,17 @@ public class TestMainFrameController {
 
     @Test
     public void testSelectPageByKeyPress(FxRobot robot) {
-        List<Long> offsets = List.of(1L, 25L, 37L);
+        List<Page> pages = List.of(
+                new Page(1, 1L, "nb0001.djvu"),
+                new Page(2, 25L, "nb0002.djvu"),
+                new Page(3, 37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(2, 25L);
-        PageNode page3 = new PageNode(3, 37L);
+        PageNode page2 = new PageNode(pages.get(1));
+        PageNode page3 = new PageNode(pages.get(2));
         doNothing().when(viewModel).loadPageAsync(page2);
         doNothing().when(viewModel).loadPageAsync(page3);
 
-        robot.interact(() -> viewModel.setPages(offsets));
+        robot.interact(() -> viewModel.setPages(pages));
 
         robot.clickOn("Pages");
         robot.clickOn("2");
@@ -232,5 +241,83 @@ public class TestMainFrameController {
 
         verify(viewModel, times(1)).loadPageAsync(page2);
         verify(viewModel, times(1)).loadPageAsync(page3);
+    }
+
+    @Test
+    public void testTableOfContextsDialog(FxRobot robot) {
+        List<Page> pages = List.of(
+                new Page(1, 1L, "nb0001.djvu"),
+                new Page(2, 25L, "nb0002.djvu"),
+                new Page(3, 37L, "nb0003.djvu"),
+                new Page(4, 48L, "nb0004.djvu"),
+                new Page(5, 51L, "nb0005.djvu"),
+                new Page(6, 63L, "nb0006.djvu"));
+
+        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root", null));
+        createMenuNode(root, "Content", 3);
+        createMenuNode(root, "Preface", 5);
+
+        PageNode page = new PageNode(pages.get(4));
+        doNothing().when(viewModel).loadPageAsync(page);
+
+        robot.interact(() -> viewModel.setPages(pages));
+        robot.interact(() -> viewModel.setMenuRootNode(root));
+        robot.interact(() -> viewModel.setDisableNavigationMenu(false));
+
+        robot.clickOn("Pages");
+        robot.clickOn("View");
+        robot.clickOn("#navigationMenu");
+        robot.clickOn("Preface");
+
+        verify(viewModel, times(1)).loadPageAsync(page);
+    }
+
+    @Test
+    public void testTableOfContextsDialogSubNode(FxRobot robot) {
+        List<Page> pages = List.of(
+                new Page(1, 1L, "nb0001.djvu"),
+                new Page(2, 25L, "nb0002.djvu"),
+                new Page(3, 37L, "nb0003.djvu"),
+                new Page(4, 48L, "nb0004.djvu"),
+                new Page(5, 51L, "nb0005.djvu"),
+                new Page(6, 63L, "nb0006.djvu"),
+                new Page(7, 78L, "nb0007.djvu"),
+                new Page(8, 89L, "nb0008.djvu"),
+                new Page(9, 95L, "nb0009.djvu"),
+                new Page(10, 107L, "nb0010.djvu"),
+                new Page(11, 119L, "nb0011.djvu"),
+                new Page(12, 137L, "nb0012.djvu"));
+
+        TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root", null));
+        createMenuNode(root, "Content", 3);
+        TreeItem<MenuNode> node = createMenuNode(root, "Preface", 4);
+        createMenuNode(node, "Conventional designations", 5);
+        createMenuNode(node, "Using code examples", 9);
+        createMenuNode(node, "Acknowledgments", 12);
+
+        PageNode page = new PageNode(pages.get(11));
+
+        doNothing().when(viewModel).loadPageAsync(page);
+
+        robot.interact(() -> viewModel.setPages(pages));
+        robot.interact(() -> viewModel.setMenuRootNode(root));
+        robot.interact(() -> viewModel.setDisableNavigationMenu(false));
+
+        robot.clickOn("Pages");
+        robot.clickOn("View");
+        robot.clickOn("#navigationMenu");
+
+        robot.interact(() -> node.setExpanded(true));
+
+        robot.clickOn("Acknowledgments");
+
+        verify(viewModel, times(1)).loadPageAsync(page);
+    }
+
+    private TreeItem<MenuNode> createMenuNode(TreeItem<MenuNode> parent, String title, Integer number) {
+        TreeItem<MenuNode> node = new TreeItem<>(new MenuNode(title, number));
+        parent.getChildren().add(node);
+
+        return node;
     }
 }

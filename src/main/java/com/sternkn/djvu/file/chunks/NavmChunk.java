@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.sternkn.djvu.utils.InputStreamUtils.read16;
 import static com.sternkn.djvu.utils.InputStreamUtils.read24;
@@ -89,5 +90,19 @@ public class NavmChunk extends Chunk {
 
     public List<Bookmark> getBookmarks() {
         return bookmarks;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bookmarks);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (! (obj instanceof NavmChunk other)) {
+            return false;
+        }
+
+        return Objects.equals(other.bookmarks, bookmarks);
     }
 }

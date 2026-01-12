@@ -17,7 +17,6 @@
 */
 package com.sternkn.djvu.gui.view;
 
-import com.sternkn.djvu.gui.view_model.MainViewModel;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import javafx.css.PseudoClass;
 import javafx.scene.control.Label;
@@ -32,19 +31,16 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
 import javafx.scene.paint.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PageCell extends ListCell<PageNode> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PageCell.class);
     private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
 
     private final ImageView thumb = new ImageView();
     private final Label number = new Label();
     private final StackPane pane = new StackPane();
 
-    PageCell(MainViewModel viewModel) {
+    PageCell() {
         thumb.setPreserveRatio(true);
         thumb.setFitWidth(90);
         thumb.setSmooth(true);
@@ -69,13 +65,6 @@ public class PageCell extends ListCell<PageNode> {
 
         selectedProperty().addListener((obs, was, is) -> {
             pane.pseudoClassStateChanged(SELECTED, is);
-
-            if (is) {
-                PageNode page = getItem();
-                LOG.debug("Page clicked: {}", page);
-
-                viewModel.loadPageAsync(page);
-            }
         });
 
         setGraphic(pane);
@@ -94,7 +83,7 @@ public class PageCell extends ListCell<PageNode> {
         else {
             thumb.imageProperty().unbind();
             thumb.imageProperty().bind(page.thumbnailProperty());
-            number.setText(Integer.toString(page.getPage()));
+            number.setText(Integer.toString(page.getPage().getIndex()));
             setGraphic(pane);
         }
     }

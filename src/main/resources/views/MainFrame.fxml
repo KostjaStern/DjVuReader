@@ -31,7 +31,9 @@
                 </Menu>
 
                 <Menu text="View">
-                    <MenuItem fx:id="showStatistics" text="Show statistics" onAction="#onShowStatistics"/>
+                    <MenuItem fx:id="navigationMenu" text="Navigation" onAction="#onOpenNavigation"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem fx:id="showStatisticsMenu" text="Show statistics" onAction="#onShowStatistics"/>
                 </Menu>
 
                 <Menu text="Help">

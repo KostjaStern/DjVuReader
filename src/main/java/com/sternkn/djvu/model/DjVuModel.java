@@ -24,9 +24,11 @@ public interface DjVuModel {
 
     void saveChunkData(File file, long chunkId);
 
-    List<Long> getPageOffsets();
+    List<Page> getPages();
 
-    Page getPage(long offset);
+    List<MenuNode> getMenuNodes();
+
+    Page getPage(Page page);
 
     ChunkInfo getChunkInfo(long chunkId);
 

@@ -29,17 +29,17 @@ public class PageLoadingTask extends Task<Page> {
     private static final Logger LOG = LoggerFactory.getLogger(PageLoadingTask.class);
 
     private final DjVuModel djvuModel;
-    private final long offset;
+    private final Page page;
 
-    public PageLoadingTask(DjVuModel djvuModel, long offset) {
+    public PageLoadingTask(DjVuModel djvuModel, Page page) {
         this.djvuModel = djvuModel;
-        this.offset = offset;
+        this.page = page;
     }
 
     @Override
     public Page call() {
         try {
-            return djvuModel.getPage(offset);
+            return djvuModel.getPage(page);
         }
         catch (Exception e) {
             LOG.error(getStackTraceAsString(e));

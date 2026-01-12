@@ -17,6 +17,7 @@
 */
 package com.sternkn.djvu.gui.view_model;
 
+import com.sternkn.djvu.model.Page;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.image.Image;
@@ -28,22 +29,16 @@ public class PageNode {
     public static final int WIDTH = 200;
     public static final int HEIGHT = 260;
 
-    private final int page;
-    private final Long offset;
+    private final Page page;
     private final ObjectProperty<Image> thumbnail;
 
-    public PageNode(int page, Long offset) {
+    public PageNode(Page page) {
         this.page = page;
-        this.offset = offset;
         thumbnail = new SimpleObjectProperty<>(emptyImage());
     }
 
-    public int getPage() {
+    public Page getPage() {
         return page;
-    }
-
-    public Long getOffset() {
-        return offset;
     }
 
     public void setThumbnail(Image image) {
@@ -63,22 +58,23 @@ public class PageNode {
         if (!(obj instanceof PageNode other)) {
             return false;
         }
-        return Objects.equals(page, other.page)
-            && Objects.equals(offset, other.offset);
+        return Objects.equals(page, other.page);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(page, offset);
+        return Objects.hash(page);
     }
 
     @Override
     public String toString() {
         final StringBuilder buffer = new StringBuilder();
-        buffer.append("PageNode{ ");
-        buffer.append(page);
-        buffer.append(" , ");
-        buffer.append(offset);
+        buffer.append("PageNode{index: ");
+        buffer.append(page.getIndex());
+        buffer.append(" , id: ");
+        buffer.append(page.getId());
+        buffer.append(" , offset: ");
+        buffer.append(page.getOffset());
         buffer.append("}");
 
         return buffer.toString();

@@ -21,8 +21,10 @@ import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.file.chunks.DirectoryChunk;
 import com.sternkn.djvu.file.chunks.GRect;
 import com.sternkn.djvu.file.chunks.InfoChunk;
+import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.file.chunks.TextZoneType;
@@ -40,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.sternkn.djvu.utils.ImageUtils.createBlank;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -108,6 +111,54 @@ public class TestDjVuModelImpl extends TestSupport {
          NAVM           : 1
         """;
         assertEquals(expectedStatistics, statistics);
+    }
+
+    @Test
+    public void testGetPages() {
+        Chunk chunk = readChunk("DIRM_with_shared_annotation.data", ChunkId.DIRM);
+        DirectoryChunk directoryChunk = new DirectoryChunk(chunk);
+        when(djvuFile.getDirectoryChunk()).thenReturn(directoryChunk);
+
+        List<Page> pages = model.getPages();
+        assertEquals(386, pages.size());
+
+        assertEquals(new Page(1, 7180L, "nb0001.djvu"), pages.get(0));
+        assertEquals(new Page(2, 68514L, "nb0002.djvu"), pages.get(1));
+        assertEquals(new Page(3, 83380L, "nb0003.djvu"), pages.get(2));
+
+        assertEquals(new Page(384, 39526846L, "nb0384.djvu"), pages.get(383));
+        assertEquals(new Page(385, 39609328L, "nb0385.djvu"), pages.get(384));
+        assertEquals(new Page(386, 39736728L, "nb0386.djvu"), pages.get(385));
+    }
+
+    @Test
+    public void testGetMenuNodes() {
+        Chunk dirm = readChunk("DIRM_with_shared_annotation.data", ChunkId.DIRM);
+        DirectoryChunk directory = new DirectoryChunk(dirm);
+        when(djvuFile.getDirectoryChunk()).thenReturn(directory);
+
+        Chunk navm = readChunk("Tanimura_NAVM.data", ChunkId.NAVM);
+        NavmChunk navigation = new NavmChunk(navm);
+        when(djvuFile.getNavigationMenu()).thenReturn(Optional.of(navigation));
+
+        List<MenuNode> menu = model.getMenuNodes();
+
+        assertEquals(164, menu.size());
+        assertEquals(new MenuNode("Содержание", 6), menu.get(1));
+        assertEquals(new MenuNode("Предисловие", 12,
+            List.of(new MenuNode("Условные обозначения", 13),
+                    new MenuNode("Использование примеров кода", 14),
+                    new MenuNode("Благодарности", 14))), menu.get(2));
+
+        assertEquals(new MenuNode("9.4.Полезные ресурсы", 369,
+                List.of(new MenuNode("Книги и блоги", 370),
+                        new MenuNode("Наборы данных", 371))), menu.get(157));
+        assertEquals(new MenuNode("Книги и блоги", 370), menu.get(158));
+        assertEquals(new MenuNode("Наборы данных", 371), menu.get(159));
+        assertEquals(new MenuNode("9.5.Заключение", 372), menu.get(160));
+        assertEquals(new MenuNode("Об авторе", 374), menu.get(161));
+        assertEquals(new MenuNode("Об обложке", 375), menu.get(162));
+        assertEquals(new MenuNode("Предметный указатель", 376), menu.get(163));
     }
 
     @Test
@@ -297,7 +348,7 @@ public class TestDjVuModelImpl extends TestSupport {
                                          createChunk(7L, ChunkId.BG44, "Yunger_revolution_BG44_4.data"))
         ));
 
-        Page page = model.getPage(offset);
+        Page page = model.getPage(new Page(1, offset, "nb0001.djvu"));
 
         Pixmap actual = new PNGPixmap(page.getImage());
         Pixmap expected = createPixmap("Yunger_revolution.png");
@@ -311,7 +362,7 @@ public class TestDjVuModelImpl extends TestSupport {
         when(djvuFile.getChunkByOffset(offset)).thenReturn(info);
         when(djvuFile.getAllPageChunks(info)).thenReturn(Map.of());
 
-        Page page = model.getPage(offset);
+        Page page = model.getPage(new Page(1, offset, "nb0001.djvu"));
 
         Pixmap actual = new PNGPixmap(page.getImage());
 

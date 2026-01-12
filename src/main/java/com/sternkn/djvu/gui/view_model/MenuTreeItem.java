@@ -17,10 +17,33 @@
 */
 package com.sternkn.djvu.gui.view_model;
 
-import com.sternkn.djvu.model.DjVuModel;
-import com.sternkn.djvu.model.Page;
-import javafx.concurrent.Task;
+import com.sternkn.djvu.model.MenuNode;
+import javafx.collections.ObservableList;
+import javafx.scene.control.TreeItem;
 
-public interface PageLoadingTaskFactory {
-    Task<Page> create(DjVuModel djvuModel, Page page);
+public class MenuTreeItem extends TreeItem<MenuNode> {
+    private boolean childrenLoaded = false;
+
+    public MenuTreeItem(MenuNode node) {
+        super(node);
+    }
+
+    @Override
+    public ObservableList<TreeItem<MenuNode>> getChildren() {
+        if (!childrenLoaded) {
+            childrenLoaded = true;
+            super.getChildren().setAll(
+                getValue().getChildren().stream()
+                    .map(MenuTreeItem::new)
+                    .toList()
+            );
+        }
+
+        return super.getChildren();
+    }
+
+    @Override
+    public boolean isLeaf() {
+        return getValue().getChildren().isEmpty();
+    }
 }

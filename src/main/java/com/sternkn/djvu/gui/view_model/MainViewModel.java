@@ -24,6 +24,7 @@ import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.DjVuModelImpl;
+import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.model.Page;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -46,8 +47,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
+import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
 
 public class MainViewModel {
@@ -63,25 +64,29 @@ public class MainViewModel {
 
     private DjVuModel djvuModel;
 
-    private StringProperty title;
+    private final StringProperty title;
 
-    private StringProperty progressMessage;
+    private final StringProperty progressMessage;
 
-    private DoubleProperty progress;
+    private final DoubleProperty progress;
 
-    private DoubleProperty fitWidth;
+    private final DoubleProperty fitWidth;
 
-    private ListProperty<PageNode> pages;
+    private final ListProperty<PageNode> pages;
 
     // left chunk tree
-    private ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
+    private final ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
+
+    private final ObjectProperty<TreeItem<MenuNode>> menuRootNode;
 
     // controls on right panel
-    private StringProperty topText;
-    private ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
-    private BooleanProperty showTextTree;
-    private ObjectProperty<Image> image;
-    private ObjectProperty<Image> pageImage;
+    private final StringProperty topText;
+    private final ObjectProperty<TreeItem<TextZoneNode>> textRootNode;
+    private final BooleanProperty showTextTree;
+    private final BooleanProperty disableNavigationMenu;
+    private final BooleanProperty disableStatisticsMenu;
+    private final ObjectProperty<Image> image;
+    private final ObjectProperty<Image> pageImage;
 
     private Task<Void> thumbnailLoadingTask;
 
@@ -105,7 +110,10 @@ public class MainViewModel {
         pages = new SimpleListProperty<>();
         textRootNode = new SimpleObjectProperty<>();
         showTextTree = new SimpleBooleanProperty(false);
+        disableNavigationMenu = new SimpleBooleanProperty(true);
+        disableStatisticsMenu = new SimpleBooleanProperty(true);
         chunkRootNode = new SimpleObjectProperty<>();
+        menuRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
         pageImage = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
@@ -126,6 +134,7 @@ public class MainViewModel {
         textRootNode.setValue(null);
         showTextTree.setValue(false);
         chunkRootNode.setValue(null);
+        menuRootNode.setValue(null);
         image.setValue(null);
         pageImage.setValue(null);
     }
@@ -142,21 +151,37 @@ public class MainViewModel {
         Task<DjVuFile> task = fileTaskFactory.create(file);
         task.setOnSucceeded(event -> {
             DjVuFile djvFile = task.getValue();
-            TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
 
+            TreeItem<ChunkTreeNode> rootNode = getRootNode(djvFile);
             setChunkRootNode(rootNode);
 
             DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             setDjvuModel(djvuModel);
-            setPages(djvuModel.getPageOffsets());
+
+            boolean isMenuEmpty = djvuModel.getMenuNodes().isEmpty();
+            setDisableNavigationMenu(isMenuEmpty);
+            setDisableStatisticsMenu(false);
+
+            if (!isMenuEmpty) {
+                MenuNode rootMenuNode = djvuModel.getMenuNodes().getFirst();
+                setMenuRootNode(new MenuTreeItem(rootMenuNode));
+            }
+
+
+            setPages(djvuModel.getPages());
 
             setTitle(file.getName());
 
+            setProgressMessage("");
+            setProgressDone();
             loadingPageThumbnails();
         });
 
         task.setOnFailed(event -> {
-            setProgressMessage(task.getException().getMessage());
+            Throwable exception = task.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            setProgressMessage(exception.getMessage());
             setProgressDone();
         });
 
@@ -168,7 +193,7 @@ public class MainViewModel {
         setInProgress();
         setProgressMessage("Loading page ...");
 
-        Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getOffset());
+        Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getPage());
         task.setOnSucceeded(event -> {
             Page p = task.getValue();
             setProgressMessage("");
@@ -178,9 +203,11 @@ public class MainViewModel {
         });
 
         task.setOnFailed(event -> {
-            String errorMessage = task.getException().getMessage();
+            Throwable exception = task.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            String errorMessage = exception.getMessage();
             setProgressMessage(errorMessage);
-            LOG.debug("Failed to load page: {}", errorMessage);
             setProgressDone();
         });
 
@@ -228,7 +255,10 @@ public class MainViewModel {
         });
 
         task.setOnFailed(event -> {
-            setProgressMessage(task.getException().getMessage());
+            Throwable exception = task.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            setProgressMessage(exception.getMessage());
             setProgressDone();
         });
 
@@ -274,10 +304,8 @@ public class MainViewModel {
     public ListProperty<PageNode> getPages() {
         return pages;
     }
-    public void setPages(List<Long> offsets) {
-        List<PageNode> pgs = IntStream.range(0, offsets.size())
-            .mapToObj(index -> new PageNode(index + 1, offsets.get(index)))
-            .toList();
+    public void setPages(List<Page> p) {
+        List<PageNode> pgs = p.stream().map(PageNode::new).toList();
 
         var list = FXCollections.observableList(pgs);
         pages.setValue(list);
@@ -289,9 +317,11 @@ public class MainViewModel {
         thumbnailLoadingTask = this.thumbnailLoadingTaskFactory.create(this, djvuModel);
 
         thumbnailLoadingTask.setOnFailed(e -> {
-            progress.set(0);
-            Throwable ex = thumbnailLoadingTask.getException();
-            setProgressMessage(ex != null ? ex.getMessage() : "Unknown error");
+            Throwable exception = thumbnailLoadingTask.getException();
+            LOG.error(getStackTraceAsString(exception));
+
+            setProgressDone();
+            setProgressMessage(exception.getMessage());
         });
 
         new Thread(thumbnailLoadingTask).start();
@@ -347,6 +377,27 @@ public class MainViewModel {
     }
     public void setChunkRootNode(TreeItem<ChunkTreeNode> rootNode) {
         chunkRootNode.set(rootNode);
+    }
+
+    public ObjectProperty<TreeItem<MenuNode>> getMenuRootNode() {
+        return menuRootNode;
+    }
+    public void setMenuRootNode(TreeItem<MenuNode> rootNode) {
+        menuRootNode.set(rootNode);
+    }
+
+    public BooleanProperty disableNavigationMenu() {
+        return disableNavigationMenu;
+    }
+    public void setDisableNavigationMenu(Boolean value) {
+        this.disableNavigationMenu.set(value);
+    }
+
+    public BooleanProperty disableStatisticsMenu() {
+        return disableStatisticsMenu;
+    }
+    public void setDisableStatisticsMenu(Boolean value) {
+        disableStatisticsMenu.set(value);
     }
 
     public BooleanProperty getShowTextTree() {

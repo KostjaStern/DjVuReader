@@ -27,6 +27,7 @@ import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
+import com.sternkn.djvu.model.Page;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
@@ -113,10 +114,12 @@ public class TestMainViewModel {
         ComponentInfo component1 = mock(ComponentInfo.class);
         when(component1.getType()).thenReturn(ComponentType.PAGE);
         when(component1.getOffset()).thenReturn(23L);
+        when(component1.getId()).thenReturn("nb0001.djvu");
 
         ComponentInfo component2 = mock(ComponentInfo.class);
         when(component2.getType()).thenReturn(ComponentType.PAGE);
         when(component2.getOffset()).thenReturn(1357L);
+        when(component2.getId()).thenReturn("nb0002.djvu");
 
         when(directoryChunk.getComponents()).thenReturn(List.of(component1, component2));
         when(djvuFile.getDirectoryChunk()).thenReturn(directoryChunk);
@@ -134,7 +137,7 @@ public class TestMainViewModel {
             @Override
             public Void call() {
                 mod.setProgressMessage("");
-                mod.setProgress(0);
+                mod.setProgressDone();
                 return null;
             }
         };
@@ -155,7 +158,8 @@ public class TestMainViewModel {
         assertEquals(fileName, viewModel.getTitle().get());
         TreeItem<ChunkTreeNode> chunkRoot = viewModel.getChunkRootNode().get();
         assertEquals(new ChunkTreeNode(rootChunk), chunkRoot.getValue());
-        assertEquals(List.of(new PageNode(1, 23L), new PageNode(2, 1357L)),
+        assertEquals(List.of(new PageNode(new Page(1, 23L, "nb0001.djvu")),
+                        new PageNode(new Page(2, 1357L, "nb0002.djvu"))),
                 viewModel.getPages().stream().toList());
 
         assertTrue(viewModel.getProgressMessage().get().isEmpty(), "errorMessage must be empty on success");
