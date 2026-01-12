@@ -128,7 +128,7 @@ public class MainFrameController {
 
         pageList.getStyleClass().add("pages");
         pageList.itemsProperty().bind(viewModel.getPages());
-        pageList.setCellFactory(v -> new PageCell(viewModel));
+        pageList.setCellFactory(v -> new PageCell());
         pageList.getSelectionModel().selectedItemProperty()
                 .addListener((obs, old, current) -> {
             if (current != null && !Objects.equals(current, old)) {

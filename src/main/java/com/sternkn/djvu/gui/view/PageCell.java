@@ -17,7 +17,6 @@
 */
 package com.sternkn.djvu.gui.view;
 
-import com.sternkn.djvu.gui.view_model.MainViewModel;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import javafx.css.PseudoClass;
 import javafx.scene.control.Label;
@@ -41,7 +40,7 @@ public class PageCell extends ListCell<PageNode> {
     private final Label number = new Label();
     private final StackPane pane = new StackPane();
 
-    PageCell(MainViewModel viewModel) {
+    PageCell() {
         thumb.setPreserveRatio(true);
         thumb.setFitWidth(90);
         thumb.setSmooth(true);
