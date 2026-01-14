@@ -206,11 +206,11 @@ public class TestMainFrameController {
     @Test
     public void testSelectPage(FxRobot robot) {
         List<Page> pages = List.of(
-                new Page(1, 1L, "nb0001.djvu"),
-                new Page(2, 25L, "nb0002.djvu"),
-                new Page(3, 37L, "nb0003.djvu"));
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(pages.get(1));
+        PageNode page2 = new PageNode(pages.get(1), 1);
         doNothing().when(viewModel).loadPageAsync(page2);
 
         robot.interact(() -> viewModel.setPages(pages));
@@ -224,12 +224,12 @@ public class TestMainFrameController {
     @Test
     public void testSelectPageByKeyPress(FxRobot robot) {
         List<Page> pages = List.of(
-                new Page(1, 1L, "nb0001.djvu"),
-                new Page(2, 25L, "nb0002.djvu"),
-                new Page(3, 37L, "nb0003.djvu"));
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(pages.get(1));
-        PageNode page3 = new PageNode(pages.get(2));
+        PageNode page2 = new PageNode(pages.get(1), 1);
+        PageNode page3 = new PageNode(pages.get(2), 2);
         doNothing().when(viewModel).loadPageAsync(page2);
         doNothing().when(viewModel).loadPageAsync(page3);
 
@@ -246,18 +246,18 @@ public class TestMainFrameController {
     @Test
     public void testTableOfContextsDialog(FxRobot robot) {
         List<Page> pages = List.of(
-                new Page(1, 1L, "nb0001.djvu"),
-                new Page(2, 25L, "nb0002.djvu"),
-                new Page(3, 37L, "nb0003.djvu"),
-                new Page(4, 48L, "nb0004.djvu"),
-                new Page(5, 51L, "nb0005.djvu"),
-                new Page(6, 63L, "nb0006.djvu"));
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"),
+                new Page(48L, "nb0004.djvu"),
+                new Page(51L, "nb0005.djvu"),
+                new Page(63L, "nb0006.djvu"));
 
         TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root", null));
         createMenuNode(root, "Content", 3);
         createMenuNode(root, "Preface", 5);
 
-        PageNode page = new PageNode(pages.get(4));
+        PageNode page = new PageNode(pages.get(4), 4);
         doNothing().when(viewModel).loadPageAsync(page);
 
         robot.interact(() -> viewModel.setPages(pages));
@@ -275,18 +275,18 @@ public class TestMainFrameController {
     @Test
     public void testTableOfContextsDialogSubNode(FxRobot robot) {
         List<Page> pages = List.of(
-                new Page(1, 1L, "nb0001.djvu"),
-                new Page(2, 25L, "nb0002.djvu"),
-                new Page(3, 37L, "nb0003.djvu"),
-                new Page(4, 48L, "nb0004.djvu"),
-                new Page(5, 51L, "nb0005.djvu"),
-                new Page(6, 63L, "nb0006.djvu"),
-                new Page(7, 78L, "nb0007.djvu"),
-                new Page(8, 89L, "nb0008.djvu"),
-                new Page(9, 95L, "nb0009.djvu"),
-                new Page(10, 107L, "nb0010.djvu"),
-                new Page(11, 119L, "nb0011.djvu"),
-                new Page(12, 137L, "nb0012.djvu"));
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"),
+                new Page(48L, "nb0004.djvu"),
+                new Page(51L, "nb0005.djvu"),
+                new Page(63L, "nb0006.djvu"),
+                new Page(78L, "nb0007.djvu"),
+                new Page(89L, "nb0008.djvu"),
+                new Page(95L, "nb0009.djvu"),
+                new Page(107L, "nb0010.djvu"),
+                new Page(119L, "nb0011.djvu"),
+                new Page(137L, "nb0012.djvu"));
 
         TreeItem<MenuNode> root = new TreeItem<>(new MenuNode("Root", null));
         createMenuNode(root, "Content", 3);
@@ -295,7 +295,7 @@ public class TestMainFrameController {
         createMenuNode(node, "Using code examples", 9);
         createMenuNode(node, "Acknowledgments", 12);
 
-        PageNode page = new PageNode(pages.get(11));
+        PageNode page = new PageNode(pages.get(11), 11);
 
         doNothing().when(viewModel).loadPageAsync(page);
 

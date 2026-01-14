@@ -158,8 +158,8 @@ public class TestMainViewModel {
         assertEquals(fileName, viewModel.getTitle().get());
         TreeItem<ChunkTreeNode> chunkRoot = viewModel.getChunkRootNode().get();
         assertEquals(new ChunkTreeNode(rootChunk), chunkRoot.getValue());
-        assertEquals(List.of(new PageNode(new Page(1, 23L, "nb0001.djvu")),
-                        new PageNode(new Page(2, 1357L, "nb0002.djvu"))),
+        assertEquals(List.of(new PageNode(new Page(23L, "nb0001.djvu"), 1),
+                             new PageNode(new Page(1357L, "nb0002.djvu"), 2)),
                 viewModel.getPages().stream().toList());
 
         assertTrue(viewModel.getProgressMessage().get().isEmpty(), "errorMessage must be empty on success");

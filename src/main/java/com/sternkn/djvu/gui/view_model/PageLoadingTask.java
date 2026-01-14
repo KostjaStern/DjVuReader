@@ -20,12 +20,13 @@ package com.sternkn.djvu.gui.view_model;
 import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.Page;
 import javafx.concurrent.Task;
+import javafx.scene.image.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 
-public class PageLoadingTask extends Task<Page> {
+public class PageLoadingTask extends Task<Image> {
     private static final Logger LOG = LoggerFactory.getLogger(PageLoadingTask.class);
 
     private final DjVuModel djvuModel;
@@ -37,9 +38,9 @@ public class PageLoadingTask extends Task<Page> {
     }
 
     @Override
-    public Page call() {
+    public Image call() {
         try {
-            return djvuModel.getPage(page);
+            return djvuModel.getCachedPageImage(page);
         }
         catch (Exception e) {
             LOG.error(getStackTraceAsString(e));

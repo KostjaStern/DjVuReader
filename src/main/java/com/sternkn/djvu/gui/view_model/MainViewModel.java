@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
@@ -193,12 +194,12 @@ public class MainViewModel {
         setInProgress();
         setProgressMessage("Loading page ...");
 
-        Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getPage());
+        Task<Image> task = pageLoadingTaskFactory.create(djvuModel, page.getPage());
         task.setOnSucceeded(event -> {
-            Page p = task.getValue();
+            Image image = task.getValue();
             setProgressMessage("");
 
-            setPageImage(p.getImage());
+            setPageImage(image);
             setProgressDone();
         });
 
@@ -305,7 +306,10 @@ public class MainViewModel {
         return pages;
     }
     public void setPages(List<Page> p) {
-        List<PageNode> pgs = p.stream().map(PageNode::new).toList();
+        AtomicInteger idx = new AtomicInteger(1);
+        List<PageNode> pgs = p.stream()
+            .map(pg -> new PageNode(pg, idx.getAndIncrement()))
+            .toList();
 
         var list = FXCollections.observableList(pgs);
         pages.setValue(list);
