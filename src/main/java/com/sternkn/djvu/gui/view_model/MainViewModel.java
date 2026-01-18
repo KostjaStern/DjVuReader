@@ -26,6 +26,8 @@ import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.DjVuModelImpl;
 import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.model.Page;
+import com.sternkn.djvu.model.PageCache;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ListProperty;
@@ -47,6 +49,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
@@ -60,7 +64,7 @@ public class MainViewModel {
 
     private final FileTaskFactory fileTaskFactory;
     private final ChunkDecodingTaskFactory chunkDecodingTaskFactory;
-    private final PageLoadingTaskFactory pageLoadingTaskFactory;
+    // private final PageLoadingTaskFactory pageLoadingTaskFactory;
     private final ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory;
 
     private DjVuModel djvuModel;
@@ -89,19 +93,26 @@ public class MainViewModel {
     private final ObjectProperty<Image> image;
     private final ObjectProperty<Image> pageImage;
 
+    private final ExecutorService decodePool;
+    private PageCache pageCache;
+
     private Task<Void> thumbnailLoadingTask;
 
     public MainViewModel() {
-        this(DjVuFileTask::new, ChunkDecodingTask::new, PageLoadingTask::new, ThumbnailLoadingTask::new);
+        this(DjVuFileTask::new, ChunkDecodingTask::new, ThumbnailLoadingTask::new); // PageLoadingTask::new
     }
 
     public MainViewModel(FileTaskFactory fileTaskFactory,
                          ChunkDecodingTaskFactory chunkDecodingTaskFactory,
-                         PageLoadingTaskFactory pageLoadingTaskFactory,
+                         // PageLoadingTaskFactory pageLoadingTaskFactory,
                          ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory) {
+
+        decodePool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        pageCache = null;
+
         this.fileTaskFactory = fileTaskFactory;
         this.chunkDecodingTaskFactory = chunkDecodingTaskFactory;
-        this.pageLoadingTaskFactory = pageLoadingTaskFactory;
+        // this.pageLoadingTaskFactory = pageLoadingTaskFactory;
         this.thumbnailLoadingTaskFactory = thumbnailLoadingTaskFactory;
 
         title = new SimpleStringProperty(APP_TITLE);
@@ -158,6 +169,7 @@ public class MainViewModel {
 
             DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             setDjvuModel(djvuModel);
+            this.pageCache = new PageCache(djvuModel, decodePool);
 
             boolean isMenuEmpty = djvuModel.getMenuNodes().isEmpty();
             setDisableNavigationMenu(isMenuEmpty);
@@ -194,6 +206,28 @@ public class MainViewModel {
         setInProgress();
         setProgressMessage("Loading page ...");
 
+        pageCache.get(page.getPage()).whenComplete((data, exception) -> {
+            if (exception != null) {
+                Platform.runLater(() -> {
+                    LOG.error(getStackTraceAsString(exception));
+                    setProgressDone();
+
+                    String errorMessage = exception.getMessage();
+                    setProgressMessage(errorMessage);
+                });
+                return;
+            }
+
+            Platform.runLater(() -> {
+                Image image = data.image();
+
+                setProgressMessage("");
+
+                setPageImage(image);
+                setProgressDone();
+            });
+        });
+/*
         Task<Image> task = pageLoadingTaskFactory.create(djvuModel, page.getPage());
         task.setOnSucceeded(event -> {
             Image image = task.getValue();
@@ -213,6 +247,7 @@ public class MainViewModel {
         });
 
         new Thread(task).start();
+ */
     }
 
     private TreeItem<ChunkTreeNode> getRootNode(DjVuFile djvuFile) {

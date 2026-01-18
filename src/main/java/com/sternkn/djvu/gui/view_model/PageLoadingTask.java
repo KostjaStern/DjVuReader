@@ -40,7 +40,7 @@ public class PageLoadingTask extends Task<Image> {
     @Override
     public Image call() {
         try {
-            return djvuModel.getCachedPageImage(page);
+            return djvuModel.getPageImage(page);
         }
         catch (Exception e) {
             LOG.error(getStackTraceAsString(e));

@@ -17,8 +17,6 @@
 */
 package com.sternkn.djvu.model;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.AnnotationChunk;
 import com.sternkn.djvu.file.chunks.Bookmark;
@@ -43,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -66,16 +63,11 @@ public class DjVuModelImpl implements DjVuModel {
     private final DjVuFile djvuFile;
     private List<Page> pages;
     private List<MenuNode> menuNodes;
-    private final Cache<Page, Image> pagesCache;
 
     public DjVuModelImpl(DjVuFile djvuFile) {
         this.djvuFile = djvuFile;
         pages = null;
         menuNodes = null;
-        pagesCache = Caffeine.newBuilder()
-            .maximumSize(5)
-            .expireAfterWrite(Duration.ofMinutes(60))
-            .build();
     }
 
     private List<Page> calculatePages() {
@@ -177,8 +169,9 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     @Override
-    public Image getCachedPageImage(Page page) {
-        return pagesCache.get(page, this::getPageImage);
+    public PageData load(Page page) {
+        Image image = getPageImage(page);
+        return new PageData(image);
     }
 
     @Override

@@ -29,7 +29,7 @@ public interface DjVuModel {
 
     List<MenuNode> getMenuNodes();
 
-    Image getCachedPageImage(Page page);
+    PageData load(Page page);
 
     Image getPageImage(Page page);
 
