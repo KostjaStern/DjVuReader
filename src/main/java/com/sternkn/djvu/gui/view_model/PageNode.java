@@ -29,12 +29,18 @@ public class PageNode {
     public static final int WIDTH = 200;
     public static final int HEIGHT = 260;
 
+    private final int index;
     private final Page page;
     private final ObjectProperty<Image> thumbnail;
 
-    public PageNode(Page page) {
+    public PageNode(Page page, int index) {
+        this.index = index;
         this.page = page;
         thumbnail = new SimpleObjectProperty<>(emptyImage());
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public Page getPage() {
@@ -70,8 +76,8 @@ public class PageNode {
     public String toString() {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("PageNode{index: ");
-        buffer.append(page.getIndex());
-        buffer.append(" , id: ");
+        buffer.append(index);
+        buffer.append(", id: ");
         buffer.append(page.getId());
         buffer.append(" , offset: ");
         buffer.append(page.getOffset());

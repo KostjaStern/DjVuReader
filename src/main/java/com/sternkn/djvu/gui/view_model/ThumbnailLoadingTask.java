@@ -18,7 +18,6 @@
 package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.model.DjVuModel;
-import com.sternkn.djvu.model.Page;
 import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.collections.ObservableList;
@@ -65,9 +64,8 @@ public class ThumbnailLoadingTask extends Task<Void> {
                 final int pageNumber = index + 1;
                 final PageNode pageNode = pages.get(index);
                 final double progress = (double) pageNumber / pageCount;
-                Page page = djvuModel.getPage(pageNode.getPage());
-                Image thumbnail = resize(page.getImage(), PageNode.WIDTH, PageNode.HEIGHT);
-                page.setImage(null);
+                Image image = djvuModel.getPageImage(pageNode.getPage());
+                Image thumbnail = resize(image, PageNode.WIDTH, PageNode.HEIGHT);
 
                 Platform.runLater(() -> {
                     pageNode.setThumbnail(thumbnail);

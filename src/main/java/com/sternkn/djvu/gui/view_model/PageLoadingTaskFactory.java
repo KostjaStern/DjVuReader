@@ -20,7 +20,8 @@ package com.sternkn.djvu.gui.view_model;
 import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.Page;
 import javafx.concurrent.Task;
+import javafx.scene.image.Image;
 
 public interface PageLoadingTaskFactory {
-    Task<Page> create(DjVuModel djvuModel, Page page);
+    Task<Image> create(DjVuModel djvuModel, Page page);
 }
