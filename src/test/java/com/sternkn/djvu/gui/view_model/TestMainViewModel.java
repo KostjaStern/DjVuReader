@@ -58,7 +58,6 @@ public class TestMainViewModel {
 
     private FileTaskFactory fileTaskFactory;
     private ChunkDecodingTaskFactory chunkDecodingTaskFactory;
-    // private PageLoadingTaskFactory pageLoadingTaskFactory;
     private ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory;
 
     @Mock
@@ -70,7 +69,6 @@ public class TestMainViewModel {
     public void testShowStatistics() {
         fileTaskFactory = mock(FileTaskFactory.class);
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        // pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
         viewModel = new MainViewModel(
             fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory); // pageLoadingTaskFactory
@@ -125,7 +123,6 @@ public class TestMainViewModel {
         when(djvuFile.getDirectoryChunk()).thenReturn(directoryChunk);
 
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        // pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
 
         fileTaskFactory = file -> new Task<>() {
             @Override
@@ -142,8 +139,7 @@ public class TestMainViewModel {
             }
         };
 
-        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory,
-                 thumbnailLoadingTaskFactory); // pageLoadingTaskFactory,
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         assertEquals(0.0, viewModel.getProgress().get(), DELTA);
@@ -177,10 +173,8 @@ public class TestMainViewModel {
             }
         };
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        // pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
-        viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory); // pageLoadingTaskFactory,
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         viewModel.loadFileAsync(new File("bad.djvu"));
@@ -208,7 +202,6 @@ public class TestMainViewModel {
         when(info.getTextData()).thenReturn("Some text data");
 
         fileTaskFactory = mock(FileTaskFactory.class);
-        // pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         chunkDecodingTaskFactory = (model, chunkId) -> new Task<>() {
             @Override
             protected ChunkInfo call() {
@@ -216,8 +209,7 @@ public class TestMainViewModel {
             }
         };
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
-        viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory); // pageLoadingTaskFactory,
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         viewModel.showChunkInfo(42L);
@@ -243,7 +235,6 @@ public class TestMainViewModel {
     public void testShowChunkInfoWithError() {
         String errorMessage = "decode failed";
         fileTaskFactory = mock(FileTaskFactory.class);
-        // pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         chunkDecodingTaskFactory = (model, chunkId) -> new Task<>() {
             @Override
             protected ChunkInfo call() {
@@ -251,8 +242,7 @@ public class TestMainViewModel {
             }
         };
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
-        viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory); // pageLoadingTaskFactory,
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         viewModel.showChunkInfo(7L);

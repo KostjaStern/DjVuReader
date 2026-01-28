@@ -28,6 +28,7 @@ Maven version 3.9.11
 
 ### Local build and run
 ```
+$ export MAVEN_OPTS="-Xmx2g"
 $ mvn clean package
 $ mvn exec:java
 ```
