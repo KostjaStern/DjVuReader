@@ -19,6 +19,7 @@ package com.sternkn.djvu.model;
 
 import java.io.File;
 import java.util.List;
+import javafx.scene.image.Image;
 
 public interface DjVuModel {
 
@@ -28,7 +29,9 @@ public interface DjVuModel {
 
     List<MenuNode> getMenuNodes();
 
-    Page getPage(Page page);
+    PageData load(Page page);
+
+    Image getPageImage(Page page);
 
     ChunkInfo getChunkInfo(long chunkId);
 

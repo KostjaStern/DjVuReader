@@ -26,6 +26,9 @@ import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.DjVuModelImpl;
 import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.model.Page;
+import com.sternkn.djvu.model.PageCache;
+import com.sternkn.djvu.model.SimplePageCache;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ListProperty;
@@ -47,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
@@ -59,7 +63,6 @@ public class MainViewModel {
 
     private final FileTaskFactory fileTaskFactory;
     private final ChunkDecodingTaskFactory chunkDecodingTaskFactory;
-    private final PageLoadingTaskFactory pageLoadingTaskFactory;
     private final ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory;
 
     private DjVuModel djvuModel;
@@ -88,19 +91,22 @@ public class MainViewModel {
     private final ObjectProperty<Image> image;
     private final ObjectProperty<Image> pageImage;
 
+    private PageCache pageCache;
+
     private Task<Void> thumbnailLoadingTask;
 
     public MainViewModel() {
-        this(DjVuFileTask::new, ChunkDecodingTask::new, PageLoadingTask::new, ThumbnailLoadingTask::new);
+        this(DjVuFileTask::new, ChunkDecodingTask::new, ThumbnailLoadingTask::new);
     }
 
     public MainViewModel(FileTaskFactory fileTaskFactory,
                          ChunkDecodingTaskFactory chunkDecodingTaskFactory,
-                         PageLoadingTaskFactory pageLoadingTaskFactory,
                          ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory) {
+
+        pageCache = null;
+
         this.fileTaskFactory = fileTaskFactory;
         this.chunkDecodingTaskFactory = chunkDecodingTaskFactory;
-        this.pageLoadingTaskFactory = pageLoadingTaskFactory;
         this.thumbnailLoadingTaskFactory = thumbnailLoadingTaskFactory;
 
         title = new SimpleStringProperty(APP_TITLE);
@@ -157,6 +163,7 @@ public class MainViewModel {
 
             DjVuModelImpl djvuModel = new DjVuModelImpl(djvFile);
             setDjvuModel(djvuModel);
+            this.pageCache = new SimplePageCache(djvuModel);
 
             boolean isMenuEmpty = djvuModel.getMenuNodes().isEmpty();
             setDisableNavigationMenu(isMenuEmpty);
@@ -193,25 +200,27 @@ public class MainViewModel {
         setInProgress();
         setProgressMessage("Loading page ...");
 
-        Task<Page> task = pageLoadingTaskFactory.create(djvuModel, page.getPage());
-        task.setOnSucceeded(event -> {
-            Page p = task.getValue();
-            setProgressMessage("");
+        pageCache.getFromCacheOrLoad(page.getPage()).whenComplete((data, exception) -> {
+            if (exception != null) {
+                Platform.runLater(() -> {
+                    LOG.error(getStackTraceAsString(exception));
+                    setProgressDone();
 
-            setPageImage(p.getImage());
-            setProgressDone();
+                    String errorMessage = exception.getMessage();
+                    setProgressMessage(errorMessage);
+                });
+                return;
+            }
+
+            Platform.runLater(() -> {
+                Image image = data.image();
+
+                setProgressMessage("");
+
+                setPageImage(image);
+                setProgressDone();
+            });
         });
-
-        task.setOnFailed(event -> {
-            Throwable exception = task.getException();
-            LOG.error(getStackTraceAsString(exception));
-
-            String errorMessage = exception.getMessage();
-            setProgressMessage(errorMessage);
-            setProgressDone();
-        });
-
-        new Thread(task).start();
     }
 
     private TreeItem<ChunkTreeNode> getRootNode(DjVuFile djvuFile) {
@@ -305,7 +314,10 @@ public class MainViewModel {
         return pages;
     }
     public void setPages(List<Page> p) {
-        List<PageNode> pgs = p.stream().map(PageNode::new).toList();
+        AtomicInteger idx = new AtomicInteger(1);
+        List<PageNode> pgs = p.stream()
+            .map(pg -> new PageNode(pg, idx.getAndIncrement()))
+            .toList();
 
         var list = FXCollections.observableList(pgs);
         pages.setValue(list);

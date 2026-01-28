@@ -15,12 +15,9 @@
     with this program; if not, write to the Free Software Foundation, Inc., 51
     Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-package com.sternkn.djvu.gui.view_model;
+package com.sternkn.djvu.model;
 
-import com.sternkn.djvu.model.DjVuModel;
-import com.sternkn.djvu.model.Page;
-import javafx.concurrent.Task;
+import javafx.scene.image.Image;
 
-public interface PageLoadingTaskFactory {
-    Task<Page> create(DjVuModel djvuModel, Page page);
+public record PageData(Image image) {
 }

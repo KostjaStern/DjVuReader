@@ -46,9 +46,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.sternkn.djvu.utils.ImageUtils.composeImage;
 import static com.sternkn.djvu.utils.ImageUtils.createBlank;
@@ -71,10 +71,9 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     private List<Page> calculatePages() {
-        AtomicInteger idx = new AtomicInteger(1);
         return djvuFile.getDirectoryChunk().getComponents().stream()
             .filter(c -> c.getType() == ComponentType.PAGE)
-            .map(c -> new Page(idx.getAndIncrement(), c.getOffset(), c.getId()))
+            .map(c -> new Page(c.getOffset(), c.getId()))
             .toList();
     }
 
@@ -141,9 +140,11 @@ public class DjVuModelImpl implements DjVuModel {
             return Integer.parseInt(pageId);
         }
         catch (NumberFormatException e) {
-            return getPages().stream()
-                    .filter(p -> Objects.equals(p.getId(), pageId))
-                    .map(Page::getIndex)
+            List<Page> pages = getPages();
+            return IntStream.range(0, pages.size())
+                    .filter(i -> Objects.equals(pages.get(i).getId(), pageId))
+                    .map(i -> i + 1)
+                    .boxed()
                     .findFirst()
                     .orElse(null);
         }
@@ -168,7 +169,13 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     @Override
-    public Page getPage(Page page) {
+    public PageData load(Page page) {
+        Image image = getPageImage(page);
+        return new PageData(image);
+    }
+
+    @Override
+    public Image getPageImage(Page page) {
         Chunk chunk = djvuFile.getChunkByOffset(page.getOffset());
         InfoChunk info = new InfoChunk(chunk);
 
@@ -190,8 +197,7 @@ public class DjVuModelImpl implements DjVuModel {
             image = createBlank(info.getWidth(), info.getHeight());
         }
 
-        page.setImage(image);
-        return page;
+        return image;
     }
 
     private Chunk getChunk(Map<ChunkId, List<Chunk>> pageChunks, ChunkId chunkId) {

@@ -32,6 +32,7 @@ import com.sternkn.djvu.file.coders.GPixmap;
 import com.sternkn.djvu.file.coders.Pixmap;
 import com.sternkn.djvu.file.coders.TestSupport;
 import com.sternkn.djvu.utils.PNGPixmap;
+import javafx.scene.image.Image;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,13 +123,13 @@ public class TestDjVuModelImpl extends TestSupport {
         List<Page> pages = model.getPages();
         assertEquals(386, pages.size());
 
-        assertEquals(new Page(1, 7180L, "nb0001.djvu"), pages.get(0));
-        assertEquals(new Page(2, 68514L, "nb0002.djvu"), pages.get(1));
-        assertEquals(new Page(3, 83380L, "nb0003.djvu"), pages.get(2));
+        assertEquals(new Page(7180L, "nb0001.djvu"), pages.get(0));
+        assertEquals(new Page(68514L, "nb0002.djvu"), pages.get(1));
+        assertEquals(new Page(83380L, "nb0003.djvu"), pages.get(2));
 
-        assertEquals(new Page(384, 39526846L, "nb0384.djvu"), pages.get(383));
-        assertEquals(new Page(385, 39609328L, "nb0385.djvu"), pages.get(384));
-        assertEquals(new Page(386, 39736728L, "nb0386.djvu"), pages.get(385));
+        assertEquals(new Page(39526846L, "nb0384.djvu"), pages.get(383));
+        assertEquals(new Page(39609328L, "nb0385.djvu"), pages.get(384));
+        assertEquals(new Page(39736728L, "nb0386.djvu"), pages.get(385));
     }
 
     @Test
@@ -348,9 +349,9 @@ public class TestDjVuModelImpl extends TestSupport {
                                          createChunk(7L, ChunkId.BG44, "Yunger_revolution_BG44_4.data"))
         ));
 
-        Page page = model.getPage(new Page(1, offset, "nb0001.djvu"));
+        Image image = model.getPageImage(new Page(offset, "nb0001.djvu"));
 
-        Pixmap actual = new PNGPixmap(page.getImage());
+        Pixmap actual = new PNGPixmap(image);
         Pixmap expected = createPixmap("Yunger_revolution.png");
         assertEquals(expected, actual);
     }
@@ -362,9 +363,9 @@ public class TestDjVuModelImpl extends TestSupport {
         when(djvuFile.getChunkByOffset(offset)).thenReturn(info);
         when(djvuFile.getAllPageChunks(info)).thenReturn(Map.of());
 
-        Page page = model.getPage(new Page(1, offset, "nb0001.djvu"));
+        Image image = model.getPageImage(new Page(offset, "nb0001.djvu"));
 
-        Pixmap actual = new PNGPixmap(page.getImage());
+        Pixmap actual = new PNGPixmap(image);
 
         InfoChunk infoChunk = new InfoChunk(info);
         Pixmap expected = new PNGPixmap(createBlank(infoChunk.getWidth(), infoChunk.getHeight()));

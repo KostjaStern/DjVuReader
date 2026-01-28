@@ -17,41 +17,18 @@
 */
 package com.sternkn.djvu.model;
 
-import java.util.Objects;
+import com.sternkn.djvu.file.DjVuFileException;
 
-public class Page {
-    private final Long offset;
-    private final String id;
+import java.util.concurrent.CompletableFuture;
 
-    public Page(Long offset, String id) {
-        this.offset = offset;
-        this.id = id;
-    }
+public interface PageCache {
 
-    public Long getOffset() {
-        return offset;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Page other)) {
-            return false;
-        }
-        return Objects.equals(offset, other.offset)
-               && Objects.equals(id, other.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(offset, id);
-    }
-
-    @Override
-    public String toString() {
-        return "Page{offset: " + offset + ", id: '" + id + "'}";
-    }
+    /**
+     * Returns the data for the requested page.
+     *
+     * @param page the page whose data should be retrieved from the cache or decoded
+     * @return the page data
+     * @throws DjVuFileException if the page is not found
+     */
+    CompletableFuture<PageData> getFromCacheOrLoad(Page page);
 }

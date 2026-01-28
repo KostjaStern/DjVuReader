@@ -58,7 +58,6 @@ public class TestMainViewModel {
 
     private FileTaskFactory fileTaskFactory;
     private ChunkDecodingTaskFactory chunkDecodingTaskFactory;
-    private PageLoadingTaskFactory pageLoadingTaskFactory;
     private ThumbnailLoadingTaskFactory thumbnailLoadingTaskFactory;
 
     @Mock
@@ -70,10 +69,9 @@ public class TestMainViewModel {
     public void testShowStatistics() {
         fileTaskFactory = mock(FileTaskFactory.class);
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
         viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
+            fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory); // pageLoadingTaskFactory
         viewModel.setDjvuModel(djvuModel);
 
         final String statistics = "Some statistics ... ";
@@ -125,7 +123,6 @@ public class TestMainViewModel {
         when(djvuFile.getDirectoryChunk()).thenReturn(directoryChunk);
 
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
 
         fileTaskFactory = file -> new Task<>() {
             @Override
@@ -142,8 +139,7 @@ public class TestMainViewModel {
             }
         };
 
-        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory,
-                pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         assertEquals(0.0, viewModel.getProgress().get(), DELTA);
@@ -158,8 +154,8 @@ public class TestMainViewModel {
         assertEquals(fileName, viewModel.getTitle().get());
         TreeItem<ChunkTreeNode> chunkRoot = viewModel.getChunkRootNode().get();
         assertEquals(new ChunkTreeNode(rootChunk), chunkRoot.getValue());
-        assertEquals(List.of(new PageNode(new Page(1, 23L, "nb0001.djvu")),
-                        new PageNode(new Page(2, 1357L, "nb0002.djvu"))),
+        assertEquals(List.of(new PageNode(new Page(23L, "nb0001.djvu"), 1),
+                             new PageNode(new Page(1357L, "nb0002.djvu"), 2)),
                 viewModel.getPages().stream().toList());
 
         assertTrue(viewModel.getProgressMessage().get().isEmpty(), "errorMessage must be empty on success");
@@ -177,10 +173,8 @@ public class TestMainViewModel {
             }
         };
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
-        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
-        viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         viewModel.loadFileAsync(new File("bad.djvu"));
@@ -208,7 +202,6 @@ public class TestMainViewModel {
         when(info.getTextData()).thenReturn("Some text data");
 
         fileTaskFactory = mock(FileTaskFactory.class);
-        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         chunkDecodingTaskFactory = (model, chunkId) -> new Task<>() {
             @Override
             protected ChunkInfo call() {
@@ -216,8 +209,7 @@ public class TestMainViewModel {
             }
         };
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
-        viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         viewModel.showChunkInfo(42L);
@@ -243,7 +235,6 @@ public class TestMainViewModel {
     public void testShowChunkInfoWithError() {
         String errorMessage = "decode failed";
         fileTaskFactory = mock(FileTaskFactory.class);
-        pageLoadingTaskFactory = mock(PageLoadingTaskFactory.class);
         chunkDecodingTaskFactory = (model, chunkId) -> new Task<>() {
             @Override
             protected ChunkInfo call() {
@@ -251,8 +242,7 @@ public class TestMainViewModel {
             }
         };
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
-        viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, pageLoadingTaskFactory, thumbnailLoadingTaskFactory);
+        viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         viewModel.showChunkInfo(7L);
