@@ -195,6 +195,7 @@ public class TestMainFrameController {
 
         robot.interact(() -> viewModel.getChunkRootNode().set(root));
 
+        robot.clickOn("Chunks");
         robot.doubleClickOn(rootNode.toString());
         robot.rightClickOn(childNode.toString());
         robot.clickOn(ChunkTreeCell.SAVE_CHUNK_DATA);
@@ -215,7 +216,6 @@ public class TestMainFrameController {
 
         robot.interact(() -> viewModel.setPages(pages));
 
-        robot.clickOn("Pages");
         robot.clickOn("2");
 
         verify(viewModel, times(1)).loadPageAsync(page2);
@@ -235,7 +235,6 @@ public class TestMainFrameController {
 
         robot.interact(() -> viewModel.setPages(pages));
 
-        robot.clickOn("Pages");
         robot.clickOn("2");
         robot.press(KeyCode.DOWN);
 
@@ -264,7 +263,6 @@ public class TestMainFrameController {
         robot.interact(() -> viewModel.setMenuRootNode(root));
         robot.interact(() -> viewModel.setDisableNavigationMenu(false));
 
-        robot.clickOn("Pages");
         robot.clickOn("View");
         robot.clickOn("#navigationMenu");
         robot.clickOn("Preface");
@@ -303,7 +301,6 @@ public class TestMainFrameController {
         robot.interact(() -> viewModel.setMenuRootNode(root));
         robot.interact(() -> viewModel.setDisableNavigationMenu(false));
 
-        robot.clickOn("Pages");
         robot.clickOn("View");
         robot.clickOn("#navigationMenu");
 
