@@ -32,6 +32,7 @@ public class JB2Dict implements Dict {
     protected final List<JB2Shape> shapes;
     protected List<Integer> lib2shape;
     protected final List<LibRect> boxes;
+    protected String comment;
 
     public JB2Dict() {
         this.shapes = new ArrayList<>();
@@ -89,5 +90,15 @@ public class JB2Dict implements Dict {
     @Override
     public int get_shape_count() {
         return shapes.size();
+    }
+
+    @Override
+    public String getComment() {
+        return comment;
+    }
+
+    @Override
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

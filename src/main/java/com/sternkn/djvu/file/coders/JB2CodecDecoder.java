@@ -292,14 +292,11 @@ public class JB2CodecDecoder {
             }
             case PRESERVED_COMMENT:
             {
-                throw new DjVuFileException("Unsupported record type PRESERVED_COMMENT");
-//                if(!gjim)
-//                {
-//                    G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                }
-//                JB2Image &jim=*gjim;
-//                code_comment(jim.comment);
-                // break;
+                if(image == null) {
+                    throw new DjVuFileException("JB2Image.bad_number");
+                }
+                code_comment(image);
+                break;
             }
             case REQUIRED_DICT_OR_RESET:
             {
@@ -540,13 +537,11 @@ public class JB2CodecDecoder {
             }
             case PRESERVED_COMMENT:
             {
-                throw new DjVuFileException("unsupported record type PRESERVED_COMMENT");
-//                if(dict != null) {
-//                    throw new DjVuFileException("JB2Image.bad_number");
-//                }
-                // JB2Dict &jim=*gjim;
-                // code_comment(jim.comment);
-                // break;
+                if(dict == null) {
+                    throw new DjVuFileException("JB2Image.bad_number");
+                }
+                code_comment(dict);
+                break;
             }
             case REQUIRED_DICT_OR_RESET:
             {
@@ -678,6 +673,19 @@ public class JB2CodecDecoder {
                (xup0.getValue(column + 1) << 3) |
                xdn1.getValue(column + 1)        |
                (n << 7);
+    }
+
+    private void code_comment(JB2Dict dict) {
+        int size = codeNumber(0, BIGPOSITIVE, dist_comment_length, 0);
+        char[] buffer = new char[size];
+
+        for (int ind = 0; ind < size; ind++) {
+            int ch = codeNumber(0, 255, dist_comment_byte, 0);
+            buffer[ind] = (char) ch;
+        }
+
+        String comment = new String(buffer);
+        dict.setComment(comment);
     }
 
     private void code_relative_mark_size(GBitmap bm, int cw, int ch, int border) {

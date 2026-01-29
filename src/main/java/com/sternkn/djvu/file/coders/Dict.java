@@ -24,4 +24,8 @@ public interface Dict {
     int add_shape(JB2Shape shape);
 
     JB2Shape get_shape(int shapeno);
+
+    String getComment();
+
+    void setComment(String comment);
 }

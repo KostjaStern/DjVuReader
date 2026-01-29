@@ -17,7 +17,6 @@
 */
 package com.sternkn.djvu.file.coders;
 
-import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.FGbzChunk;
@@ -29,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import static com.sternkn.djvu.utils.ImageUtils.decodeJB2Image;
 import static com.sternkn.djvu.utils.ImageUtils.toImage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestJB2Image extends TestSupport {
 
@@ -72,13 +70,14 @@ public class TestJB2Image extends TestSupport {
         assertPixmapEquals(expectedPixmap, actualPixmap);
     }
 
-    // TODO: this test need to be fixed
     @Test
     public void testJB2ImageWithComment() {
-        // fgjd->comment = GNativeString("Vinogradov information comment");
-        Exception exception = assertThrows(DjVuFileException.class,
-                () -> readImage("Vinogradov_Sjbz_with_comment.data"));
-        assertEquals("Unsupported record type PRESERVED_COMMENT", exception.getMessage());
+        JB2Image jb2Image = readImage("Vinogradov_Sjbz_with_comment.data");
+        assertEquals("Vinogradov information comment", jb2Image.getComment());
+
+        Pixmap actualPixmap = jb2Image.get_bitmap();
+        Pixmap expectedPixmap = readPixmap("Vinogradov.png");
+        assertPixmapEquals(expectedPixmap, actualPixmap);
     }
 
     @Test
