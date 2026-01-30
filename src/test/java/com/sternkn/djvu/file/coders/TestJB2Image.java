@@ -81,6 +81,23 @@ public class TestJB2Image extends TestSupport {
     }
 
     @Test
+    public void testJB2ImageCustomChunkWithComment() {
+        JB2Image jb2Image = readImage("My_Sjbz_with_comment.data");
+        assertEquals("My comment!", jb2Image.getComment());
+
+        assertEquals(5, jb2Image.getHeight());
+        assertEquals(3, jb2Image.getWidth());
+        assertEquals(1, jb2Image.get_blit_count());
+        assertEquals(1, jb2Image.get_shape_count());
+
+        assertEquals(new JB2Blit(3, 4, 0), jb2Image.get_blit(0));
+
+        Pixmap actualPixmap = jb2Image.get_bitmap();
+        Pixmap expectedPixmap = readPixmap("My_Sjbz_with_comment.png");
+        assertPixmapEquals(expectedPixmap, actualPixmap);
+    }
+
+    @Test
     public void testJB2ImageWithForegroundColors() {
         JB2Image jb2Image = readImage("Yunger_Sjbz.data");
 

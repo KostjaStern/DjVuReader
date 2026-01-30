@@ -32,7 +32,7 @@ public class JB2Dict implements Dict {
     protected final List<JB2Shape> shapes;
     protected List<Integer> lib2shape;
     protected final List<LibRect> boxes;
-    protected String comment;
+    private String comment;
 
     public JB2Dict() {
         this.shapes = new ArrayList<>();
