@@ -29,6 +29,7 @@ import java.util.List;
  */
 public class JB2Dict implements Dict {
 
+    protected JB2Dict inheritedDictionary;
     protected final List<JB2Shape> shapes;
     protected List<Integer> lib2shape;
     protected final List<LibRect> boxes;
@@ -39,6 +40,13 @@ public class JB2Dict implements Dict {
         this.boxes = new ArrayList<>();
 
         lib2shape = new ArrayList<>();
+    }
+
+    public JB2Dict getInheritedDictionary() {
+        return inheritedDictionary;
+    }
+    public void setInheritedDictionary(JB2Dict dictionary) {
+        this.inheritedDictionary = dictionary;
     }
 
     public List<Integer> getLib2shape() {

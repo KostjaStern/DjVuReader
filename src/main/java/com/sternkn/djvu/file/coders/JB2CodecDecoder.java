@@ -446,7 +446,7 @@ public class JB2CodecDecoder {
             return;
         }
 
-        JB2Dict dict = image.getDictionary();
+        JB2Dict dict = image.getInheritedDictionary();
         if (dict == null) {
             throw new DjVuFileException("JB2Image.need_dict");
         }

@@ -306,7 +306,9 @@ public final class ImageUtils {
             decoder.decode(dictionary);
         }
 
-        JB2Image image = new JB2Image(dictionary);
+        JB2Image image = new JB2Image();
+        image.setInheritedDictionary(dictionary);
+
         JB2CodecDecoder decoder = new JB2CodecDecoder(new ByteArrayInputStream(data));
         decoder.decode(image);
 

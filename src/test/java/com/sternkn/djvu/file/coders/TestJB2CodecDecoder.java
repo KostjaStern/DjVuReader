@@ -97,4 +97,27 @@ public class TestJB2CodecDecoder extends TestSupport {
         assertEquals(22, dict.get_shape(487).getBits().getWidth());
         assertEquals(21, dict.get_shape(487).getBits().getHeight());
     }
+
+    @Test
+    public void testDecodeDictionaryWithComment() {
+        JB2Dict dict = readDictionary("My_Djbz_with_comment.data");
+
+        assertEquals("My dict comment!", dict.getComment());
+
+        assertEquals(1, dict.get_shape_count());
+
+        JB2Shape shape = dict.get_shape(0);
+
+        final int[] bytes_data = {
+            0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final int[] buffer = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+        final GBitmap expectedBitmap = new GBitmap();
+        expectedBitmap.init(5, 3, 4, bytes_data, buffer);
+
+        assertPixmapEquals(expectedBitmap, shape.getBits());
+    }
 }

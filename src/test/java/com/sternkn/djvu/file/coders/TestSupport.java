@@ -134,7 +134,8 @@ public class TestSupport {
 
     JB2Image readImage(String imageFileName, String dictFileName) {
         JB2Dict dict = dictFileName != null ? readDictionary(dictFileName) : null;
-        JB2Image image = new JB2Image(dict);
+        JB2Image image = new JB2Image();
+        image.setInheritedDictionary(dict);
 
         try (InputStream inputStream = readStream(imageFileName)) {
             JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
