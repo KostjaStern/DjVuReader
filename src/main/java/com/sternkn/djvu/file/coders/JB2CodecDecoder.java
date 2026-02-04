@@ -440,7 +440,7 @@ public class JB2CodecDecoder {
         return codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_loc, 0);
     }
 
-    private void code_inherited_shape_count(JB2Image image) {
+    private void code_inherited_shape_count(JB2Dict image) {
         final int size = codeNumber(0, BIGPOSITIVE, inherited_shape_count_dist, 0);
         if (size <= 0) {
             return;
@@ -545,7 +545,17 @@ public class JB2CodecDecoder {
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                throw new DjVuFileException("unsupported record type REQUIRED_DICT_OR_RESET");
+                // throw new DjVuFileException("unsupported record type REQUIRED_DICT_OR_RESET");
+
+                if (!this.gotStartRecord) {
+                    // Indicates need for a shape dictionary
+                    code_inherited_shape_count(dict);
+                }
+                else {
+                    // Reset all numerical contexts to zero
+                    reset_numcoder();
+                }
+                break;
 //                if (! gotstartrecordp)
 //                {
 //                    // Indicates need for a shape dictionary

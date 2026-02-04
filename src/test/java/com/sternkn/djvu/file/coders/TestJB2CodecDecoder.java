@@ -120,4 +120,38 @@ public class TestJB2CodecDecoder extends TestSupport {
 
         assertPixmapEquals(expectedBitmap, shape.getBits());
     }
+
+    @Test
+    public void testDecodeDictionaryWithCommentAndInhDictionary() {
+        JB2Dict dict = readDictionary("My_Djbz_with_comment_and_inh_dict.data",
+                "My_inh_Djbz_with_comment.data");
+
+        assertEquals("My dict comment!", dict.getComment());
+
+        assertEquals(2, dict.get_shape_count());
+
+        JB2Shape shape1 = dict.get_shape(0);
+        JB2Shape shape2 = dict.get_shape(1);
+
+        final int[] bytes_data1 = {
+            0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final int[] buffer1 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+        final GBitmap expectedBitmap1 = new GBitmap();
+        expectedBitmap1.init(4, 3, 4, bytes_data1, buffer1);
+
+        assertPixmapEquals(expectedBitmap1, shape1.getBits());
+
+        final int[] bytes_data2 = {
+            0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final int[] buffer2 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+        final GBitmap expectedBitmap2 = new GBitmap();
+        expectedBitmap2.init(5, 3, 4, bytes_data2, buffer2);
+
+        assertPixmapEquals(expectedBitmap2, shape2.getBits());
+    }
 }

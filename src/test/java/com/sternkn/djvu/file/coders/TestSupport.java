@@ -161,4 +161,20 @@ public class TestSupport {
 
         return dict;
     }
+
+    JB2Dict readDictionary(String fileName, String inhFileName) {
+        JB2Dict inheritedDict = readDictionary(inhFileName);
+        JB2Dict dict = new JB2Dict();
+        dict.setInheritedDictionary(inheritedDict);
+
+        try (InputStream inputStream = readStream(fileName)) {
+            JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
+            decoder.decode(dict);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return dict;
+    }
 }

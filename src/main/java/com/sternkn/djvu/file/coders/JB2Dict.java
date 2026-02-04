@@ -49,6 +49,10 @@ public class JB2Dict implements Dict {
         this.inheritedDictionary = dictionary;
     }
 
+    public int get_inherited_shape_count() {
+        return this.inheritedDictionary == null ? 0 : this.inheritedDictionary.get_shape_count();
+    }
+
     public List<Integer> getLib2shape() {
         return lib2shape;
     }
@@ -77,8 +81,14 @@ public class JB2Dict implements Dict {
 
     @Override
     public JB2Shape get_shape(int shapeno) {
-        if(shapeno >= 0) {
-            return shapes.get(shapeno);
+        int inheritedShapes = get_inherited_shape_count();
+
+        if(shapeno >= inheritedShapes) {
+            return shapes.get(shapeno - inheritedShapes);
+        }
+
+        if (this.inheritedDictionary != null) {
+            return this.inheritedDictionary.get_shape(shapeno);
         }
 
         throw new DjVuFileException("JB2Image.bad_number");
@@ -92,12 +102,12 @@ public class JB2Dict implements Dict {
 
         int index = shapes.size();
         shapes.add(shape);
-        return index;
+        return index + get_inherited_shape_count();
     }
 
     @Override
     public int get_shape_count() {
-        return shapes.size();
+        return get_inherited_shape_count() + shapes.size();
     }
 
     @Override

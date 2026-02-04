@@ -83,35 +83,6 @@ public class JB2Image extends JB2Dict implements Dict {
         }
     }
 
-    @Override
-    public JB2Shape get_shape(int shapeno) {
-        int inheritedShapes = get_inherited_shape_count();
-
-        if(shapeno >= inheritedShapes) {
-            return shapes.get(shapeno - inheritedShapes);
-        }
-
-        if (this.inheritedDictionary != null) {
-            return this.inheritedDictionary.get_shape(shapeno);
-        }
-
-        throw new DjVuFileException("JB2Image.bad_number");
-    }
-
-    @Override
-    public int add_shape(JB2Shape shape) {
-        return super.add_shape(shape) + get_inherited_shape_count();
-    }
-
-    @Override
-    public int get_shape_count() {
-        return get_inherited_shape_count() + shapes.size();
-    }
-
-    public int get_inherited_shape_count() {
-        return this.inheritedDictionary == null ? 0 : this.inheritedDictionary.get_shape_count();
-    }
-
     public int add_blit(JB2Blit blit) {
         if (blit.getShapeno() >= asUnsignedInt(get_shape_count())) {
             throw new DjVuFileException("JB2Image.bad_shape");
