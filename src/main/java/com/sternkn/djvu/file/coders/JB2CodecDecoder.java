@@ -54,7 +54,7 @@ public class JB2CodecDecoder {
     private final ZPCodecDecoder zpDecoder;
 
     // ??
-    private boolean gotStartRecord;
+    private boolean isStartRecord;
 
     private int cur_ncell;
     // Code comment
@@ -114,12 +114,12 @@ public class JB2CodecDecoder {
         this.dist_refinement_flag = new BitContext();
         this.offset_type_dist = new BitContext();
 
-        reset_numcoder();
+        resetCoder();
 
         this.bitdist = getInitialBitContext(1024);
         this.cbitdist = getInitialBitContext(2048);
 
-        this.gotStartRecord = false;
+        this.isStartRecord = false;
         this.refinementp = false;
     }
 
@@ -131,7 +131,7 @@ public class JB2CodecDecoder {
         }
         while (rectype != END_OF_DATA);
 
-        if (!gotStartRecord) {
+        if (!isStartRecord) {
             throw new DjVuFileException("JB2Image.no_start");
         }
 
@@ -146,7 +146,7 @@ public class JB2CodecDecoder {
         }
         while (rectype != END_OF_DATA);
 
-        if (!gotStartRecord) {
+        if (!isStartRecord) {
             throw new DjVuFileException("JB2Image.no_start");
         }
 
@@ -300,14 +300,7 @@ public class JB2CodecDecoder {
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                if (!this.gotStartRecord) {
-                    // Indicates need for a shape dictionary
-                    code_inherited_shape_count(image);
-                }
-                else {
-                    // Reset all numerical contexts to zero
-                    reset_numcoder();
-                }
+                code_inherited_shape_count(image);
                 break;
             }
             case END_OF_DATA:
@@ -371,7 +364,7 @@ public class JB2CodecDecoder {
     private JB2Blit code_relative_location(int rows, int columns)
     {
         // Check start record
-        if (!this.gotStartRecord) {
+        if (!this.isStartRecord) {
             throw new DjVuFileException("JB2Image.no_start");
         }
 
@@ -441,6 +434,11 @@ public class JB2CodecDecoder {
     }
 
     private void code_inherited_shape_count(JB2Dict image) {
+        if (isStartRecord) {
+            resetCoder();
+            return;
+        }
+
         final int size = codeNumber(0, BIGPOSITIVE, inherited_shape_count_dist, 0);
         if (size <= 0) {
             return;
@@ -456,7 +454,7 @@ public class JB2CodecDecoder {
         }
     }
 
-    private void reset_numcoder() {
+    private void resetCoder() {
         this.dist_comment_byte  = new BitContext();
         this.dist_comment_length = new BitContext();
         this.dist_record_type = new BitContext();
@@ -546,14 +544,7 @@ public class JB2CodecDecoder {
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                if (!this.gotStartRecord) {
-                    // Indicates need for a shape dictionary
-                    code_inherited_shape_count(dict);
-                }
-                else {
-                    // Reset all numerical contexts to zero
-                    reset_numcoder();
-                }
+                code_inherited_shape_count(dict);
                 break;
             }
             case END_OF_DATA:
@@ -565,10 +556,8 @@ public class JB2CodecDecoder {
                 throw new DjVuFileException("Unsupported record type: " + rectype);
             }
         }
+
         // Post-coding action
-        // if (!encoding) // encoding = false
-        // {
-            // add shape to dictionary
         switch(rectype)
         {
             case NEW_MARK_LIBRARY_ONLY:
@@ -724,7 +713,7 @@ public class JB2CodecDecoder {
         this.last_row_left = 0;
         this.last_row_bottom = 0;
         this.last_right = 0;
-        this.gotStartRecord = true;
+        this.isStartRecord = true;
         fill_short_list(this.last_row_bottom);
     }
 
@@ -742,7 +731,7 @@ public class JB2CodecDecoder {
         this.last_row_left = 0;
         this.last_row_bottom = image_rows;
         this.last_right = 0;
-        this.gotStartRecord = true;
+        this.isStartRecord = true;
         fill_short_list(this.last_row_bottom);
     }
 
