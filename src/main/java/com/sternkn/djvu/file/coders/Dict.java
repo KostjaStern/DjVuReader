@@ -21,15 +21,15 @@ import java.util.List;
 
 public interface Dict {
 
-    int get_inherited_shape_count();
+    int getInheritedShapeCount();
 
-    int get_shape_count();
+    int getShapeCount();
 
-    int add_shape(JB2Shape shape);
+    int addShape(JB2Shape shape);
 
-    JB2Shape get_shape(int shapeno);
+    JB2Shape getShape(int index);
 
-    void init_library();
+    void initLibrary();
 
     JB2Dict getInheritedDictionary();
 

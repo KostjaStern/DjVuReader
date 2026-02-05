@@ -88,7 +88,7 @@ public class TestJB2Image extends TestSupport {
         assertEquals(5, jb2Image.getHeight());
         assertEquals(3, jb2Image.getWidth());
         assertEquals(1, jb2Image.get_blit_count());
-        assertEquals(1, jb2Image.get_shape_count());
+        assertEquals(1, jb2Image.getShapeCount());
 
         assertEquals(new JB2Blit(3, 4, 0), jb2Image.get_blit(0));
 

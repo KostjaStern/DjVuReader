@@ -53,8 +53,8 @@ public class JB2Dict implements Dict {
     }
 
     @Override
-    public int get_inherited_shape_count() {
-        return this.inheritedDictionary == null ? 0 : this.inheritedDictionary.get_shape_count();
+    public int getInheritedShapeCount() {
+        return this.inheritedDictionary == null ? 0 : this.inheritedDictionary.getShapeCount();
     }
 
     @Override
@@ -63,8 +63,8 @@ public class JB2Dict implements Dict {
     }
 
     @Override
-    public void init_library() {
-        int nshape = get_inherited_shape_count();
+    public void initLibrary() {
+        int nshape = getInheritedShapeCount();
 
         lib2shape = new ArrayList<>(nshape);
 
@@ -87,7 +87,7 @@ public class JB2Dict implements Dict {
     }
 
     public LibRect get_bounding_box(int shapeno) {
-        final JB2Shape shape = get_shape(shapeno);
+        final JB2Shape shape = getShape(shapeno);
         LibRect libRect = new LibRect();
         libRect.compute_bounding_box(shape.getBits());
 
@@ -99,34 +99,34 @@ public class JB2Dict implements Dict {
     }
 
     @Override
-    public JB2Shape get_shape(int shapeno) {
-        int inheritedShapes = get_inherited_shape_count();
+    public JB2Shape getShape(int shapeno) {
+        int inheritedShapes = getInheritedShapeCount();
 
         if(shapeno >= inheritedShapes) {
             return shapes.get(shapeno - inheritedShapes);
         }
 
         if (this.inheritedDictionary != null) {
-            return this.inheritedDictionary.get_shape(shapeno);
+            return this.inheritedDictionary.getShape(shapeno);
         }
 
         throw new DjVuFileException("JB2Image.bad_number");
     }
 
     @Override
-    public int add_shape(JB2Shape shape) {
-        if (shape.getParent() >= get_shape_count()) {
+    public int addShape(JB2Shape shape) {
+        if (shape.getParent() >= getShapeCount()) {
             throw new DjVuFileException("JB2Image.bad_parent_shape");
         }
 
         int index = shapes.size();
         shapes.add(shape);
-        return index + get_inherited_shape_count();
+        return index + getInheritedShapeCount();
     }
 
     @Override
-    public int get_shape_count() {
-        return get_inherited_shape_count() + shapes.size();
+    public int getShapeCount() {
+        return getInheritedShapeCount() + shapes.size();
     }
 
     @Override

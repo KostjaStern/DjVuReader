@@ -70,7 +70,7 @@ public class JB2Image extends JB2Dict implements Dict {
     }
 
     public int add_blit(JB2Blit blit) {
-        if (blit.getShapeno() >= asUnsignedInt(get_shape_count())) {
+        if (blit.getShapeno() >= asUnsignedInt(getShapeCount())) {
             throw new DjVuFileException("JB2Image.bad_shape");
         }
 
@@ -112,7 +112,7 @@ public class JB2Image extends JB2Dict implements Dict {
         for (int blitno = 0; blitno < blitCount; blitno++)
         {
            JB2Blit pblit = get_blit(blitno);
-           JB2Shape  pshape = get_shape(pblit.getShapeno());
+           JB2Shape  pshape = getShape(pblit.getShapeno());
             GBitmap pshapeBits = pshape.getBits();
 
             if (pshapeBits != null) {

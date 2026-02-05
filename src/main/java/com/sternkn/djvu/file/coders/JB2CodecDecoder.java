@@ -187,7 +187,7 @@ public class JB2CodecDecoder {
             {
                 code_image_size(image);
                 code_eventual_lossless_refinement();
-                image.init_library();
+                image.initLibrary();
                 break;
             }
             case NEW_MARK:
@@ -210,7 +210,7 @@ public class JB2CodecDecoder {
             case MATCHED_REFINE:
             {
                 match = code_match_index(image, shape);
-                cbm = image.get_shape(shape.getParent()).getBits();
+                cbm = image.getShape(shape.getParent()).getBits();
                 LibRect libRect = image.get_lib(match);
                 code_relative_mark_size(bm,
                                     libRect.getRight() - libRect.getLeft() + 1,
@@ -231,7 +231,7 @@ public class JB2CodecDecoder {
             {
                 blit = new JB2Blit();
                 match = code_match_index(image, blit);
-                bm = image.get_shape(blit.getShapeno()).getBits();
+                bm = image.getShape(blit.getShapeno()).getBits();
                 LibRect libRect = image.get_lib(match);
                 blit.setLeft(libRect.getLeft());
                 blit.setBottom(libRect.getBottom());
@@ -285,7 +285,7 @@ public class JB2CodecDecoder {
             case MATCHED_REFINE_IMAGE_ONLY:
             case NON_MARK_DATA:
             {
-                shapeno = image.add_shape(shape);
+                shapeno = image.addShape(shape);
                 break;
             }
         }
@@ -408,7 +408,7 @@ public class JB2CodecDecoder {
             throw new DjVuFileException("JB2Image.need_dict");
         }
 
-        if (size != dict.get_shape_count()) {
+        if (size != dict.getShapeCount()) {
             throw new DjVuFileException("JB2Image.bad_dict");
         }
     }
@@ -471,7 +471,7 @@ public class JB2CodecDecoder {
 
                 code_image_size();
                 code_eventual_lossless_refinement();
-                dict.init_library();
+                dict.initLibrary();
                 break;
             }
             case NEW_MARK_LIBRARY_ONLY:
@@ -483,7 +483,7 @@ public class JB2CodecDecoder {
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
                 int match = code_match_index(dict, shape);
-                cbm = dict.get_shape(shape.getParent()).getBits();
+                cbm = dict.getShape(shape.getParent()).getBits();
                 LibRect libRect = dict.get_lib(match);
                 code_relative_mark_size(bm,
                     libRect.getRight() - libRect.getLeft() + 1,
@@ -522,7 +522,7 @@ public class JB2CodecDecoder {
                 if(dict == null) {
                     throw new DjVuFileException("JB2Image.bad_number");
                 }
-                shapeno = dict.add_shape(shape);
+                shapeno = dict.addShape(shape);
                 dict.add_library(shapeno, shape);
                 break;
             }
