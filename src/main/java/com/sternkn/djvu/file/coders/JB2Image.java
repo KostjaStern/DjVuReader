@@ -35,7 +35,6 @@ public class JB2Image extends JB2Dict implements Dict {
     private int height;
 
     private final List<JB2Blit> blits;
-
     private final boolean reproduce_old_bug;
 
     public JB2Image() {
@@ -68,19 +67,6 @@ public class JB2Image extends JB2Dict implements Dict {
 
     public JB2Blit get_blit(int index) {
         return blits.get(index);
-    }
-
-    public void init_library() {
-        int nshape = get_inherited_shape_count();
-
-        lib2shape = new ArrayList<>(nshape);
-
-        for (int i = 0; i < nshape; i++) {
-            lib2shape.add(i);
-
-            LibRect libRect = this.inheritedDictionary.get_bounding_box(i);
-            boxes.add(libRect);
-        }
     }
 
     public int add_blit(JB2Blit blit) {

@@ -29,10 +29,10 @@ import java.util.List;
  */
 public class JB2Dict implements Dict {
 
-    protected JB2Dict inheritedDictionary;
-    protected final List<JB2Shape> shapes;
-    protected List<Integer> lib2shape;
-    protected final List<LibRect> boxes;
+    private JB2Dict inheritedDictionary;
+    private final List<JB2Shape> shapes;
+    private List<Integer> lib2shape;
+    private final List<LibRect> boxes;
     private String comment;
 
     public JB2Dict() {
@@ -42,19 +42,38 @@ public class JB2Dict implements Dict {
         lib2shape = new ArrayList<>();
     }
 
+    @Override
     public JB2Dict getInheritedDictionary() {
         return inheritedDictionary;
     }
+
+    @Override
     public void setInheritedDictionary(JB2Dict dictionary) {
         this.inheritedDictionary = dictionary;
     }
 
+    @Override
     public int get_inherited_shape_count() {
         return this.inheritedDictionary == null ? 0 : this.inheritedDictionary.get_shape_count();
     }
 
+    @Override
     public List<Integer> getLib2shape() {
         return lib2shape;
+    }
+
+    @Override
+    public void init_library() {
+        int nshape = get_inherited_shape_count();
+
+        lib2shape = new ArrayList<>(nshape);
+
+        for (int i = 0; i < nshape; i++) {
+            lib2shape.add(i);
+
+            LibRect libRect = this.inheritedDictionary.get_bounding_box(i);
+            boxes.add(libRect);
+        }
     }
 
     public int add_library(int shapeno, JB2Shape shape) {

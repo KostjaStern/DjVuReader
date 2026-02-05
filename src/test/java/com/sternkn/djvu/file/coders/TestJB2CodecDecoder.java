@@ -113,10 +113,7 @@ public class TestJB2CodecDecoder extends TestSupport {
             0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
-        final int[] buffer = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-        final GBitmap expectedBitmap = new GBitmap();
-        expectedBitmap.init(5, 3, 4, bytes_data, buffer);
+        final GBitmap expectedBitmap = createBitmap(3, 5, bytes_data);
 
         assertPixmapEquals(expectedBitmap, shape.getBits());
     }
@@ -136,10 +133,7 @@ public class TestJB2CodecDecoder extends TestSupport {
         final int[] bytes_data1 = {
             0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
-        final int[] buffer1 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-        final GBitmap expectedBitmap1 = new GBitmap();
-        expectedBitmap1.init(4, 3, 4, bytes_data1, buffer1);
+        final GBitmap expectedBitmap1 = createBitmap(3, 4, bytes_data1);
 
         assertPixmapEquals(expectedBitmap1, shape1.getBits());
 
@@ -147,11 +141,43 @@ public class TestJB2CodecDecoder extends TestSupport {
             0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
-        final int[] buffer2 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-        final GBitmap expectedBitmap2 = new GBitmap();
-        expectedBitmap2.init(5, 3, 4, bytes_data2, buffer2);
+        final GBitmap expectedBitmap2 = createBitmap(3, 5, bytes_data2);
 
         assertPixmapEquals(expectedBitmap2, shape2.getBits());
+    }
+
+    @Test
+    public void testDecodeDictionaryWithCommentAndInhDictionaryDecodeLibInitializationProblem() {
+        JB2Dict dict = readDictionary("My_Djbz_with_comment_and_inh_dict1.data",
+                "My_inh_Djbz_with_comment.data");
+
+        assertEquals("My dict comment!", dict.getComment());
+
+        assertEquals(2, dict.get_shape_count());
+
+        JB2Shape shape1 = dict.get_shape(0);
+        JB2Shape shape2 = dict.get_shape(1);
+
+        final int[] bytes_data1 = {
+            0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final GBitmap expectedBitmap1 = createBitmap(3, 4, bytes_data1);
+
+        assertPixmapEquals(expectedBitmap1, shape1.getBits());
+
+        final int[] bytes_data2 = {
+            0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final GBitmap expectedBitmap2 = createBitmap(3, 5, bytes_data2);
+
+        assertPixmapEquals(expectedBitmap2, shape2.getBits());
+    }
+
+    private GBitmap createBitmap(int width, int height, int[] data) {
+        final GBitmap bitmap = new GBitmap();
+        bitmap.init(height, width, 4, data, null);
+
+        return bitmap;
     }
 }

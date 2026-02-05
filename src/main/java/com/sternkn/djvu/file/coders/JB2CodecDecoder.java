@@ -514,6 +514,7 @@ public class JB2CodecDecoder {
 
                 code_image_size(dict);
                 code_eventual_lossless_refinement();
+                dict.init_library();
                 break;
             }
             case NEW_MARK_LIBRARY_ONLY:
@@ -545,8 +546,6 @@ public class JB2CodecDecoder {
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                // throw new DjVuFileException("unsupported record type REQUIRED_DICT_OR_RESET");
-
                 if (!this.gotStartRecord) {
                     // Indicates need for a shape dictionary
                     code_inherited_shape_count(dict);
@@ -556,18 +555,6 @@ public class JB2CodecDecoder {
                     reset_numcoder();
                 }
                 break;
-//                if (! gotstartrecordp)
-//                {
-//                    // Indicates need for a shape dictionary
-//                    if(!gjim)
-//                    {
-//                        G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                    }
-//                    code_inherited_shape_count(*gjim);
-//                }else
-//                    // Reset all numerical contexts to zero
-//                    reset_numcoder();
-                // break;
             }
             case END_OF_DATA:
             {
