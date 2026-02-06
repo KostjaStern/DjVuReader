@@ -260,7 +260,7 @@ public class JB2CodecDecoder {
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                code_inherited_shape_count(image);
+                codeInheritedShapeCount(image);
                 break;
             }
             case END_OF_DATA:
@@ -392,7 +392,7 @@ public class JB2CodecDecoder {
         return codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_loc, 0);
     }
 
-    private void code_inherited_shape_count(JB2Dict image) {
+    private void codeInheritedShapeCount(Dict dict) {
         if (isStartRecord) {
             resetCoder();
             return;
@@ -403,12 +403,12 @@ public class JB2CodecDecoder {
             return;
         }
 
-        JB2Dict dict = image.getInheritedDictionary();
-        if (dict == null) {
+        final JB2Dict inheritedDictionary = dict.getInheritedDictionary();
+        if (inheritedDictionary == null) {
             throw new DjVuFileException("JB2Image.need_dict");
         }
 
-        if (size != dict.getShapeCount()) {
+        if (size != inheritedDictionary.getShapeCount()) {
             throw new DjVuFileException("JB2Image.bad_dict");
         }
     }
@@ -500,7 +500,7 @@ public class JB2CodecDecoder {
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                code_inherited_shape_count(dict);
+                codeInheritedShapeCount(dict);
                 break;
             }
             case END_OF_DATA:
@@ -616,7 +616,7 @@ public class JB2CodecDecoder {
                (n << 7);
     }
 
-    private void codeComment(JB2Dict dict) {
+    private void codeComment(Dict dict) {
         if(dict == null) {
             throw new DjVuFileException("JB2Image.bad_number");
         }
