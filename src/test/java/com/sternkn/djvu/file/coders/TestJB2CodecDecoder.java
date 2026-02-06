@@ -30,8 +30,8 @@ public class TestJB2CodecDecoder extends TestSupport {
         assertEquals(2600, image.getWidth());
         assertEquals(4200, image.getHeight());
         assertEquals(1861, image.get_blit_count());
-        assertEquals(120, image.get_shape_count());
-        assertEquals(0, image.get_inherited_shape_count());
+        assertEquals(120, image.getShapeCount());
+        assertEquals(0, image.getInheritedShapeCount());
 
         assertEquals(new JB2Blit(1539, 4049, 0), image.get_blit(0));
         assertEquals(new JB2Blit(1569, 4048, 1), image.get_blit(1));
@@ -48,8 +48,8 @@ public class TestJB2CodecDecoder extends TestSupport {
         assertEquals(1871, image.getWidth());
         assertEquals(2633, image.getHeight());
         assertEquals(0, image.get_blit_count());
-        assertEquals(0, image.get_shape_count());
-        assertEquals(0, image.get_inherited_shape_count());
+        assertEquals(0, image.getShapeCount());
+        assertEquals(0, image.getInheritedShapeCount());
     }
 
     @Test
@@ -59,8 +59,8 @@ public class TestJB2CodecDecoder extends TestSupport {
         assertEquals(1871, image.getWidth());
         assertEquals(2638, image.getHeight());
         assertEquals(1259, image.get_blit_count());
-        assertEquals(351, image.get_shape_count());
-        assertEquals(0, image.get_inherited_shape_count());
+        assertEquals(351, image.getShapeCount());
+        assertEquals(0, image.getInheritedShapeCount());
     }
 
     @Test
@@ -70,8 +70,8 @@ public class TestJB2CodecDecoder extends TestSupport {
         assertEquals(2832, image.getWidth());
         assertEquals(4539, image.getHeight());
         assertEquals(241, image.get_blit_count());
-        assertEquals(707, image.get_shape_count());
-        assertEquals(488, image.get_inherited_shape_count());
+        assertEquals(707, image.getShapeCount());
+        assertEquals(488, image.getInheritedShapeCount());
 
         assertEquals(new JB2Blit(1285, 4025, 488), image.get_blit(0));
         assertEquals(new JB2Blit(1329, 4011, 489), image.get_blit(1));
@@ -85,16 +85,99 @@ public class TestJB2CodecDecoder extends TestSupport {
     public void testDecodeDictionary() {
         JB2Dict dict = readDictionary("Djbz_4.data");
 
-        assertEquals(488, dict.get_shape_count());
+        assertEquals(488, dict.getShapeCount());
 
-        assertEquals(34, dict.get_shape(0).getBits().getWidth());
-        assertEquals(41, dict.get_shape(0).getBits().getHeight());
-        assertEquals(32, dict.get_shape(1).getBits().getWidth());
-        assertEquals(38, dict.get_shape(1).getBits().getHeight());
+        assertEquals(34, dict.getShape(0).getBits().getWidth());
+        assertEquals(41, dict.getShape(0).getBits().getHeight());
+        assertEquals(32, dict.getShape(1).getBits().getWidth());
+        assertEquals(38, dict.getShape(1).getBits().getHeight());
 
-        assertEquals(5, dict.get_shape(486).getBits().getWidth());
-        assertEquals(7, dict.get_shape(486).getBits().getHeight());
-        assertEquals(22, dict.get_shape(487).getBits().getWidth());
-        assertEquals(21, dict.get_shape(487).getBits().getHeight());
+        assertEquals(5, dict.getShape(486).getBits().getWidth());
+        assertEquals(7, dict.getShape(486).getBits().getHeight());
+        assertEquals(22, dict.getShape(487).getBits().getWidth());
+        assertEquals(21, dict.getShape(487).getBits().getHeight());
+    }
+
+    @Test
+    public void testDecodeDictionaryWithComment() {
+        JB2Dict dict = readDictionary("My_Djbz_with_comment.data");
+
+        assertEquals("My dict comment!", dict.getComment());
+
+        assertEquals(1, dict.getShapeCount());
+
+        JB2Shape shape = dict.getShape(0);
+
+        final int[] bytes_data = {
+            0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final GBitmap expectedBitmap = createBitmap(3, 5, bytes_data);
+
+        assertPixmapEquals(expectedBitmap, shape.getBits());
+    }
+
+    @Test
+    public void testDecodeDictionaryWithCommentAndInhDictionary() {
+        JB2Dict dict = readDictionary("My_Djbz_with_comment_and_inh_dict.data",
+                "My_inh_Djbz_with_comment.data");
+
+        assertEquals("My dict comment!", dict.getComment());
+
+        assertEquals(2, dict.getShapeCount());
+
+        JB2Shape shape1 = dict.getShape(0);
+        JB2Shape shape2 = dict.getShape(1);
+
+        final int[] bytes_data1 = {
+            0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final GBitmap expectedBitmap1 = createBitmap(3, 4, bytes_data1);
+
+        assertPixmapEquals(expectedBitmap1, shape1.getBits());
+
+        final int[] bytes_data2 = {
+            0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final GBitmap expectedBitmap2 = createBitmap(3, 5, bytes_data2);
+
+        assertPixmapEquals(expectedBitmap2, shape2.getBits());
+    }
+
+    @Test
+    public void testDecodeDictionaryWithCommentAndInhDictionaryDecodeLibInitializationProblem() {
+        JB2Dict dict = readDictionary("My_Djbz_with_comment_and_inh_dict1.data",
+                "My_inh_Djbz_with_comment.data");
+
+        assertEquals("My dict comment!", dict.getComment());
+
+        assertEquals(2, dict.getShapeCount());
+
+        JB2Shape shape1 = dict.getShape(0);
+        JB2Shape shape2 = dict.getShape(1);
+
+        final int[] bytes_data1 = {
+            0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final GBitmap expectedBitmap1 = createBitmap(3, 4, bytes_data1);
+
+        assertPixmapEquals(expectedBitmap1, shape1.getBits());
+
+        final int[] bytes_data2 = {
+            0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+        final GBitmap expectedBitmap2 = createBitmap(3, 5, bytes_data2);
+
+        assertPixmapEquals(expectedBitmap2, shape2.getBits());
+    }
+
+    private GBitmap createBitmap(int width, int height, int[] data) {
+        final GBitmap bitmap = new GBitmap();
+        bitmap.init(height, width, 4, data, null);
+
+        return bitmap;
     }
 }

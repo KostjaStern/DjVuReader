@@ -33,23 +33,15 @@ public class JB2Image extends JB2Dict implements Dict {
 
     private int width;
     private int height;
-    private final JB2Dict dictionary;
 
     private final List<JB2Blit> blits;
-
     private final boolean reproduce_old_bug;
 
-    public JB2Image(JB2Dict dict) {
+    public JB2Image() {
         super();
 
-        this.dictionary = dict;
         this.blits = new ArrayList<>();
-
         this.reproduce_old_bug = false;
-    }
-
-    public JB2Dict getDictionary() {
-        return dictionary;
     }
 
     public void set_dimension(int width, int height) {
@@ -77,50 +69,8 @@ public class JB2Image extends JB2Dict implements Dict {
         return blits.get(index);
     }
 
-    public void init_library() {
-        int nshape = get_inherited_shape_count();
-
-        lib2shape = new ArrayList<>(nshape);
-
-        for (int i = 0; i < nshape; i++) {
-            lib2shape.add(i);
-
-            LibRect libRect = this.dictionary.get_bounding_box(i);
-            boxes.add(libRect);
-        }
-    }
-
-    @Override
-    public JB2Shape get_shape(int shapeno) {
-        int inheritedShapes = get_inherited_shape_count();
-
-        if(shapeno >= inheritedShapes) {
-            return shapes.get(shapeno - inheritedShapes);
-        }
-
-        if (this.dictionary != null) {
-            return this.dictionary.get_shape(shapeno);
-        }
-
-        throw new DjVuFileException("JB2Image.bad_number");
-    }
-
-    @Override
-    public int add_shape(JB2Shape shape) {
-        return super.add_shape(shape) + get_inherited_shape_count();
-    }
-
-    @Override
-    public int get_shape_count() {
-        return get_inherited_shape_count() + shapes.size();
-    }
-
-    public int get_inherited_shape_count() {
-        return this.dictionary == null ? 0 : this.dictionary.get_shape_count();
-    }
-
     public int add_blit(JB2Blit blit) {
-        if (blit.getShapeno() >= asUnsignedInt(get_shape_count())) {
+        if (blit.getShapeno() >= asUnsignedInt(getShapeCount())) {
             throw new DjVuFileException("JB2Image.bad_shape");
         }
 
@@ -162,7 +112,7 @@ public class JB2Image extends JB2Dict implements Dict {
         for (int blitno = 0; blitno < blitCount; blitno++)
         {
            JB2Blit pblit = get_blit(blitno);
-           JB2Shape  pshape = get_shape(pblit.getShapeno());
+           JB2Shape  pshape = getShape(pblit.getShapeno());
             GBitmap pshapeBits = pshape.getBits();
 
             if (pshapeBits != null) {

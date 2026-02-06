@@ -134,7 +134,8 @@ public class TestSupport {
 
     JB2Image readImage(String imageFileName, String dictFileName) {
         JB2Dict dict = dictFileName != null ? readDictionary(dictFileName) : null;
-        JB2Image image = new JB2Image(dict);
+        JB2Image image = new JB2Image();
+        image.setInheritedDictionary(dict);
 
         try (InputStream inputStream = readStream(imageFileName)) {
             JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
@@ -149,6 +150,22 @@ public class TestSupport {
 
     JB2Dict readDictionary(String fileName) {
         JB2Dict dict = new JB2Dict();
+
+        try (InputStream inputStream = readStream(fileName)) {
+            JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);
+            decoder.decode(dict);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return dict;
+    }
+
+    JB2Dict readDictionary(String fileName, String inhFileName) {
+        JB2Dict inheritedDict = readDictionary(inhFileName);
+        JB2Dict dict = new JB2Dict();
+        dict.setInheritedDictionary(inheritedDict);
 
         try (InputStream inputStream = readStream(fileName)) {
             JB2CodecDecoder decoder = new JB2CodecDecoder(inputStream);

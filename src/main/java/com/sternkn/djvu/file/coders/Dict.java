@@ -17,11 +17,27 @@
 */
 package com.sternkn.djvu.file.coders;
 
+import java.util.List;
+
 public interface Dict {
 
-    int get_shape_count();
+    int getInheritedShapeCount();
 
-    int add_shape(JB2Shape shape);
+    int getShapeCount();
 
-    JB2Shape get_shape(int shapeno);
+    int addShape(JB2Shape shape);
+
+    JB2Shape getShape(int index);
+
+    void initLibrary();
+
+    JB2Dict getInheritedDictionary();
+
+    void setInheritedDictionary(JB2Dict dictionary);
+
+    List<Integer> getLib2shape();
+
+    String getComment();
+
+    void setComment(String comment);
 }

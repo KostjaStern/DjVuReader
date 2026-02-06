@@ -29,9 +29,11 @@ import java.util.List;
  */
 public class JB2Dict implements Dict {
 
-    protected final List<JB2Shape> shapes;
-    protected List<Integer> lib2shape;
-    protected final List<LibRect> boxes;
+    private JB2Dict inheritedDictionary;
+    private final List<JB2Shape> shapes;
+    private List<Integer> lib2shape;
+    private final List<LibRect> boxes;
+    private String comment;
 
     public JB2Dict() {
         this.shapes = new ArrayList<>();
@@ -40,8 +42,38 @@ public class JB2Dict implements Dict {
         lib2shape = new ArrayList<>();
     }
 
+    @Override
+    public JB2Dict getInheritedDictionary() {
+        return inheritedDictionary;
+    }
+
+    @Override
+    public void setInheritedDictionary(JB2Dict dictionary) {
+        this.inheritedDictionary = dictionary;
+    }
+
+    @Override
+    public int getInheritedShapeCount() {
+        return this.inheritedDictionary == null ? 0 : this.inheritedDictionary.getShapeCount();
+    }
+
+    @Override
     public List<Integer> getLib2shape() {
         return lib2shape;
+    }
+
+    @Override
+    public void initLibrary() {
+        int nshape = getInheritedShapeCount();
+
+        lib2shape = new ArrayList<>(nshape);
+
+        for (int i = 0; i < nshape; i++) {
+            lib2shape.add(i);
+
+            LibRect libRect = this.inheritedDictionary.get_bounding_box(i);
+            boxes.add(libRect);
+        }
     }
 
     public int add_library(int shapeno, JB2Shape shape) {
@@ -55,7 +87,7 @@ public class JB2Dict implements Dict {
     }
 
     public LibRect get_bounding_box(int shapeno) {
-        final JB2Shape shape = get_shape(shapeno);
+        final JB2Shape shape = getShape(shapeno);
         LibRect libRect = new LibRect();
         libRect.compute_bounding_box(shape.getBits());
 
@@ -67,27 +99,43 @@ public class JB2Dict implements Dict {
     }
 
     @Override
-    public JB2Shape get_shape(int shapeno) {
-        if(shapeno >= 0) {
-            return shapes.get(shapeno);
+    public JB2Shape getShape(int shapeno) {
+        int inheritedShapes = getInheritedShapeCount();
+
+        if(shapeno >= inheritedShapes) {
+            return shapes.get(shapeno - inheritedShapes);
+        }
+
+        if (this.inheritedDictionary != null) {
+            return this.inheritedDictionary.getShape(shapeno);
         }
 
         throw new DjVuFileException("JB2Image.bad_number");
     }
 
     @Override
-    public int add_shape(JB2Shape shape) {
-        if (shape.getParent() >= get_shape_count()) {
+    public int addShape(JB2Shape shape) {
+        if (shape.getParent() >= getShapeCount()) {
             throw new DjVuFileException("JB2Image.bad_parent_shape");
         }
 
         int index = shapes.size();
         shapes.add(shape);
-        return index;
+        return index + getInheritedShapeCount();
     }
 
     @Override
-    public int get_shape_count() {
-        return shapes.size();
+    public int getShapeCount() {
+        return getInheritedShapeCount() + shapes.size();
+    }
+
+    @Override
+    public String getComment() {
+        return comment;
+    }
+
+    @Override
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

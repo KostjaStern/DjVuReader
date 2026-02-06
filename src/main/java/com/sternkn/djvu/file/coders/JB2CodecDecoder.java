@@ -53,8 +53,7 @@ public class JB2CodecDecoder {
 
     private final ZPCodecDecoder zpDecoder;
 
-    // ??
-    private boolean gotStartRecord;
+    private boolean isStartRecord;
 
     private int cur_ncell;
     // Code comment
@@ -114,12 +113,12 @@ public class JB2CodecDecoder {
         this.dist_refinement_flag = new BitContext();
         this.offset_type_dist = new BitContext();
 
-        reset_numcoder();
+        resetCoder();
 
         this.bitdist = getInitialBitContext(1024);
         this.cbitdist = getInitialBitContext(2048);
 
-        this.gotStartRecord = false;
+        this.isStartRecord = false;
         this.refinementp = false;
     }
 
@@ -131,11 +130,9 @@ public class JB2CodecDecoder {
         }
         while (rectype != END_OF_DATA);
 
-        if (!gotStartRecord) {
+        if (!isStartRecord) {
             throw new DjVuFileException("JB2Image.no_start");
         }
-
-        // dict.compress();
     }
 
     public void decode(JB2Image image) {
@@ -146,11 +143,9 @@ public class JB2CodecDecoder {
         }
         while (rectype != END_OF_DATA);
 
-        if (!gotStartRecord) {
+        if (!isStartRecord) {
             throw new DjVuFileException("JB2Image.no_start");
         }
-
-        // dict.compress();
     }
 
     private int codeRecord(JB2Image image) {
@@ -192,7 +187,7 @@ public class JB2CodecDecoder {
             {
                 code_image_size(image);
                 code_eventual_lossless_refinement();
-                image.init_library();
+                image.initLibrary();
                 break;
             }
             case NEW_MARK:
@@ -211,15 +206,11 @@ public class JB2CodecDecoder {
             case NEW_MARK_IMAGE_ONLY:
             {
                 throw new DjVuFileException("Unsupported record type NEW_MARK_IMAGE_ONLY");
-//                code_absolute_mark_size (*bm, 3);
-//                code_bitmap_directly (*bm);
-//                code_relative_location (jblt, bm->rows(), bm->columns() );
-                // break;
             }
             case MATCHED_REFINE:
             {
                 match = code_match_index(image, shape);
-                cbm = image.get_shape(shape.getParent()).getBits();
+                cbm = image.getShape(shape.getParent()).getBits();
                 LibRect libRect = image.get_lib(match);
                 code_relative_mark_size(bm,
                                     libRect.getRight() - libRect.getLeft() + 1,
@@ -230,41 +221,17 @@ public class JB2CodecDecoder {
             }
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
-                throw new DjVuFileException("Unsupported record type MATCHED_REFINE_LIBRARY_ONLY");
-//                if(!xjshp||!gjim)
-//                {
-//                    G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                }
-//                JB2Image &jim=*gjim;
-//                JB2Shape &jshp=*xjshp;
-//                match = code_match_index (jshp.parent, jim);
-//                cbm = jim.get_shape(jshp.parent).bits;
-//                LibRect &l = libinfo[match];
-//                code_relative_mark_size (*bm, l.right-l.left+1, l.top-l.bottom+1, 4);
-                // break;
+                throw new DjVuFileException("Unsupported record type MATCHED_REFINE_LIBRARY_ONLY for Sjbz chunk");
             }
             case MATCHED_REFINE_IMAGE_ONLY:
             {
                 throw new DjVuFileException("Unsupported record type MATCHED_REFINE_IMAGE_ONLY");
-//                if(!xjshp||!gjim)
-//                {
-//                    G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                }
-//                JB2Image &jim=*gjim;
-//                JB2Shape &jshp=*xjshp;
-//                match = code_match_index (jshp.parent, jim);
-//                cbm = jim.get_shape(jshp.parent).bits;
-//                LibRect &l = libinfo[match];
-//                code_relative_mark_size (*bm, l.right-l.left+1, l.top-l.bottom+1, 4);
-//                code_bitmap_by_cross_coding (*bm, cbm, match);
-//                code_relative_location (jblt, bm->rows(), bm->columns() );
-                // break;
             }
             case MATCHED_COPY:
             {
                 blit = new JB2Blit();
                 match = code_match_index(image, blit);
-                bm = image.get_shape(blit.getShapeno()).getBits();
+                bm = image.getShape(blit.getShapeno()).getBits();
                 LibRect libRect = image.get_lib(match);
                 blit.setLeft(libRect.getLeft());
                 blit.setBottom(libRect.getBottom());
@@ -285,32 +252,15 @@ public class JB2CodecDecoder {
             case NON_MARK_DATA:
             {
                 throw new DjVuFileException("Unsupported record type NON_MARK_DATA");
-//                code_absolute_mark_size (*bm, 3);
-//                code_bitmap_directly (*bm);
-//                code_absolute_location (jblt, bm->rows(), bm->columns() );
-                // break;
             }
             case PRESERVED_COMMENT:
             {
-                throw new DjVuFileException("Unsupported record type PRESERVED_COMMENT");
-//                if(!gjim)
-//                {
-//                    G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                }
-//                JB2Image &jim=*gjim;
-//                code_comment(jim.comment);
-                // break;
+                codeComment(image);
+                break;
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                if (!this.gotStartRecord) {
-                    // Indicates need for a shape dictionary
-                    code_inherited_shape_count(image);
-                }
-                else {
-                    // Reset all numerical contexts to zero
-                    reset_numcoder();
-                }
+                codeInheritedShapeCount(image);
                 break;
             }
             case END_OF_DATA:
@@ -335,7 +285,7 @@ public class JB2CodecDecoder {
             case MATCHED_REFINE_IMAGE_ONLY:
             case NON_MARK_DATA:
             {
-                shapeno = image.add_shape(shape);
+                shapeno = image.addShape(shape);
                 break;
             }
         }
@@ -371,10 +321,9 @@ public class JB2CodecDecoder {
         return rectype;
     }
 
-    private JB2Blit code_relative_location(int rows, int columns)
-    {
+    private JB2Blit code_relative_location(int rows, int columns) {
         // Check start record
-        if (!this.gotStartRecord) {
+        if (!this.isStartRecord) {
             throw new DjVuFileException("JB2Image.no_start");
         }
 
@@ -443,23 +392,28 @@ public class JB2CodecDecoder {
         return codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_loc, 0);
     }
 
-    private void code_inherited_shape_count(JB2Image image) {
+    private void codeInheritedShapeCount(Dict dict) {
+        if (isStartRecord) {
+            resetCoder();
+            return;
+        }
+
         final int size = codeNumber(0, BIGPOSITIVE, inherited_shape_count_dist, 0);
         if (size <= 0) {
             return;
         }
 
-        JB2Dict dict = image.getDictionary();
-        if (dict == null) {
+        final JB2Dict inheritedDictionary = dict.getInheritedDictionary();
+        if (inheritedDictionary == null) {
             throw new DjVuFileException("JB2Image.need_dict");
         }
 
-        if (size != dict.get_shape_count()) {
+        if (size != inheritedDictionary.getShapeCount()) {
             throw new DjVuFileException("JB2Image.bad_dict");
         }
     }
 
-    private void reset_numcoder() {
+    private void resetCoder() {
         this.dist_comment_byte  = new BitContext();
         this.dist_comment_length = new BitContext();
         this.dist_record_type = new BitContext();
@@ -515,8 +469,9 @@ public class JB2CodecDecoder {
                     throw new DjVuFileException("JB2Image.bad_number");
                 }
 
-                code_image_size(dict);
+                code_image_size();
                 code_eventual_lossless_refinement();
+                dict.initLibrary();
                 break;
             }
             case NEW_MARK_LIBRARY_ONLY:
@@ -527,12 +482,12 @@ public class JB2CodecDecoder {
             }
             case MATCHED_REFINE_LIBRARY_ONLY:
             {
-                int match = code_match_index(dict, shape); // shape.getParent()
-                cbm = dict.get_shape(shape.getParent()).getBits();
-                LibRect libRect = dict.get_lib(match); // libinfo.get(match);
+                int match = code_match_index(dict, shape);
+                cbm = dict.getShape(shape.getParent()).getBits();
+                LibRect libRect = dict.get_lib(match);
                 code_relative_mark_size(bm,
-                                        libRect.getRight() - libRect.getLeft() + 1,
-                                        libRect.getTop() - libRect.getBottom() + 1, 4);
+                    libRect.getRight() - libRect.getLeft() + 1,
+                    libRect.getTop() - libRect.getBottom() + 1, 4);
 
                 libRect = dict.get_lib(shape.getParent());
                 code_bitmap_by_cross_coding(bm, cbm, libRect);
@@ -540,29 +495,13 @@ public class JB2CodecDecoder {
             }
             case PRESERVED_COMMENT:
             {
-                throw new DjVuFileException("unsupported record type PRESERVED_COMMENT");
-//                if(dict != null) {
-//                    throw new DjVuFileException("JB2Image.bad_number");
-//                }
-                // JB2Dict &jim=*gjim;
-                // code_comment(jim.comment);
-                // break;
+                codeComment(dict);
+                break;
             }
             case REQUIRED_DICT_OR_RESET:
             {
-                throw new DjVuFileException("unsupported record type REQUIRED_DICT_OR_RESET");
-//                if (! gotstartrecordp)
-//                {
-//                    // Indicates need for a shape dictionary
-//                    if(!gjim)
-//                    {
-//                        G_THROW( ERR_MSG("JB2Image.bad_number") );
-//                    }
-//                    code_inherited_shape_count(*gjim);
-//                }else
-//                    // Reset all numerical contexts to zero
-//                    reset_numcoder();
-                // break;
+                codeInheritedShapeCount(dict);
+                break;
             }
             case END_OF_DATA:
             {
@@ -573,10 +512,8 @@ public class JB2CodecDecoder {
                 throw new DjVuFileException("Unsupported record type: " + rectype);
             }
         }
+
         // Post-coding action
-        // if (!encoding) // encoding = false
-        // {
-            // add shape to dictionary
         switch(rectype)
         {
             case NEW_MARK_LIBRARY_ONLY:
@@ -585,7 +522,7 @@ public class JB2CodecDecoder {
                 if(dict == null) {
                     throw new DjVuFileException("JB2Image.bad_number");
                 }
-                shapeno = dict.add_shape(shape);
+                shapeno = dict.addShape(shape);
                 dict.add_library(shapeno, shape);
                 break;
             }
@@ -655,8 +592,7 @@ public class JB2CodecDecoder {
     }
 
     private int get_cross_context(BufferPointer up1, BufferPointer up0, BufferPointer xup1,
-                                  BufferPointer xup0, BufferPointer xdn1, int column)
-    {
+                                  BufferPointer xup0, BufferPointer xdn1, int column) {
         return (up1.getValue(column - 1) << 10)  |
                (up1.getValue(column) <<  9)             |
                (up1.getValue(column + 1) <<  8)  |
@@ -680,6 +616,23 @@ public class JB2CodecDecoder {
                (n << 7);
     }
 
+    private void codeComment(Dict dict) {
+        if(dict == null) {
+            throw new DjVuFileException("JB2Image.bad_number");
+        }
+
+        int size = codeNumber(0, BIGPOSITIVE, dist_comment_length, 0);
+        char[] buffer = new char[size];
+
+        for (int ind = 0; ind < size; ind++) {
+            int ch = codeNumber(0, 255, dist_comment_byte, 0);
+            buffer[ind] = (char) ch;
+        }
+
+        String comment = new String(buffer);
+        dict.setComment(comment);
+    }
+
     private void code_relative_mark_size(GBitmap bm, int cw, int ch, int border) {
         int xdiff = codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_size_x, 0);
         int ydiff = codeNumber(BIGNEGATIVE, BIGPOSITIVE, rel_size_y, 0);
@@ -699,14 +652,11 @@ public class JB2CodecDecoder {
         return match;
     }
 
-    // inline void JB2Dict::JB2Codec::code_eventual_lossless_refinement(void)  (see JB2Image.h)
     private void code_eventual_lossless_refinement() {
         this.refinementp = codeBit(dist_refinement_flag);
     }
 
-    // codeNumber(START_OF_DATA, END_OF_DATA, dist_record_type, 0);
-    // void JB2Dict::JB2Codec::Decode::code_image_size(JB2Dict &jim)
-    private void code_image_size(JB2Dict dict) {
+    private void code_image_size() {
         int w = codeNumber(0, BIGPOSITIVE, image_size_dist, 0);
         int h = codeNumber(0, BIGPOSITIVE, image_size_dist, 0);
 
@@ -714,12 +664,11 @@ public class JB2CodecDecoder {
             throw new DjVuFileException("JB2Image.bad_dict2");
         }
 
-        // JB2Codec::code_image_size(jim);
         this.last_left = 1;
         this.last_row_left = 0;
         this.last_row_bottom = 0;
         this.last_right = 0;
-        this.gotStartRecord = true;
+        this.isStartRecord = true;
         fill_short_list(this.last_row_bottom);
     }
 
@@ -737,7 +686,7 @@ public class JB2CodecDecoder {
         this.last_row_left = 0;
         this.last_row_bottom = image_rows;
         this.last_right = 0;
-        this.gotStartRecord = true;
+        this.isStartRecord = true;
         fill_short_list(this.last_row_bottom);
     }
 
