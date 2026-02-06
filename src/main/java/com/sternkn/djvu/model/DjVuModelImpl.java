@@ -170,18 +170,51 @@ public class DjVuModelImpl implements DjVuModel {
 
     @Override
     public PageData load(Page page) {
-        Image image = getPageImage(page);
+        PageChunks chunks = getPageChunks(page.getOffset());
+
+        Image image = getPageImage(chunks);
+
+
         return new PageData(image);
+    }
+
+    private TextChunk getTextChunk(PageChunks chunks) {
+        Chunk chunk = getChunk(chunks.pageChunks(), ChunkId.TXTz);
+        if (chunk != null) {
+            return new TextChunk(chunk);
+        }
+
+        chunk = getChunk(chunks.pageChunks(), ChunkId.TXTa);
+        if (chunk != null) {
+            return new TextChunk(chunk);
+        }
+
+        return null;
+    }
+
+    private static record PageChunks(InfoChunk info, Map<ChunkId, List<Chunk>> pageChunks) {
+    }
+
+    private PageChunks getPageChunks(Long offset) {
+        Chunk chunk = djvuFile.getChunkByOffset(offset);
+        InfoChunk info = new InfoChunk(chunk);
+
+        LOG.debug("Page offset = {}, info = {}", offset, info);
+
+        Map<ChunkId, List<Chunk>> pageChunks = djvuFile.getAllPageChunks(chunk);
+
+        return new PageChunks(info, pageChunks);
     }
 
     @Override
     public Image getPageImage(Page page) {
-        Chunk chunk = djvuFile.getChunkByOffset(page.getOffset());
-        InfoChunk info = new InfoChunk(chunk);
+        PageChunks chunks = getPageChunks(page.getOffset());
+        return getPageImage(chunks);
+    }
 
-        LOG.debug("Page offset = {}, info = {}", page.getOffset(), info);
-
-        Map<ChunkId, List<Chunk>> pageChunks = djvuFile.getAllPageChunks(chunk);
+    private Image getPageImage(PageChunks chunks) {
+        InfoChunk info = chunks.info();
+        Map<ChunkId, List<Chunk>> pageChunks = chunks.pageChunks();
 
         Chunk sjbz = getChunk(pageChunks, ChunkId.Sjbz);
         Chunk fgbz = getChunk(pageChunks, ChunkId.FGbz);
