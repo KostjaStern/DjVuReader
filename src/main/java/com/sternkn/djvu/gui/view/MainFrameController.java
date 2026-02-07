@@ -26,6 +26,9 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -36,7 +39,11 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -78,6 +85,9 @@ public class MainFrameController {
     private ImageView pageView;
 
     @FXML
+    private Pane selectionOverlay;
+
+    @FXML
     private VBox chunkInfoBox;
 
     @FXML
@@ -97,10 +107,26 @@ public class MainFrameController {
 
     private final DoubleProperty sharedPos;
 
+    private final Rectangle selection;
+    private double startX;
+    private double startY;
+
     public MainFrameController(MainViewModel viewModel, Stage stage) {
         this.viewModel = viewModel;
         this.stage = stage;
         sharedPos = new SimpleDoubleProperty(0.25);
+        selection = createSelectionRectangle();
+    }
+
+    private Rectangle createSelectionRectangle() {
+        Rectangle selection = new Rectangle();
+        selection.setManaged(false);
+        selection.setFill(Color.color(0, 0.5, 1, 0.20));
+        selection.setStroke(Color.DODGERBLUE);
+        selection.getStrokeDashArray().setAll(6.0, 6.0);
+        selection.setVisible(false);
+
+        return selection;
     }
 
     @FXML
@@ -148,6 +174,131 @@ public class MainFrameController {
         Platform.runLater(() -> {
             viewModel.getFitWidth().set(chunkInfoBox.getWidth());
         });
+
+        selectionOverlay.getChildren().add(selection);
+
+        selectionOverlay.minWidthProperty().bind(pageView.boundsInParentProperty().map(Bounds::getWidth));
+        selectionOverlay.minHeightProperty().bind(pageView.boundsInParentProperty().map(Bounds::getHeight));
+        selectionOverlay.prefWidthProperty().bind(selectionOverlay.minWidthProperty());
+        selectionOverlay.prefHeightProperty().bind(selectionOverlay.minHeightProperty());
+        selectionOverlay.maxWidthProperty().bind(selectionOverlay.minWidthProperty());
+        selectionOverlay.maxHeightProperty().bind(selectionOverlay.minHeightProperty());
+
+        selectionOverlay.addEventHandler(MouseEvent.MOUSE_PRESSED, this::onPressed);
+        selectionOverlay.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::onDragged);
+        selectionOverlay.addEventHandler(MouseEvent.MOUSE_RELEASED, this::onReleased);
+    }
+
+    private void onPressed(MouseEvent e) {
+        startX = clamp(e.getX(), 0, selectionOverlay.getWidth());
+        startY = clamp(e.getY(), 0, selectionOverlay.getHeight());
+
+        LOG.debug("onPressed: startX = {}, startY = {}", startX, startY);
+
+        selection.setX(startX);
+        selection.setY(startY);
+        selection.setWidth(0);
+        selection.setHeight(0);
+        selection.setVisible(true);
+    }
+
+    private void onDragged(MouseEvent e) {
+        double x = clamp(e.getX(), 0, selectionOverlay.getWidth());
+        double y = clamp(e.getY(), 0, selectionOverlay.getHeight());
+
+        double minX = Math.min(startX, x);
+        double minY = Math.min(startY, y);
+        double w = Math.abs(x - startX);
+        double h = Math.abs(y - startY);
+
+        selection.setX(minX);
+        selection.setY(minY);
+        selection.setWidth(w);
+        selection.setHeight(h);
+    }
+
+    private void onReleased(MouseEvent e) {
+        if (!selection.isVisible() || selection.getWidth() < 2 || selection.getHeight() < 2) {
+            selection.setVisible(false);
+            return;
+        }
+
+        Point2D p1Scene = selectionOverlay.localToScene(selection.getX(), selection.getY());
+        Point2D p2Scene = selectionOverlay.localToScene(selection.getX() + selection.getWidth(),
+                selection.getY() + selection.getHeight());
+
+        Point2D p1InView = pageView.sceneToLocal(p1Scene);
+        Point2D p2InView = pageView.sceneToLocal(p2Scene);
+
+        var img = pageView.getImage();
+        if (img == null) return;
+
+        Bounds viewport = getImageViewportInImageView(pageView);
+
+        double vx1 = clamp(p1InView.getX(), viewport.getMinX(), viewport.getMaxX());
+        double vy1 = clamp(p1InView.getY(), viewport.getMinY(), viewport.getMaxY());
+        double vx2 = clamp(p2InView.getX(), viewport.getMinX(), viewport.getMaxX());
+        double vy2 = clamp(p2InView.getY(), viewport.getMinY(), viewport.getMaxY());
+
+        double vMinX = Math.min(vx1, vx2);
+        double vMinY = Math.min(vy1, vy2);
+        double vMaxX = Math.max(vx1, vx2);
+        double vMaxY = Math.max(vy1, vy2);
+
+        double viewW = viewport.getWidth();
+        double viewH = viewport.getHeight();
+
+        double nx1 = (vMinX - viewport.getMinX()) / viewW;
+        double ny1 = (vMinY - viewport.getMinY()) / viewH;
+        double nx2 = (vMaxX - viewport.getMinX()) / viewW;
+        double ny2 = (vMaxY - viewport.getMinY()) / viewH;
+
+        int ix1 = (int) Math.floor(nx1 * img.getWidth());
+        int iy1 = (int) Math.floor(ny1 * img.getHeight());
+        int ix2 = (int) Math.ceil(nx2 * img.getWidth());
+        int iy2 = (int) Math.ceil(ny2 * img.getHeight());
+
+        int w = Math.max(1, ix2 - ix1);
+        int h = Math.max(1, iy2 - iy1);
+
+        // Тут у тебя ROI в пикселях исходного изображения: (ix1, iy1, w, h)
+        //  - можешь вырезать subimage и скормить OCR
+        //  - или пересчитать координаты для текста, если OCR движок работает по исходному изображению
+        LOG.debug("onReleased: ROI in image pixels: x = {}, y = {}, w = {}, h = {}", ix1, iy1, w, h);
+
+        // optional: оставить выделение или скрыть
+        // selection.setVisible(false);
+
+        // TODO: вызвать OCR и скопировать в буфер
+        // String text = runOcrOnRegion(ix1, iy1, w, h);
+        // copyToClipboard(text);
+    }
+
+    private static double clamp(double v, double min, double max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    private Bounds getImageViewportInImageView(ImageView view) {
+        var img = view.getImage();
+        if (img == null) return view.getBoundsInLocal();
+
+        double iw = img.getWidth();
+        double ih = img.getHeight();
+
+        double vw = view.getBoundsInLocal().getWidth();
+        double vh = view.getBoundsInLocal().getHeight();
+
+        double fw = view.getFitWidth()  > 0 ? view.getFitWidth()  : vw;
+        double fh = view.getFitHeight() > 0 ? view.getFitHeight() : vh;
+
+        double scale = Math.min(fw / iw, fh / ih);
+        double dw = iw * scale;
+        double dh = ih * scale;
+
+        double x = (fw - dw) / 2.0;
+        double y = (fh - dh) / 2.0;
+
+        return new BoundingBox(x, y, dw, dh);
     }
 
     private void bindDivider(SplitPane splitPane) {
