@@ -74,6 +74,7 @@
                         <VBox fx:id="pageBox">
                             <StackPane>
                                 <ImageView fx:id="pageView" preserveRatio="true" />
+                                <Pane fx:id="selectionOverlay" /> <!-- pickOnBounds="false" -->
                             </StackPane>
                         </VBox>
                     </ScrollPane>
