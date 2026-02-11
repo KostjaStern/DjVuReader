@@ -38,6 +38,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -190,8 +191,16 @@ public class MainFrameController {
     }
 
     private void onPressed(MouseEvent e) {
-        startX = clamp(e.getX(), 0, selectionOverlay.getWidth());
-        startY = clamp(e.getY(), 0, selectionOverlay.getHeight());
+        LOG.debug("onPressed: e.getX() = {}, e.getY() = {}, viewModel.getFitWidth() = {}",
+                e.getX(), e.getY(), viewModel.getFitWidth().doubleValue());
+
+        Image page = viewModel.getPageImage().getValue();
+        if (page != null) {
+            LOG.debug("Page width: {}, height = {}", page.getWidth(), page.getHeight());
+        }
+
+        startX = e.getX();
+        startY = e.getY();
 
         LOG.debug("onPressed: startX = {}, startY = {}", startX, startY);
 
@@ -203,8 +212,8 @@ public class MainFrameController {
     }
 
     private void onDragged(MouseEvent e) {
-        double x = clamp(e.getX(), 0, selectionOverlay.getWidth());
-        double y = clamp(e.getY(), 0, selectionOverlay.getHeight());
+        double x = e.getX();
+        double y = e.getY();
 
         double minX = Math.min(startX, x);
         double minY = Math.min(startY, y);
@@ -218,53 +227,17 @@ public class MainFrameController {
     }
 
     private void onReleased(MouseEvent e) {
-        if (!selection.isVisible() || selection.getWidth() < 2 || selection.getHeight() < 2) {
+        if (!selection.isVisible() ||
+            selection.getWidth() < 2 ||
+            selection.getHeight() < 2 ||
+            pageView.getImage() == null) {
             selection.setVisible(false);
             return;
         }
 
-        Point2D p1Scene = selectionOverlay.localToScene(selection.getX(), selection.getY());
-        Point2D p2Scene = selectionOverlay.localToScene(selection.getX() + selection.getWidth(),
-                selection.getY() + selection.getHeight());
 
-        Point2D p1InView = pageView.sceneToLocal(p1Scene);
-        Point2D p2InView = pageView.sceneToLocal(p2Scene);
-
-        var img = pageView.getImage();
-        if (img == null) return;
-
-        Bounds viewport = getImageViewportInImageView(pageView);
-
-        double vx1 = clamp(p1InView.getX(), viewport.getMinX(), viewport.getMaxX());
-        double vy1 = clamp(p1InView.getY(), viewport.getMinY(), viewport.getMaxY());
-        double vx2 = clamp(p2InView.getX(), viewport.getMinX(), viewport.getMaxX());
-        double vy2 = clamp(p2InView.getY(), viewport.getMinY(), viewport.getMaxY());
-
-        double vMinX = Math.min(vx1, vx2);
-        double vMinY = Math.min(vy1, vy2);
-        double vMaxX = Math.max(vx1, vx2);
-        double vMaxY = Math.max(vy1, vy2);
-
-        double viewW = viewport.getWidth();
-        double viewH = viewport.getHeight();
-
-        double nx1 = (vMinX - viewport.getMinX()) / viewW;
-        double ny1 = (vMinY - viewport.getMinY()) / viewH;
-        double nx2 = (vMaxX - viewport.getMinX()) / viewW;
-        double ny2 = (vMaxY - viewport.getMinY()) / viewH;
-
-        int ix1 = (int) Math.floor(nx1 * img.getWidth());
-        int iy1 = (int) Math.floor(ny1 * img.getHeight());
-        int ix2 = (int) Math.ceil(nx2 * img.getWidth());
-        int iy2 = (int) Math.ceil(ny2 * img.getHeight());
-
-        int w = Math.max(1, ix2 - ix1);
-        int h = Math.max(1, iy2 - iy1);
-
-        // Тут у тебя ROI в пикселях исходного изображения: (ix1, iy1, w, h)
-        //  - можешь вырезать subimage и скормить OCR
-        //  - или пересчитать координаты для текста, если OCR движок работает по исходному изображению
-        LOG.debug("onReleased: ROI in image pixels: x = {}, y = {}, w = {}, h = {}", ix1, iy1, w, h);
+        LOG.debug("onReleased: ROI in image pixels: x = {}, y = {}, w = {}, h = {}",
+                e.getX(), e.getY(), Math.abs(e.getX() - startX), Math.abs(e.getY() - startY));
 
         // optional: оставить выделение или скрыть
         // selection.setVisible(false);
@@ -272,33 +245,6 @@ public class MainFrameController {
         // TODO: вызвать OCR и скопировать в буфер
         // String text = runOcrOnRegion(ix1, iy1, w, h);
         // copyToClipboard(text);
-    }
-
-    private static double clamp(double v, double min, double max) {
-        return Math.max(min, Math.min(max, v));
-    }
-
-    private Bounds getImageViewportInImageView(ImageView view) {
-        var img = view.getImage();
-        if (img == null) return view.getBoundsInLocal();
-
-        double iw = img.getWidth();
-        double ih = img.getHeight();
-
-        double vw = view.getBoundsInLocal().getWidth();
-        double vh = view.getBoundsInLocal().getHeight();
-
-        double fw = view.getFitWidth()  > 0 ? view.getFitWidth()  : vw;
-        double fh = view.getFitHeight() > 0 ? view.getFitHeight() : vh;
-
-        double scale = Math.min(fw / iw, fh / ih);
-        double dw = iw * scale;
-        double dh = ih * scale;
-
-        double x = (fw - dw) / 2.0;
-        double y = (fh - dh) / 2.0;
-
-        return new BoundingBox(x, y, dw, dh);
     }
 
     private void bindDivider(SplitPane splitPane) {

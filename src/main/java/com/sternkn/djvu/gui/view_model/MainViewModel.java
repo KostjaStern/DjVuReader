@@ -74,6 +74,10 @@ public class MainViewModel {
     private final DoubleProperty progress;
 
     private final DoubleProperty fitWidth;
+    private final DoubleProperty selectionStartX;
+    private final DoubleProperty selectionStartY;
+    private final DoubleProperty selectionEndX;
+    private final DoubleProperty selectionEndY;
 
     private final ListProperty<PageNode> pages;
 
@@ -124,6 +128,10 @@ public class MainViewModel {
         pageImage = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
         fitWidth = new SimpleDoubleProperty(-1);
+        selectionStartX = new SimpleDoubleProperty(-1);
+        selectionStartY = new SimpleDoubleProperty(-1);
+        selectionEndX = new SimpleDoubleProperty(-1);
+        selectionEndY = new SimpleDoubleProperty(-1);
     }
 
     private void resetState() {
