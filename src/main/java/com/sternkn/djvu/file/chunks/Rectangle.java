@@ -17,7 +17,7 @@
 */
 package com.sternkn.djvu.file.chunks;
 
-public record GRect(int xmin, int ymin, int xmax, int ymax) {
+public record Rectangle(int xmin, int ymin, int xmax, int ymax) {
 
     public int getWidth() {
         return xmax - xmin;
