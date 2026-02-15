@@ -42,7 +42,7 @@ public class PageCell extends ListCell<PageNode> {
 
     PageCell() {
         thumb.setPreserveRatio(true);
-        thumb.setFitWidth(90);
+        thumb.setFitWidth(80);
         thumb.setSmooth(true);
 
         final StackPane thumbCard = new StackPane();
@@ -57,7 +57,7 @@ public class PageCell extends ListCell<PageNode> {
 
         final HBox content = new HBox(12);
         content.getChildren().addAll(thumbCard, number);
-        content.setPadding(new Insets(10, 16, 10, 16));
+        content.setPadding(new Insets(10, 0, 10, 16));
         content.setFillHeight(false);
 
         pane.getStyleClass().add("page-cell");

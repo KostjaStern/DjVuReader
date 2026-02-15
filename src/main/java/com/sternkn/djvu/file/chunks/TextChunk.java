@@ -98,6 +98,10 @@ public class TextChunk extends Chunk {
         return buffer.toString();
     }
 
+    public String getSelectedText(GRectangle rectangle) {
+        return null;
+    }
+
     public int getTextZoneCount() {
         return textZoneCount;
     }

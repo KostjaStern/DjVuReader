@@ -17,6 +17,7 @@
 */
 package com.sternkn.djvu.gui.view;
 
+import com.sternkn.djvu.file.chunks.GRectangle;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
@@ -32,11 +33,17 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -78,6 +85,15 @@ public class MainFrameController {
     private ImageView pageView;
 
     @FXML
+    private VBox pageBox;
+
+    @FXML
+    private ScrollPane pageScrollPane;
+
+    @FXML
+    private Pane selectionOverlay;
+
+    @FXML
     private VBox chunkInfoBox;
 
     @FXML
@@ -97,10 +113,26 @@ public class MainFrameController {
 
     private final DoubleProperty sharedPos;
 
+    private final Rectangle selection;
+    private double startX;
+    private double startY;
+
     public MainFrameController(MainViewModel viewModel, Stage stage) {
         this.viewModel = viewModel;
         this.stage = stage;
         sharedPos = new SimpleDoubleProperty(0.25);
+        selection = createSelectionRectangle();
+    }
+
+    private Rectangle createSelectionRectangle() {
+        Rectangle selection = new Rectangle();
+        selection.setManaged(false);
+        selection.setFill(Color.color(0, 0.5, 1, 0.20));
+        selection.setStroke(Color.DODGERBLUE);
+        selection.getStrokeDashArray().setAll(6.0, 6.0);
+        selection.setVisible(false);
+
+        return selection;
     }
 
     @FXML
@@ -146,8 +178,68 @@ public class MainFrameController {
         bindDivider(pagesSplitPane);
 
         Platform.runLater(() -> {
-            viewModel.getFitWidth().set(chunkInfoBox.getWidth());
+            viewModel.getFitWidth().set(pageBox.getWidth()); // chunkInfoBox.getWidth()
         });
+
+        selectionOverlay.getChildren().add(selection);
+        selectionOverlay.addEventHandler(MouseEvent.MOUSE_PRESSED, this::onPressed);
+        selectionOverlay.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::onDragged);
+        selectionOverlay.addEventHandler(MouseEvent.MOUSE_RELEASED, this::onReleased);
+    }
+
+    private void onPressed(MouseEvent e) {
+        LOG.debug("onPressed: e.getX() = {}, e.getY() = {}, viewModel.getFitWidth() = {}",
+                e.getX(), e.getY(), viewModel.getFitWidth().doubleValue());
+
+        LOG.debug("pageScrollPane.getWidth() = {}, pageBox.getWidth() = {}, pageView.getFitWidth() = {}",
+                pageScrollPane.getWidth(), pageBox.getWidth(), pageView.getFitWidth());
+
+        Image page = viewModel.getPageImage().getValue();
+        if (page != null) {
+            LOG.debug("Page width: {}, height = {}", page.getWidth(), page.getHeight());
+        }
+
+        startX = e.getX();
+        startY = e.getY();
+
+        LOG.debug("onPressed: startX = {}, startY = {}", startX, startY);
+
+        selection.setX(startX);
+        selection.setY(startY);
+        selection.setWidth(0);
+        selection.setHeight(0);
+        selection.setVisible(true);
+    }
+
+    private GRectangle getRectangle(MouseEvent e) {
+        return new GRectangle(startX, startY, e.getX(), e.getY());
+    }
+
+    private void setRectangle(MouseEvent e) {
+        final GRectangle rectangle = getRectangle(e);
+
+        selection.setX(rectangle.xmin());
+        selection.setY(rectangle.ymin());
+        selection.setWidth(rectangle.getWidth());
+        selection.setHeight(rectangle.getHeight());
+    }
+
+    private void onDragged(MouseEvent e) {
+        setRectangle(e);
+    }
+
+    private void onReleased(MouseEvent e) {
+        if (!selection.isVisible() ||
+            selection.getWidth() < 2 ||
+            selection.getHeight() < 2 ||
+            pageView.getImage() == null) {
+            selection.setVisible(false);
+            return;
+        }
+
+        GRectangle rect = getRectangle(e);
+        LOG.debug("onReleased: rectangle = {}, pageBox.getWidth() = {}", rect, pageBox.getWidth());
+        viewModel.setSelectionRectangle(rect, pageBox.getWidth());
     }
 
     private void bindDivider(SplitPane splitPane) {
