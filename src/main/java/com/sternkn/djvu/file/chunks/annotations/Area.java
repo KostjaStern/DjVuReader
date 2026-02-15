@@ -86,7 +86,7 @@ public abstract class Area {
 
         Node rect = rects.getFirst();
         if (rect.getArguments().size() != 5) {
-            throw new InvalidAnnotationException("Rectangle should have 4 arguments");
+            throw new InvalidAnnotationException("GRectangle should have 4 arguments");
         }
 
         final int xmin = toInt(rect.getArguments().get(1));

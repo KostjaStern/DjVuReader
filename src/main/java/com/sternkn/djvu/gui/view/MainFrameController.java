@@ -17,6 +17,7 @@
 */
 package com.sternkn.djvu.gui.view;
 
+import com.sternkn.djvu.file.chunks.GRectangle;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
@@ -26,15 +27,13 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.BoundingBox;
-import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
@@ -84,6 +83,12 @@ public class MainFrameController {
 
     @FXML
     private ImageView pageView;
+
+    @FXML
+    private VBox pageBox;
+
+    @FXML
+    private ScrollPane pageScrollPane;
 
     @FXML
     private Pane selectionOverlay;
@@ -173,18 +178,10 @@ public class MainFrameController {
         bindDivider(pagesSplitPane);
 
         Platform.runLater(() -> {
-            viewModel.getFitWidth().set(chunkInfoBox.getWidth());
+            viewModel.getFitWidth().set(pageBox.getWidth()); // chunkInfoBox.getWidth()
         });
 
         selectionOverlay.getChildren().add(selection);
-
-        selectionOverlay.minWidthProperty().bind(pageView.boundsInParentProperty().map(Bounds::getWidth));
-        selectionOverlay.minHeightProperty().bind(pageView.boundsInParentProperty().map(Bounds::getHeight));
-        selectionOverlay.prefWidthProperty().bind(selectionOverlay.minWidthProperty());
-        selectionOverlay.prefHeightProperty().bind(selectionOverlay.minHeightProperty());
-        selectionOverlay.maxWidthProperty().bind(selectionOverlay.minWidthProperty());
-        selectionOverlay.maxHeightProperty().bind(selectionOverlay.minHeightProperty());
-
         selectionOverlay.addEventHandler(MouseEvent.MOUSE_PRESSED, this::onPressed);
         selectionOverlay.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::onDragged);
         selectionOverlay.addEventHandler(MouseEvent.MOUSE_RELEASED, this::onReleased);
@@ -193,6 +190,9 @@ public class MainFrameController {
     private void onPressed(MouseEvent e) {
         LOG.debug("onPressed: e.getX() = {}, e.getY() = {}, viewModel.getFitWidth() = {}",
                 e.getX(), e.getY(), viewModel.getFitWidth().doubleValue());
+
+        LOG.debug("pageScrollPane.getWidth() = {}, pageBox.getWidth() = {}, pageView.getFitWidth() = {}",
+                pageScrollPane.getWidth(), pageBox.getWidth(), pageView.getFitWidth());
 
         Image page = viewModel.getPageImage().getValue();
         if (page != null) {
@@ -211,19 +211,21 @@ public class MainFrameController {
         selection.setVisible(true);
     }
 
+    private GRectangle getRectangle(MouseEvent e) {
+        return new GRectangle(startX, startY, e.getX(), e.getY());
+    }
+
+    private void setRectangle(MouseEvent e) {
+        final GRectangle rectangle = getRectangle(e);
+
+        selection.setX(rectangle.xmin());
+        selection.setY(rectangle.ymin());
+        selection.setWidth(rectangle.getWidth());
+        selection.setHeight(rectangle.getHeight());
+    }
+
     private void onDragged(MouseEvent e) {
-        double x = e.getX();
-        double y = e.getY();
-
-        double minX = Math.min(startX, x);
-        double minY = Math.min(startY, y);
-        double w = Math.abs(x - startX);
-        double h = Math.abs(y - startY);
-
-        selection.setX(minX);
-        selection.setY(minY);
-        selection.setWidth(w);
-        selection.setHeight(h);
+        setRectangle(e);
     }
 
     private void onReleased(MouseEvent e) {
@@ -235,16 +237,9 @@ public class MainFrameController {
             return;
         }
 
-
-        LOG.debug("onReleased: ROI in image pixels: x = {}, y = {}, w = {}, h = {}",
-                e.getX(), e.getY(), Math.abs(e.getX() - startX), Math.abs(e.getY() - startY));
-
-        // optional: оставить выделение или скрыть
-        // selection.setVisible(false);
-
-        // TODO: вызвать OCR и скопировать в буфер
-        // String text = runOcrOnRegion(ix1, iy1, w, h);
-        // copyToClipboard(text);
+        GRectangle rect = getRectangle(e);
+        LOG.debug("onReleased: rectangle = {}, pageBox.getWidth() = {}", rect, pageBox.getWidth());
+        viewModel.setSelectionRectangle(rect, pageBox.getWidth());
     }
 
     private void bindDivider(SplitPane splitPane) {

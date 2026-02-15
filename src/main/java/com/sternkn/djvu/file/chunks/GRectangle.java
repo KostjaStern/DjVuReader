@@ -17,7 +17,24 @@
 */
 package com.sternkn.djvu.file.chunks;
 
-public record Rectangle(int xmin, int ymin, int xmax, int ymax) {
+public record GRectangle(int xmin, int ymin, int xmax, int ymax) {
+
+    public GRectangle {
+        if (xmin > xmax) {
+            throw new IllegalArgumentException("xmin must be less or equal to xmax");
+        }
+
+        if (ymin > ymax) {
+            throw new IllegalArgumentException("ymin must be less or equal to ymax");
+        }
+    }
+
+    public GRectangle(double x1, double y1, double x2, double y2) {
+        this((int) Math.floor(Math.min(x1, x2)),
+             (int) Math.floor(Math.min(y1, y2)),
+             (int) Math.ceil(Math.max(x1, x2)),
+             (int) Math.ceil(Math.max(y1, y2)));
+    }
 
     public int getWidth() {
         return xmax - xmin;
@@ -33,5 +50,10 @@ public record Rectangle(int xmin, int ymin, int xmax, int ymax) {
 
     public int area() {
         return isEmpty() ? 0 : getWidth() * getHeight();
+    }
+
+    public boolean isOverlapped(GRectangle rectangle) {
+        return this.xmin < rectangle.xmax() && this.xmax > rectangle.xmin()
+                && this.ymin < rectangle.ymax() && this.ymax > rectangle.ymin();
     }
 }

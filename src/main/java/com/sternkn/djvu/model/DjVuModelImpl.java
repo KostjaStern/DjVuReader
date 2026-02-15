@@ -173,9 +173,10 @@ public class DjVuModelImpl implements DjVuModel {
         PageChunks chunks = getPageChunks(page.getOffset());
 
         Image image = getPageImage(chunks);
+        TextChunk text = getTextChunk(chunks);
 
 
-        return new PageData(image);
+        return new PageData(image, text);
     }
 
     private TextChunk getTextChunk(PageChunks chunks) {

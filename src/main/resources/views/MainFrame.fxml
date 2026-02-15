@@ -70,7 +70,7 @@
             <Tab text="Pages" closable="false">
                 <SplitPane fx:id="pagesSplitPane">
                     <ListView fx:id="pageList"/>
-                    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" fitToHeight="true" pannable="true">
+                    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" fitToHeight="true"> <!-- pannable="false" -->
                         <VBox fx:id="pageBox">
                             <StackPane>
                                 <ImageView fx:id="pageView" preserveRatio="true" />

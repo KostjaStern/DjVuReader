@@ -33,7 +33,7 @@ public class TextZone {
 
     private final int zoneId;
     private final TextZoneType type;
-    private Rectangle rect;
+    private GRectangle rect;
     private int textStart;
     private int textLength;
     private TextZone parent;
@@ -53,10 +53,10 @@ public class TextZone {
         return type;
     }
 
-    public Rectangle getRect() {
+    public GRectangle getRect() {
         return rect;
     }
-    public void setRect(Rectangle rect) {
+    public void setRect(GRectangle rect) {
         this.rect = rect;
     }
 
@@ -115,7 +115,7 @@ public class TextZone {
             txtStart += parent.getTextStart();
         }
 
-        this.rect = new Rectangle(x, y, x + width, y + height);
+        this.rect = new GRectangle(x, y, x + width, y + height);
         this.textStart = txtStart;
         this.textLength = txtLength;
 

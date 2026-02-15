@@ -19,6 +19,7 @@ package com.sternkn.djvu.gui.view_model;
 
 import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
+import com.sternkn.djvu.file.chunks.GRectangle;
 import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
@@ -44,6 +45,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
+import javafx.scene.shape.Rectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,10 +76,7 @@ public class MainViewModel {
     private final DoubleProperty progress;
 
     private final DoubleProperty fitWidth;
-    private final DoubleProperty selectionStartX;
-    private final DoubleProperty selectionStartY;
-    private final DoubleProperty selectionEndX;
-    private final DoubleProperty selectionEndY;
+    private final ObjectProperty<GRectangle> selection;
 
     private final ListProperty<PageNode> pages;
 
@@ -128,10 +127,7 @@ public class MainViewModel {
         pageImage = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
         fitWidth = new SimpleDoubleProperty(-1);
-        selectionStartX = new SimpleDoubleProperty(-1);
-        selectionStartY = new SimpleDoubleProperty(-1);
-        selectionEndX = new SimpleDoubleProperty(-1);
-        selectionEndY = new SimpleDoubleProperty(-1);
+        selection = new SimpleObjectProperty<>();
     }
 
     private void resetState() {
@@ -345,6 +341,31 @@ public class MainViewModel {
         });
 
         new Thread(thumbnailLoadingTask).start();
+    }
+
+    public void setSelectionRectangle(GRectangle selectionRectangle, double pageBoxWidth) {
+        Image page = getPageImage().getValue();
+        if (page == null) {
+            return;
+        }
+
+        double fitWidthValue = getFitWidth().doubleValue();
+        double xDelta = (pageBoxWidth - fitWidthValue) / 2;
+        double scale = page.getWidth() / fitWidthValue;
+        double height = page.getHeight();
+
+        LOG.debug("fitWidthValue = {}, page.getWidth() = {}, page.getHeight() = {}, scale = {}, xDelta = {}",
+                fitWidthValue, page.getWidth(), page.getHeight(), scale, xDelta);
+
+        double x1 = scale * (selectionRectangle.xmin() - xDelta);
+        double x2 = scale * (selectionRectangle.xmax() - xDelta);
+        double y1 = height - scale * selectionRectangle.ymin();
+        double y2 = height - scale * selectionRectangle.ymax();
+
+        GRectangle rectangle = new GRectangle(x1, y1, x2, y2);
+        LOG.debug("Setting selection rectangle to {}", rectangle);
+
+        this.selection.setValue(rectangle);
     }
 
     public StringProperty getTitle() {
