@@ -17,6 +17,11 @@
 */
 package com.sternkn.djvu.file.chunks;
 
+import com.sternkn.djvu.file.chunks.annotations.Point;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 public record GRectangle(int xmin, int ymin, int xmax, int ymax) {
 
     public GRectangle {
@@ -55,5 +60,32 @@ public record GRectangle(int xmin, int ymin, int xmax, int ymax) {
     public boolean isOverlapped(GRectangle rectangle) {
         return this.xmin < rectangle.xmax() && this.xmax > rectangle.xmin()
                 && this.ymin < rectangle.ymax() && this.ymax > rectangle.ymin();
+    }
+
+    public int getOverlappedArea(GRectangle rectangle) {
+        if (rectangle == null) {
+            throw new IllegalArgumentException("rectangle must not be null");
+        }
+
+        int overlappedWidth = getOverlappedInterval(xmin(), xmax(), rectangle.xmin(), rectangle.xmax());
+        int overlappedHeight = getOverlappedInterval(ymin(), ymax(), rectangle.ymin(), rectangle.ymax());
+
+        return overlappedWidth * overlappedHeight;
+    }
+
+    private int getOverlappedInterval(int amin, int amax, int bmin, int bmax) {
+        return max(0, min(amax, bmax) - max(amin, bmin));
+    }
+
+    public boolean isIncluded(Point point) {
+        return point.x() >= xmin && point.x() <= xmax
+            && point.y() >= ymin && point.y() <= ymax;
+    }
+
+    public boolean isIncluded(GRectangle rectangle) {
+        Point p1 = new Point(rectangle.xmin(), rectangle.ymin());
+        Point p2 = new Point(rectangle.xmax(), rectangle.ymax());
+
+        return isIncluded(p1) && isIncluded(p2);
     }
 }
