@@ -23,6 +23,7 @@ import com.sternkn.djvu.gui.view_model.PageNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
 import com.sternkn.djvu.model.PageData;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -48,6 +49,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -179,7 +181,7 @@ public class MainFrameController {
         bindDivider(pagesSplitPane);
 
         Platform.runLater(() -> {
-            viewModel.getFitWidth().set(pageBox.getWidth()); // chunkInfoBox.getWidth()
+            viewModel.getFitWidth().set(pageBox.getWidth());
         });
 
         selectionOverlay.getChildren().add(selection);
@@ -241,6 +243,10 @@ public class MainFrameController {
         GRectangle rect = getRectangle(e);
         LOG.debug("onReleased: rectangle = {}, pageBox.getWidth() = {}", rect, pageBox.getWidth());
         viewModel.setSelectionRectangle(rect, pageBox.getWidth());
+
+        PauseTransition delay = new PauseTransition(Duration.millis(500));
+        delay.setOnFinished(a -> selection.setVisible(false));
+        delay.play();
     }
 
     private void bindDivider(SplitPane splitPane) {

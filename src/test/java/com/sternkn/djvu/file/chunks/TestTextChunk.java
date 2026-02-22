@@ -21,7 +21,6 @@ import com.sternkn.djvu.file.coders.TestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestTextChunk extends TestSupport {
 
@@ -164,9 +163,8 @@ public class TestTextChunk extends TestSupport {
         TextChunk textChunk = new TextChunk(chunk);
 
         GRectangle rectangle = new GRectangle(669, 4320, 2186, 4516);
-
         String selectedText = textChunk.getSelectedText(rectangle);
-        assertNotNull(selectedText);
+
         assertEquals("Предисловие переводчика ", selectedText);
     }
 

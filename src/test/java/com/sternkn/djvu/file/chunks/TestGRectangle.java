@@ -17,7 +17,6 @@
 */
 package com.sternkn.djvu.file.chunks;
 
-import com.sternkn.djvu.file.chunks.annotations.Point;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -101,6 +100,16 @@ public class TestGRectangle {
     }
 
     @Test
+    public void testIsOverlappedInvalidArgument() {
+        GRectangle r = new GRectangle(2, 4, 7, 7);
+
+        Exception exception = assertThrows(IllegalArgumentException.class,
+            () -> r.getOverlappedArea(null));
+
+        assertEquals("rectangle must not be null", exception.getMessage());
+    }
+
+    @Test
     public void testGetOverlappedAreaOverlapped() {
         GRectangle r1 = new GRectangle(2, 4, 7, 7);
         GRectangle r2 = new GRectangle(3, 2, 9, 6);
@@ -147,30 +156,5 @@ public class TestGRectangle {
                 () -> r.getOverlappedArea(null));
 
         assertEquals("rectangle must not be null", exception.getMessage());
-    }
-
-    @Test
-    public void testIsIncludedPoint() {
-        GRectangle r = new GRectangle(2, 4, 7, 7);
-
-        assertTrue(r.isIncluded(new Point(2, 5)));
-        assertTrue(r.isIncluded(new Point(5, 6)));
-
-        assertFalse(r.isIncluded(new Point(0, 0)));
-        assertFalse(r.isIncluded(new Point(2, 3)));
-    }
-
-    @Test
-    public void testIsIncludedRectangle() {
-        GRectangle r1 = new GRectangle(2, 4, 7, 7);
-        GRectangle r2 = new GRectangle(2, 5, 3, 6);
-        GRectangle r3 = new GRectangle(3, 5, 5, 6);
-
-        assertTrue(r1.isIncluded(r1));
-        assertTrue(r1.isIncluded(r2));
-        assertTrue(r1.isIncluded(r3));
-
-        assertFalse(r2.isIncluded(r1));
-        assertFalse(r3.isIncluded(r1));
     }
 }

@@ -70,11 +70,11 @@
             <Tab text="Pages" closable="false">
                 <SplitPane fx:id="pagesSplitPane">
                     <ListView fx:id="pageList"/>
-                    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" fitToHeight="true"> <!-- pannable="false" -->
+                    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" fitToHeight="true">
                         <VBox fx:id="pageBox">
                             <StackPane>
                                 <ImageView fx:id="pageView" preserveRatio="true" />
-                                <Pane fx:id="selectionOverlay" /> <!-- pickOnBounds="false" -->
+                                <Pane fx:id="selectionOverlay" />
                             </StackPane>
                         </VBox>
                     </ScrollPane>

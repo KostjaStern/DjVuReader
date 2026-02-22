@@ -58,6 +58,10 @@ public record GRectangle(int xmin, int ymin, int xmax, int ymax) {
     }
 
     public boolean isOverlapped(GRectangle rectangle) {
+        if (rectangle == null) {
+            throw new IllegalArgumentException("rectangle must not be null");
+        }
+
         return this.xmin < rectangle.xmax() && this.xmax > rectangle.xmin()
                 && this.ymin < rectangle.ymax() && this.ymax > rectangle.ymin();
     }
@@ -75,17 +79,5 @@ public record GRectangle(int xmin, int ymin, int xmax, int ymax) {
 
     private int getOverlappedInterval(int amin, int amax, int bmin, int bmax) {
         return max(0, min(amax, bmax) - max(amin, bmin));
-    }
-
-    public boolean isIncluded(Point point) {
-        return point.x() >= xmin && point.x() <= xmax
-            && point.y() >= ymin && point.y() <= ymax;
-    }
-
-    public boolean isIncluded(GRectangle rectangle) {
-        Point p1 = new Point(rectangle.xmin(), rectangle.ymin());
-        Point p2 = new Point(rectangle.xmax(), rectangle.ymax());
-
-        return isIncluded(p1) && isIncluded(p2);
     }
 }
