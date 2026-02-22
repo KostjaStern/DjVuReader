@@ -21,6 +21,7 @@ import com.sternkn.djvu.file.DjVuFile;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.GRectangle;
 import com.sternkn.djvu.file.chunks.ImageRotationType;
+import com.sternkn.djvu.file.chunks.TextChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
@@ -28,6 +29,7 @@ import com.sternkn.djvu.model.DjVuModelImpl;
 import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.model.Page;
 import com.sternkn.djvu.model.PageCache;
+import com.sternkn.djvu.model.PageData;
 import com.sternkn.djvu.model.SimplePageCache;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -45,7 +47,8 @@ import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +79,6 @@ public class MainViewModel {
     private final DoubleProperty progress;
 
     private final DoubleProperty fitWidth;
-    private final ObjectProperty<GRectangle> selection;
 
     private final ListProperty<PageNode> pages;
 
@@ -92,7 +94,7 @@ public class MainViewModel {
     private final BooleanProperty disableNavigationMenu;
     private final BooleanProperty disableStatisticsMenu;
     private final ObjectProperty<Image> image;
-    private final ObjectProperty<Image> pageImage;
+    private final ObjectProperty<PageData> pageData;
 
     private PageCache pageCache;
 
@@ -124,10 +126,9 @@ public class MainViewModel {
         chunkRootNode = new SimpleObjectProperty<>();
         menuRootNode = new SimpleObjectProperty<>();
         image = new SimpleObjectProperty<>();
-        pageImage = new SimpleObjectProperty<>();
+        pageData = new SimpleObjectProperty<>();
         progress = new SimpleDoubleProperty(0);
         fitWidth = new SimpleDoubleProperty(-1);
-        selection = new SimpleObjectProperty<>();
     }
 
     private void resetState() {
@@ -146,7 +147,7 @@ public class MainViewModel {
         chunkRootNode.setValue(null);
         menuRootNode.setValue(null);
         image.setValue(null);
-        pageImage.setValue(null);
+        pageData.setValue(null);
     }
 
     public void showStatistics() {
@@ -177,7 +178,6 @@ public class MainViewModel {
                 MenuNode rootMenuNode = djvuModel.getMenuNodes().getFirst();
                 setMenuRootNode(new MenuTreeItem(rootMenuNode));
             }
-
 
             setPages(djvuModel.getPages());
 
@@ -217,11 +217,9 @@ public class MainViewModel {
             }
 
             Platform.runLater(() -> {
-                Image image = data.image();
-
                 setProgressMessage("");
 
-                setPageImage(image);
+                setPageData(data);
                 setProgressDone();
             });
         });
@@ -344,18 +342,21 @@ public class MainViewModel {
     }
 
     public void setSelectionRectangle(GRectangle selectionRectangle, double pageBoxWidth) {
-        Image page = getPageImage().getValue();
-        if (page == null) {
+        PageData page = getPageData().getValue();
+        if (page == null || page.text() == null) {
             return;
         }
 
+        Image pageImage = page.image();
+        TextChunk pageText = page.text();
+
         double fitWidthValue = getFitWidth().doubleValue();
         double xDelta = (pageBoxWidth - fitWidthValue) / 2;
-        double scale = page.getWidth() / fitWidthValue;
-        double height = page.getHeight();
+        double scale = pageImage.getWidth() / fitWidthValue;
+        double height = pageImage.getHeight();
 
         LOG.debug("fitWidthValue = {}, page.getWidth() = {}, page.getHeight() = {}, scale = {}, xDelta = {}",
-                fitWidthValue, page.getWidth(), page.getHeight(), scale, xDelta);
+                fitWidthValue, pageImage.getWidth(), pageImage.getHeight(), scale, xDelta);
 
         double x1 = scale * (selectionRectangle.xmin() - xDelta);
         double x2 = scale * (selectionRectangle.xmax() - xDelta);
@@ -365,7 +366,16 @@ public class MainViewModel {
         GRectangle rectangle = new GRectangle(x1, y1, x2, y2);
         LOG.debug("Setting selection rectangle to {}", rectangle);
 
-        this.selection.setValue(rectangle);
+        String text = pageText.getSelectedText(rectangle);
+        LOG.debug("Selected text = {}", text);
+
+        copyToClipboard(text);
+    }
+
+    private void copyToClipboard(String text) {
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text);
+        Clipboard.getSystemClipboard().setContent(content);
     }
 
     public StringProperty getTitle() {
@@ -462,11 +472,11 @@ public class MainViewModel {
         this.image.set(img);
     }
 
-    public ObjectProperty<Image> getPageImage() {
-        return pageImage;
+    public ObjectProperty<PageData> getPageData() {
+        return pageData;
     }
-    public void setPageImage(Image pageImage) {
-        this.pageImage.set(pageImage);
+    public void setPageData(PageData page) {
+        this.pageData.set(page);
     }
 
     public void setDjvuModel(DjVuModel djvuModel) {

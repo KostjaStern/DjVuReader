@@ -22,6 +22,7 @@ import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import com.sternkn.djvu.gui.view_model.TextZoneNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
+import com.sternkn.djvu.model.PageData;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -155,7 +156,7 @@ public class MainFrameController {
         imageView.imageProperty().bind(viewModel.getImage());
         imageView.managedProperty().bind(imageView.visibleProperty());
 
-        pageView.imageProperty().bind(viewModel.getPageImage());
+        pageView.imageProperty().bind(viewModel.getPageData().map(PageData::image));
         pageView.fitWidthProperty().bind(viewModel.getFitWidth());
 
         pageList.getStyleClass().add("pages");
@@ -194,7 +195,7 @@ public class MainFrameController {
         LOG.debug("pageScrollPane.getWidth() = {}, pageBox.getWidth() = {}, pageView.getFitWidth() = {}",
                 pageScrollPane.getWidth(), pageBox.getWidth(), pageView.getFitWidth());
 
-        Image page = viewModel.getPageImage().getValue();
+        Image page = viewModel.getPageData().get().image();
         if (page != null) {
             LOG.debug("Page width: {}, height = {}", page.getWidth(), page.getHeight());
         }

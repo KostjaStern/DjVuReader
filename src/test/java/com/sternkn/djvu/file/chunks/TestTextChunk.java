@@ -21,6 +21,7 @@ import com.sternkn.djvu.file.coders.TestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestTextChunk extends TestSupport {
 
@@ -155,6 +156,18 @@ public class TestTextChunk extends TestSupport {
                 TextZoneType.WORD,
                 new GRectangle(1057, 4168, 1457, 4242),
                 0, 45, 11);
+    }
+
+    @Test
+    public void testGetSelectedText() {
+        Chunk chunk = readChunk("Abert_TXTz_41.data", ChunkId.TXTz);
+        TextChunk textChunk = new TextChunk(chunk);
+
+        GRectangle rectangle = new GRectangle(669, 4320, 2186, 4516);
+
+        String selectedText = textChunk.getSelectedText(rectangle);
+        assertNotNull(selectedText);
+        assertEquals("Предисловие переводчика ", selectedText);
     }
 
     private void assertTextZone(TextZone textZone,
