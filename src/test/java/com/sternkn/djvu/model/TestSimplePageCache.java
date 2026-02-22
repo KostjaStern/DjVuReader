@@ -58,7 +58,7 @@ public class TestSimplePageCache {
                 new Page(278584L, "nb0007.djvu"),
                 new Page(397042L, "nb0008.djvu"),
                 new Page(515402L, "nb0009.djvu"));
-        pageData = new PageData(null);
+        pageData = new PageData(null, null);
     }
 
     @BeforeEach
