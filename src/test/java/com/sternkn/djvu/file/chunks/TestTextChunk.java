@@ -166,6 +166,14 @@ public class TestTextChunk extends TestSupport {
         String selectedText = textChunk.getSelectedText(rectangle);
 
         assertEquals("Предисловие переводчика ", selectedText);
+
+        rectangle = new GRectangle(925, 2300, 2394, 2406);
+        selectedText = textChunk.getSelectedText(rectangle);
+        assertEquals("К музыкознанию Аберт обратился ", selectedText);
+
+        rectangle = new GRectangle(2023, 72, 2760, 173);
+        selectedText = textChunk.getSelectedText(rectangle);
+        assertEquals("Роберта Франца ", selectedText);
     }
 
     private void assertTextZone(TextZone textZone,

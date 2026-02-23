@@ -341,7 +341,7 @@ public class MainViewModel {
         new Thread(thumbnailLoadingTask).start();
     }
 
-    public void setSelectionRectangle(GRectangle selectionRectangle, double pageBoxWidth) {
+    public void setSelectedText(GRectangle selectionRectangle, double pageBoxWidth) {
         PageData page = getPageData().getValue();
         if (page == null || page.text() == null) {
             return;

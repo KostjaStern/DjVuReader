@@ -175,7 +175,6 @@ public class DjVuModelImpl implements DjVuModel {
         Image image = getPageImage(chunks);
         TextChunk text = getTextChunk(chunks);
 
-
         return new PageData(image, text);
     }
 

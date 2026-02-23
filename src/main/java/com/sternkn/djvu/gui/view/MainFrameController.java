@@ -242,9 +242,9 @@ public class MainFrameController {
 
         GRectangle rect = getRectangle(e);
         LOG.debug("onReleased: rectangle = {}, pageBox.getWidth() = {}", rect, pageBox.getWidth());
-        viewModel.setSelectionRectangle(rect, pageBox.getWidth());
+        viewModel.setSelectedText(rect, pageBox.getWidth());
 
-        PauseTransition delay = new PauseTransition(Duration.millis(500));
+        PauseTransition delay = new PauseTransition(Duration.seconds(1));
         delay.setOnFinished(a -> selection.setVisible(false));
         delay.play();
     }
