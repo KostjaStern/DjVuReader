@@ -21,4 +21,8 @@ import com.sternkn.djvu.file.chunks.TextChunk;
 import javafx.scene.image.Image;
 
 public record PageData(Image image, TextChunk text) {
+
+    public boolean isTextExist() {
+        return text != null;
+    }
 }

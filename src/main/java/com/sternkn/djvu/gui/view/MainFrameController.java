@@ -191,13 +191,19 @@ public class MainFrameController {
     }
 
     private void onPressed(MouseEvent e) {
+        PageData pageData = viewModel.getPageData().get();
+        if (!pageData.isTextExist()) {
+            return;
+        }
+
         LOG.debug("onPressed: e.getX() = {}, e.getY() = {}, viewModel.getFitWidth() = {}",
                 e.getX(), e.getY(), viewModel.getFitWidth().doubleValue());
 
         LOG.debug("pageScrollPane.getWidth() = {}, pageBox.getWidth() = {}, pageView.getFitWidth() = {}",
                 pageScrollPane.getWidth(), pageBox.getWidth(), pageView.getFitWidth());
 
-        Image page = viewModel.getPageData().get().image();
+
+        Image page = pageData.image();
         if (page != null) {
             LOG.debug("Page width: {}, height = {}", page.getWidth(), page.getHeight());
         }
