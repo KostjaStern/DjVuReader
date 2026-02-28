@@ -22,6 +22,10 @@ import javafx.scene.image.Image;
 
 public record PageData(Image image, TextChunk text) {
 
+    public PageData() {
+        this(null, null);
+    }
+
     public boolean isTextExist() {
         return text != null;
     }

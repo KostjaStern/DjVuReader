@@ -20,6 +20,7 @@ package com.sternkn.djvu.gui.view;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.GRectangle;
+import com.sternkn.djvu.file.chunks.ImageRotationType;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
 import com.sternkn.djvu.file.chunks.TextChunk;
 import com.sternkn.djvu.file.coders.GBitmap;
@@ -236,7 +237,7 @@ public class TestMainFrameController extends TestSupport {
     public void testSelectPageText(FxRobot robot) {
         JB2Image image = readImage("Abert_Sjbz_40.data", "Abert_Djbz_3.data");
         GBitmap bitmap = image.get_bitmap();
-        Image pageImage = ImageUtils.composeImage(bitmap);
+        Image pageImage = ImageUtils.toImage(bitmap, ImageRotationType.UPSIDE_DOWN);
 
         Chunk chunk = readChunk("Abert_TXTz_41.data", ChunkId.TXTz);
         TextChunk textChunk = new TextChunk(chunk);
@@ -247,8 +248,11 @@ public class TestMainFrameController extends TestSupport {
 
         robot.moveTo("#selectionOverlay").moveBy(0, 0);
 
+        final double width = 120;
+        final double height = 80;
+
         robot.press(MouseButton.PRIMARY);
-        robot.moveBy(120, 80);
+        robot.moveBy(width, height);
         robot.release(MouseButton.PRIMARY);
 
         ArgumentCaptor<GRectangle> selectionRectangleCap = ArgumentCaptor.forClass(GRectangle.class);
@@ -260,8 +264,8 @@ public class TestMainFrameController extends TestSupport {
         GRectangle selectionRectangle = selectionRectangleCap.getValue();
         Double pageBoxWidth = pageBoxWidthCap.getValue();
 
-        assertEquals(120, selectionRectangle.getWidth());
-        assertEquals(80, selectionRectangle.getHeight());
+        assertEquals(width, selectionRectangle.getWidth());
+        assertEquals(height, selectionRectangle.getHeight());
         assertEquals(fitWidth, pageBoxWidth, DOUBLE_DELTA);
     }
 
