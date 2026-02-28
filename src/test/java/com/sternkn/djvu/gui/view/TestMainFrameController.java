@@ -19,22 +19,32 @@ package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
+import com.sternkn.djvu.file.chunks.GRectangle;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
+import com.sternkn.djvu.file.chunks.TextChunk;
+import com.sternkn.djvu.file.coders.GBitmap;
+import com.sternkn.djvu.file.coders.JB2Image;
+import com.sternkn.djvu.file.coders.TestSupport;
 import com.sternkn.djvu.gui.view_model.ChunkTreeNode;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
 import com.sternkn.djvu.model.MenuNode;
 import com.sternkn.djvu.gui.view_model.PageNode;
 import com.sternkn.djvu.model.Page;
+import com.sternkn.djvu.model.PageData;
+import com.sternkn.djvu.utils.ImageUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -55,9 +65,10 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.argThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(ApplicationExtension.class)
-public class TestMainFrameController {
+public class TestMainFrameController extends TestSupport {
 
     private MainViewModel viewModel;
 
@@ -219,6 +230,39 @@ public class TestMainFrameController {
         robot.clickOn("2");
 
         verify(viewModel, times(1)).loadPageAsync(page2);
+    }
+
+    @Test
+    public void testSelectPageText(FxRobot robot) {
+        JB2Image image = readImage("Abert_Sjbz_40.data", "Abert_Djbz_3.data");
+        GBitmap bitmap = image.get_bitmap();
+        Image pageImage = ImageUtils.composeImage(bitmap);
+
+        Chunk chunk = readChunk("Abert_TXTz_41.data", ChunkId.TXTz);
+        TextChunk textChunk = new TextChunk(chunk);
+
+        robot.interact(() -> viewModel.setPageData(new PageData(pageImage, textChunk)));
+
+        double fitWidth = viewModel.getFitWidth().getValue();
+
+        robot.moveTo("#selectionOverlay").moveBy(0, 0);
+
+        robot.press(MouseButton.PRIMARY);
+        robot.moveBy(120, 80);
+        robot.release(MouseButton.PRIMARY);
+
+        ArgumentCaptor<GRectangle> selectionRectangleCap = ArgumentCaptor.forClass(GRectangle.class);
+        ArgumentCaptor<Double> pageBoxWidthCap = ArgumentCaptor.forClass(Double.class);
+
+        verify(viewModel, times(1)).setSelectedText(
+            selectionRectangleCap.capture(), pageBoxWidthCap.capture());
+
+        GRectangle selectionRectangle = selectionRectangleCap.getValue();
+        Double pageBoxWidth = pageBoxWidthCap.getValue();
+
+        assertEquals(120, selectionRectangle.getWidth());
+        assertEquals(80, selectionRectangle.getHeight());
+        assertEquals(fitWidth, pageBoxWidth, DOUBLE_DELTA);
     }
 
     @Test

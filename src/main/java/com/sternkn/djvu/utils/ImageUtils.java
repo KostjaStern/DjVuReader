@@ -220,6 +220,10 @@ public final class ImageUtils {
         return composeImage(mask, background, foreground, height, width, ImageRotationType.NO_ROTATION);
     }
 
+    public static Image composeImage(Pixmap mask) {
+        return composeImage(mask, null, null, mask.getHeight(), mask.getWidth(), ImageRotationType.UPSIDE_DOWN);
+    }
+
     /**
      * Returns a composite image created by painting the foreground color image over the background color image
      * using the foreground mask as a stencil, then applying the specified rotation.

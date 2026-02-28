@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestSupport {
+    public static final double DOUBLE_DELTA = 1e-9;
     private static final String PATH_CHUNKS = "test_chunks/";
     private static final String PATH_IMAGES = "test_images/";
 
@@ -132,7 +133,7 @@ public class TestSupport {
         return readImage(imageFileName, null);
     }
 
-    JB2Image readImage(String imageFileName, String dictFileName) {
+    protected JB2Image readImage(String imageFileName, String dictFileName) {
         JB2Dict dict = dictFileName != null ? readDictionary(dictFileName) : null;
         JB2Image image = new JB2Image();
         image.setInheritedDictionary(dict);
