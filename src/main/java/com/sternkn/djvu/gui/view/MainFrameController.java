@@ -41,6 +41,8 @@ import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -248,12 +250,22 @@ public class MainFrameController {
 
         GRectangle rect = getRectangle(e);
         LOG.debug("onReleased: rectangle = {}, pageBox.getWidth() = {}", rect, pageBox.getWidth());
-        viewModel.setSelectedText(rect, pageBox.getWidth());
+        String text = viewModel.getSelectedText(rect, pageBox.getWidth());
+
+        LOG.debug("text to clipboard = {}", text);
+        copyToClipboard(text);
 
         PauseTransition delay = new PauseTransition(Duration.seconds(1));
         delay.setOnFinished(a -> selection.setVisible(false));
         delay.play();
     }
+
+    private void copyToClipboard(String text) {
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text);
+        Clipboard.getSystemClipboard().setContent(content);
+    }
+
 
     private void bindDivider(SplitPane splitPane) {
         var divider = splitPane.getDividers().getFirst();

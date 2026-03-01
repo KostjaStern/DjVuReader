@@ -23,14 +23,18 @@ import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.ComponentInfo;
 import com.sternkn.djvu.file.chunks.ComponentType;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
+import com.sternkn.djvu.file.chunks.GRectangle;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
+import com.sternkn.djvu.file.chunks.TextChunk;
 import com.sternkn.djvu.file.chunks.TextZone;
 import com.sternkn.djvu.model.ChunkInfo;
 import com.sternkn.djvu.model.DjVuModel;
 import com.sternkn.djvu.model.Page;
+import com.sternkn.djvu.model.PageData;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -46,15 +50,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testfx.util.WaitForAsyncUtils.waitForFxEvents;
+import static com.sternkn.djvu.file.coders.TestSupport.DOUBLE_DELTA;
 
 @ExtendWith({MockitoExtension.class, ApplicationExtension.class})
 public class TestMainViewModel {
-    private static final double DELTA = 1e-9;
 
     private FileTaskFactory fileTaskFactory;
     private ChunkDecodingTaskFactory chunkDecodingTaskFactory;
@@ -71,7 +76,7 @@ public class TestMainViewModel {
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
         viewModel = new MainViewModel(
-            fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory); // pageLoadingTaskFactory
+            fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
         final String statistics = "Some statistics ... ";
@@ -142,7 +147,7 @@ public class TestMainViewModel {
         viewModel = new MainViewModel(fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
         viewModel.setDjvuModel(djvuModel);
 
-        assertEquals(0.0, viewModel.getProgress().get(), DELTA);
+        assertEquals(0.0, viewModel.getProgress().get(), DOUBLE_DELTA);
 
         final String fileName = "sample.djvu";
         File file = new File(fileName);
@@ -159,7 +164,7 @@ public class TestMainViewModel {
                 viewModel.getPages().stream().toList());
 
         assertTrue(viewModel.getProgressMessage().get().isEmpty(), "errorMessage must be empty on success");
-        assertEquals(0.0, viewModel.getProgress().get(), DELTA);
+        assertEquals(0.0, viewModel.getProgress().get(), DOUBLE_DELTA);
     }
 
     @Test
@@ -179,12 +184,12 @@ public class TestMainViewModel {
 
         viewModel.loadFileAsync(new File("bad.djvu"));
 
-        assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
+        assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DOUBLE_DELTA);
 
         waitForFxEvents();
 
         assertEquals(errorMessage, viewModel.getProgressMessage().get());
-        assertEquals(0.0, viewModel.getProgress().get(), DELTA);
+        assertEquals(0.0, viewModel.getProgress().get(), DOUBLE_DELTA);
         assertEquals(MainViewModel.APP_TITLE, viewModel.getTitle().get());
         assertNull(viewModel.getChunkRootNode().get());
     }
@@ -214,7 +219,7 @@ public class TestMainViewModel {
 
         viewModel.showChunkInfo(42L);
 
-        assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
+        assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DOUBLE_DELTA);
 
         waitForFxEvents();
 
@@ -228,7 +233,7 @@ public class TestMainViewModel {
         assertNull(viewModel.getImage().get());
 
         assertTrue(viewModel.getProgressMessage().get().isEmpty(), "errorMessage must be empty on success");
-        assertEquals(0.0, viewModel.getProgress().get(), DELTA);
+        assertEquals(0.0, viewModel.getProgress().get(), DOUBLE_DELTA);
     }
 
     @Test
@@ -247,13 +252,45 @@ public class TestMainViewModel {
 
         viewModel.showChunkInfo(7L);
 
-        assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DELTA);
+        assertEquals(ProgressBar.INDETERMINATE_PROGRESS, viewModel.getProgress().get(), DOUBLE_DELTA);
 
         waitForFxEvents();
 
         assertEquals(errorMessage, viewModel.getProgressMessage().get());
-        assertEquals(0.0, viewModel.getProgress().get(), DELTA);
+        assertEquals(0.0, viewModel.getProgress().get(), DOUBLE_DELTA);
         assertNull(viewModel.getTextRootNode().get());
         assertNull(viewModel.getImage().get());
+    }
+
+    @Test
+    public void testSetSelectedText() {
+        fileTaskFactory = mock(FileTaskFactory.class);
+        chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
+        thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
+        viewModel = new MainViewModel(
+                fileTaskFactory, chunkDecodingTaskFactory, thumbnailLoadingTaskFactory);
+
+        final double pageBoxWidth = 400.0;
+        final double fitWidthValue = 300.0;
+        viewModel.getFitWidth().set(fitWidthValue);
+
+        Image pageImage = mock(Image.class);
+        when(pageImage.getWidth()).thenReturn(600.0);
+        when(pageImage.getHeight()).thenReturn(1200.0);
+
+        TextChunk pageText = mock(TextChunk.class);
+
+        viewModel.setPageData(new PageData(pageImage, pageText));
+
+        GRectangle rectangle = new GRectangle(0, 400, 500, 800);
+        GRectangle selectionRectangle = new GRectangle(50, 200, 300, 400);
+
+        String expectedText = "Some text data";
+        when(pageText.getSelectedText(eq(rectangle))).thenReturn(expectedText);
+
+        String text = viewModel.getSelectedText(selectionRectangle, pageBoxWidth);
+
+        verify(pageText, times(1)).getSelectedText(eq(rectangle));
+        assertEquals(expectedText, text);
     }
 }

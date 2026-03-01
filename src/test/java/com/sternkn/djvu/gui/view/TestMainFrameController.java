@@ -38,6 +38,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
+import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.FileChooser;
@@ -239,8 +240,10 @@ public class TestMainFrameController extends TestSupport {
         GBitmap bitmap = image.get_bitmap();
         Image pageImage = ImageUtils.toImage(bitmap, ImageRotationType.UPSIDE_DOWN);
 
-        Chunk chunk = readChunk("Abert_TXTz_41.data", ChunkId.TXTz);
-        TextChunk textChunk = new TextChunk(chunk);
+        TextChunk textChunk = mock(TextChunk.class);
+
+        String expectedText = "Some text data";
+        when(textChunk.getSelectedText(any())).thenReturn(expectedText);
 
         robot.interact(() -> viewModel.setPageData(new PageData(pageImage, textChunk)));
 
@@ -258,7 +261,7 @@ public class TestMainFrameController extends TestSupport {
         ArgumentCaptor<GRectangle> selectionRectangleCap = ArgumentCaptor.forClass(GRectangle.class);
         ArgumentCaptor<Double> pageBoxWidthCap = ArgumentCaptor.forClass(Double.class);
 
-        verify(viewModel, times(1)).setSelectedText(
+        verify(viewModel, times(1)).getSelectedText(
             selectionRectangleCap.capture(), pageBoxWidthCap.capture());
 
         GRectangle selectionRectangle = selectionRectangleCap.getValue();
@@ -267,6 +270,8 @@ public class TestMainFrameController extends TestSupport {
         assertEquals(width, selectionRectangle.getWidth());
         assertEquals(height, selectionRectangle.getHeight());
         assertEquals(fitWidth, pageBoxWidth, DOUBLE_DELTA);
+
+        robot.interact(() -> assertEquals(expectedText, Clipboard.getSystemClipboard().getString()));
     }
 
     @Test

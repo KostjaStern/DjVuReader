@@ -47,8 +47,6 @@ import javafx.concurrent.Task;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -341,10 +339,10 @@ public class MainViewModel {
         new Thread(thumbnailLoadingTask).start();
     }
 
-    public void setSelectedText(GRectangle selectionRectangle, double pageBoxWidth) {
+    public String getSelectedText(GRectangle selectionRectangle, double pageBoxWidth) {
         PageData page = getPageData().getValue();
         if (page == null || page.text() == null) {
-            return;
+            return "";
         }
 
         Image pageImage = page.image();
@@ -366,16 +364,7 @@ public class MainViewModel {
         GRectangle rectangle = new GRectangle(x1, y1, x2, y2);
         LOG.debug("Setting selection rectangle to {}", rectangle);
 
-        String text = pageText.getSelectedText(rectangle);
-        LOG.debug("Selected text = {}", text);
-
-        copyToClipboard(text);
-    }
-
-    private void copyToClipboard(String text) {
-        ClipboardContent content = new ClipboardContent();
-        content.putString(text);
-        Clipboard.getSystemClipboard().setContent(content);
+        return pageText.getSelectedText(rectangle);
     }
 
     public StringProperty getTitle() {
