@@ -39,7 +39,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TextArea;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -198,22 +197,11 @@ public class MainFrameController {
             return;
         }
 
-        LOG.debug("onPressed: e.getX() = {}, e.getY() = {}, viewModel.getFitWidth() = {}",
-                e.getX(), e.getY(), viewModel.getFitWidth().doubleValue());
-
-        LOG.debug("pageScrollPane.getWidth() = {}, pageBox.getWidth() = {}, pageView.getFitWidth() = {}",
-                pageScrollPane.getWidth(), pageBox.getWidth(), pageView.getFitWidth());
-
-
-        Image page = pageData.image();
-        if (page != null) {
-            LOG.debug("Page width: {}, height = {}", page.getWidth(), page.getHeight());
-        }
-
         startX = e.getX();
         startY = e.getY();
+        final double fitWidth = viewModel.getFitWidth().doubleValue();
 
-        LOG.debug("onPressed: startX = {}, startY = {}", startX, startY);
+        LOG.debug("onPressed: startX = {}, startY = {}, fitWidth = {}", startX, startY, fitWidth);
 
         selection.setX(startX);
         selection.setY(startY);
@@ -265,7 +253,6 @@ public class MainFrameController {
         content.putString(text);
         Clipboard.getSystemClipboard().setContent(content);
     }
-
 
     private void bindDivider(SplitPane splitPane) {
         var divider = splitPane.getDividers().getFirst();

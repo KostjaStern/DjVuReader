@@ -263,7 +263,7 @@ public class TestMainViewModel {
     }
 
     @Test
-    public void testSetSelectedText() {
+    public void testGetSelectedText() {
         fileTaskFactory = mock(FileTaskFactory.class);
         chunkDecodingTaskFactory = mock(ChunkDecodingTaskFactory.class);
         thumbnailLoadingTaskFactory = mock(ThumbnailLoadingTaskFactory.class);
