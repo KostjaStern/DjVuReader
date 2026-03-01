@@ -48,5 +48,5 @@ If you need to build the tool for another platform, change the `javafx.platform`
   - To run TestFX tests on **macOS**, check the following system settings (see https://github.com/TestFX/TestFX/issues/641):
       * Go to System Settings > Security & Privacy > Accessibility
         * If you’re running tests from your **IDE**, enable your IDE in the list.
-        * If you’re running tests from **Maven/Gradle** in the **Terminal** app, enable **Terminal**.
+        * If you’re running tests from **Maven** in the **Terminal** app, enable **Terminal**.
 

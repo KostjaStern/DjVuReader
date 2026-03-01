@@ -22,7 +22,7 @@ import com.sternkn.djvu.file.DjVuFileException;
 import com.sternkn.djvu.file.chunks.Chunk;
 import com.sternkn.djvu.file.chunks.ChunkId;
 import com.sternkn.djvu.file.chunks.DirectoryChunk;
-import com.sternkn.djvu.file.chunks.GRect;
+import com.sternkn.djvu.file.chunks.GRectangle;
 import com.sternkn.djvu.file.chunks.InfoChunk;
 import com.sternkn.djvu.file.chunks.NavmChunk;
 import com.sternkn.djvu.file.chunks.SecondaryChunkId;
@@ -298,7 +298,7 @@ public class TestDjVuModelImpl extends TestSupport {
         assertEquals(TextZoneType.PAGE, textZone.getType());
         assertEquals(0, textZone.getTextStart());
         assertEquals(239, textZone.getTextLength());
-        assertEquals(new GRect(0, 0, 3956, 5575), textZone.getRect());
+        assertEquals(new GRectangle(0, 0, 3956, 5575), textZone.getRect());
     }
 
     @Test

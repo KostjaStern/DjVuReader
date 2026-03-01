@@ -25,7 +25,9 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.sternkn.djvu.utils.InputStreamUtils.read24;
@@ -96,6 +98,50 @@ public class TextChunk extends Chunk {
         buffer.append(text).append(NL).append(NL);
 
         return buffer.toString();
+    }
+
+    public String getSelectedText(GRectangle rectangle) {
+        StringBuilder buffer = new StringBuilder();
+        for (TextZone textZone : textZones) {
+            GRectangle textRect = textZone.getRect();
+            if (textRect.isOverlapped(rectangle)) {
+                addText(buffer, textZone, rectangle);
+            }
+        }
+        return buffer.toString();
+    }
+
+    private void addText(StringBuilder buffer, TextZone textZone, GRectangle rectangle) {
+        List<TextZone> children = textZone.getChildren();
+
+        if (children.isEmpty()) {
+            String subText = getSubText(textZone, rectangle);
+            buffer.append(subText);
+            return;
+        }
+
+        for (TextZone child : children) {
+            GRectangle textRect = child.getRect();
+            if (textRect.isOverlapped(rectangle)) {
+                addText(buffer, child, rectangle);
+            }
+        }
+    }
+
+    private String getSubText(TextZone textZone, GRectangle rectangle) {
+        GRectangle textRect = textZone.getRect();
+        final int minArea = Math.min(textRect.area(), rectangle.area()) / 2;
+        if (text == null || textRect.getOverlappedArea(rectangle) < minArea) {
+            return "";
+        }
+
+        final int beginIndex = textZone.getTextStart();
+        final int endIndex = beginIndex + textZone.getTextLength();
+
+        byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+        byte[] subBytes = Arrays.copyOfRange(bytes, beginIndex, endIndex);
+
+        return new String(subBytes, StandardCharsets.UTF_8);
     }
 
     public int getTextZoneCount() {

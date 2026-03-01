@@ -17,7 +17,16 @@
 */
 package com.sternkn.djvu.model;
 
+import com.sternkn.djvu.file.chunks.TextChunk;
 import javafx.scene.image.Image;
 
-public record PageData(Image image) {
+public record PageData(Image image, TextChunk text) {
+
+    public PageData() {
+        this(null, null);
+    }
+
+    public boolean isTextExist() {
+        return text != null;
+    }
 }
