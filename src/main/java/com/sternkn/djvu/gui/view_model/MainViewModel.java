@@ -80,6 +80,8 @@ public class MainViewModel {
 
     private final ListProperty<PageNode> pages;
 
+    private final ListProperty<Integer> pagesIndex;
+
     // left chunk tree
     private final ObjectProperty<TreeItem<ChunkTreeNode>> chunkRootNode;
 
@@ -117,6 +119,7 @@ public class MainViewModel {
         topText = new SimpleStringProperty("");
 
         pages = new SimpleListProperty<>();
+        pagesIndex = new SimpleListProperty<>();
         textRootNode = new SimpleObjectProperty<>();
         showTextTree = new SimpleBooleanProperty(false);
         disableNavigationMenu = new SimpleBooleanProperty(true);
@@ -140,6 +143,7 @@ public class MainViewModel {
         topText.setValue("");
 
         pages.setValue(null);
+        pagesIndex.setValue(null);
         textRootNode.setValue(null);
         showTextTree.setValue(false);
         chunkRootNode.setValue(null);
@@ -313,14 +317,21 @@ public class MainViewModel {
     public ListProperty<PageNode> getPages() {
         return pages;
     }
+
+    public ListProperty<Integer> getPagesIndex() {
+            return pagesIndex;
+    }
+
     public void setPages(List<Page> p) {
         AtomicInteger idx = new AtomicInteger(1);
         List<PageNode> pgs = p.stream()
             .map(pg -> new PageNode(pg, idx.getAndIncrement()))
             .toList();
 
-        var list = FXCollections.observableList(pgs);
-        pages.setValue(list);
+        List<Integer> pgsIndex = pgs.stream().map(PageNode::getIndex).toList();
+
+        pages.setValue(FXCollections.observableList(pgs));
+        pagesIndex.setValue(FXCollections.observableList(pgsIndex));
     }
 
     public void loadingPageThumbnails() {

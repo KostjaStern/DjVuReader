@@ -27,10 +27,12 @@ import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
@@ -115,6 +117,9 @@ public class MainFrameController {
     @FXML
     private MenuItem showStatisticsMenu;
 
+    @FXML
+    private ComboBox<Integer> pageSelector;
+
     private final DoubleProperty sharedPos;
 
     private final Rectangle selection;
@@ -162,6 +167,14 @@ public class MainFrameController {
         pageView.imageProperty().bind(viewModel.getPageData().map(PageData::image));
         pageView.fitWidthProperty().bind(viewModel.getFitWidth());
 
+        pageSelector.itemsProperty().bind(viewModel.getPagesIndex());
+        pageSelector.getSelectionModel().selectedItemProperty().addListener((observable, old, current) -> {
+            if (current != null && !Objects.equals(current, old)) {
+                int currentIndex = current - 1;
+                LOG.debug("Current page index: {}", currentIndex);
+                goToPage(currentIndex);
+            }
+        });
         pageList.getStyleClass().add("pages");
         pageList.itemsProperty().bind(viewModel.getPages());
         pageList.setCellFactory(v -> new PageCell());
@@ -317,7 +330,7 @@ public class MainFrameController {
             dialogStage.initModality(Modality.NONE);
 
             TableOfContentsDialogController controller = new TableOfContentsDialogController(
-                    viewModel, pageList);
+                    viewModel, this);
             loader.setController(controller);
 
             Scene scene = new Scene(loader.load());
@@ -347,5 +360,67 @@ public class MainFrameController {
     @FXML
     private void onZoomOutClicked() {
         viewModel.zoomOut();
+    }
+
+    @FXML
+    private void goToFirstPage() {
+        LOG.debug("Going to first page ...");
+
+        ObservableList<PageNode> pgs = pageList.itemsProperty().getValue();
+        if (pgs == null || pgs.isEmpty()) {
+            return;
+        }
+
+        goToPage(0);
+    }
+
+    @FXML
+    private void goToPrevPage() {
+        LOG.debug("Going to previous page ...");
+
+        PageNode node = pageList.getSelectionModel().getSelectedItem();
+        if (node == null) {
+            return;
+        }
+
+        int prevIndex = Math.max(node.getIndex() - 2, 0);
+        goToPage(prevIndex);
+    }
+
+    @FXML
+    private void goToNextPage() {
+        ObservableList<PageNode> pgs = pageList.itemsProperty().getValue();
+        if (pgs == null || pgs.isEmpty()) {
+            return;
+        }
+
+        PageNode node = pageList.getSelectionModel().getSelectedItem();
+        if (node == null) {
+            return;
+        }
+
+        int nextIndex = Math.min(node.getIndex(), pgs.size() - 1);
+        LOG.debug("Going to next page with index {}", nextIndex);
+
+        goToPage(nextIndex);
+    }
+
+    @FXML
+    private void goToLastPage() {
+        ObservableList<PageNode> pgs = pageList.itemsProperty().getValue();
+        if (pgs == null || pgs.isEmpty()) {
+            return;
+        }
+
+        int lastIndex = pgs.size() - 1;
+        LOG.debug("Going to last page with index {}", lastIndex);
+
+        goToPage(lastIndex);
+    }
+
+    public void goToPage(int pageIndex) {
+        pageSelector.setValue(pageIndex + 1);
+        pageList.scrollTo(pageIndex);
+        pageList.getSelectionModel().select(pageIndex);
     }
 }
