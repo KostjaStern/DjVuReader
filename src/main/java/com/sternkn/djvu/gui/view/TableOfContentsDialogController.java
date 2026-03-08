@@ -19,10 +19,8 @@ package com.sternkn.djvu.gui.view;
 
 import com.sternkn.djvu.gui.view_model.MainViewModel;
 import com.sternkn.djvu.model.MenuNode;
-import com.sternkn.djvu.gui.view_model.PageNode;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TreeView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +36,11 @@ public class TableOfContentsDialogController {
     @FXML
     private TreeView<MenuNode> menuTree;
 
-    private final ListView<PageNode> pageList;
+    private final PageScrolling pageScrolling;
 
-    public TableOfContentsDialogController(MainViewModel viewModel, ListView<PageNode> pageList) {
+    public TableOfContentsDialogController(MainViewModel viewModel, PageScrolling pageScrolling) {
         this.viewModel = viewModel;
-        this.pageList = pageList;
+        this.pageScrolling = pageScrolling;
     }
 
     @FXML
@@ -68,8 +66,7 @@ public class TableOfContentsDialogController {
         LOG.debug("scroll to page {}", number);
 
         Platform.runLater(() -> {
-            pageList.getSelectionModel().select(number);
-            pageList.scrollTo(number);
+            pageScrolling.goToPage(number);
         });
     }
 }

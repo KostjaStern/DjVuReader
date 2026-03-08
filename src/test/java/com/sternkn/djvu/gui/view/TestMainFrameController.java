@@ -36,6 +36,8 @@ import com.sternkn.djvu.utils.ImageUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
@@ -57,6 +59,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.testfx.api.FxAssert.verifyThat;
+import static org.testfx.matcher.control.ComboBoxMatchers.hasSelectedItem;
 import static org.testfx.matcher.control.TextInputControlMatchers.hasText;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -224,7 +227,7 @@ public class TestMainFrameController extends TestSupport {
                 new Page(25L, "nb0002.djvu"),
                 new Page(37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(pages.get(1), 1);
+        PageNode page2 = new PageNode(pages.get(1), 2);
         doNothing().when(viewModel).loadPageAsync(page2);
 
         robot.interact(() -> viewModel.setPages(pages));
@@ -232,6 +235,146 @@ public class TestMainFrameController extends TestSupport {
         robot.clickOn("2");
 
         verify(viewModel, times(1)).loadPageAsync(page2);
+    }
+
+    @Test
+    public void testSelectNextPage(FxRobot robot) {
+        List<Page> pages = List.of(
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"),
+                new Page(49L, "nb0004.djvu"));
+
+        PageNode page2 = new PageNode(pages.get(1), 2);
+        doNothing().when(viewModel).loadPageAsync(page2);
+
+        robot.interact(() -> viewModel.setPages(pages));
+
+        robot.clickOn("2");
+
+        verify(viewModel, times(1)).loadPageAsync(page2);
+        verifyThat("#pageSelector", hasSelectedItem(2));
+
+        PageNode page3 = new PageNode(pages.get(2), 3);
+        doNothing().when(viewModel).loadPageAsync(page3);
+
+        robot.clickOn("#nextPageButton");
+
+        verify(viewModel, times(1)).loadPageAsync(page3);
+        verifyThat("#pageSelector", hasSelectedItem(3));
+    }
+
+    @Test
+    public void testSelectNextForLastPage(FxRobot robot) {
+        List<Page> pages = List.of(
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"),
+                new Page(49L, "nb0004.djvu"),
+                new Page(53L, "nb0005.djvu"));
+
+        PageNode page5 = new PageNode(pages.get(4), 5);
+        doNothing().when(viewModel).loadPageAsync(page5);
+
+        robot.interact(() -> viewModel.setPages(pages));
+
+        robot.interact(() -> {
+            robot.lookup("#pageList")
+                 .queryAs(ListView.class)
+                 .getSelectionModel().select(page5);
+        });
+
+        verify(viewModel, times(1)).loadPageAsync(page5);
+        verifyThat("#pageSelector", hasSelectedItem(5));
+
+        robot.clickOn("#nextPageButton");
+
+        verify(viewModel, times(1)).loadPageAsync(page5);
+        verifyThat("#pageSelector", hasSelectedItem(5));
+    }
+
+    @Test
+    public void testSelectPrevPage(FxRobot robot) {
+        List<Page> pages = List.of(
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"),
+                new Page(49L, "nb0004.djvu"),
+                new Page(53L, "nb0005.djvu"));
+
+        PageNode page4 = new PageNode(pages.get(3), 4);
+        doNothing().when(viewModel).loadPageAsync(page4);
+
+        robot.interact(() -> viewModel.setPages(pages));
+
+        robot.interact(() -> {
+            robot.lookup("#pageList")
+                    .queryAs(ListView.class)
+                    .getSelectionModel().select(page4);
+        });
+
+        verify(viewModel, times(1)).loadPageAsync(page4);
+        verifyThat("#pageSelector", hasSelectedItem(4));
+
+        PageNode page3 = new PageNode(pages.get(2), 3);
+        doNothing().when(viewModel).loadPageAsync(page3);
+
+        robot.clickOn("#prevPageButton");
+
+        verify(viewModel, times(1)).loadPageAsync(page3);
+        verifyThat("#pageSelector", hasSelectedItem(3));
+    }
+
+    @Test
+    public void testSelectLastThenFirstPage(FxRobot robot) {
+        List<Page> pages = List.of(
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"),
+                new Page(49L, "nb0004.djvu"),
+                new Page(53L, "nb0005.djvu"),
+                new Page(65L, "nb0006.djvu"));
+
+        PageNode page1 = new PageNode(pages.getFirst(), 1);
+        PageNode page6 = new PageNode(pages.getLast(), 6);
+        doNothing().when(viewModel).loadPageAsync(page1);
+        doNothing().when(viewModel).loadPageAsync(page6);
+
+        robot.interact(() -> viewModel.setPages(pages));
+
+        robot.clickOn("#lastPageButton");
+
+        verify(viewModel, times(1)).loadPageAsync(page6);
+        verifyThat("#pageSelector", hasSelectedItem(6));
+
+        robot.clickOn("#firstPageButton");
+
+        verify(viewModel, times(1)).loadPageAsync(page1);
+        verifyThat("#pageSelector", hasSelectedItem(1));
+    }
+
+    @Test
+    public void testSelectPageFromSelector(FxRobot robot) {
+        List<Page> pages = List.of(
+                new Page(1L, "nb0001.djvu"),
+                new Page(25L, "nb0002.djvu"),
+                new Page(37L, "nb0003.djvu"),
+                new Page(49L, "nb0004.djvu"),
+                new Page(53L, "nb0005.djvu"));
+
+        PageNode page4 = new PageNode(pages.get(3), 4);
+        doNothing().when(viewModel).loadPageAsync(page4);
+
+        robot.interact(() -> viewModel.setPages(pages));
+
+        robot.interact(() -> {
+            robot.lookup("#pageSelector")
+                    .queryAs(ComboBox.class)
+                    .setValue(4);
+        });
+
+        verify(viewModel, times(1)).loadPageAsync(page4);
+        verifyThat("#pageSelector", hasSelectedItem(4));
     }
 
     @Test
@@ -281,8 +424,8 @@ public class TestMainFrameController extends TestSupport {
                 new Page(25L, "nb0002.djvu"),
                 new Page(37L, "nb0003.djvu"));
 
-        PageNode page2 = new PageNode(pages.get(1), 1);
-        PageNode page3 = new PageNode(pages.get(2), 2);
+        PageNode page2 = new PageNode(pages.get(1), 2);
+        PageNode page3 = new PageNode(pages.get(2), 3);
         doNothing().when(viewModel).loadPageAsync(page2);
         doNothing().when(viewModel).loadPageAsync(page3);
 
@@ -293,6 +436,7 @@ public class TestMainFrameController extends TestSupport {
 
         verify(viewModel, times(1)).loadPageAsync(page2);
         verify(viewModel, times(1)).loadPageAsync(page3);
+        verifyThat("#pageSelector", hasSelectedItem(3));
     }
 
     @Test
@@ -309,7 +453,7 @@ public class TestMainFrameController extends TestSupport {
         createMenuNode(root, "Content", 3);
         createMenuNode(root, "Preface", 5);
 
-        PageNode page = new PageNode(pages.get(4), 4);
+        PageNode page = new PageNode(pages.get(4), 5);
         doNothing().when(viewModel).loadPageAsync(page);
 
         robot.interact(() -> viewModel.setPages(pages));
@@ -321,6 +465,7 @@ public class TestMainFrameController extends TestSupport {
         robot.clickOn("Preface");
 
         verify(viewModel, times(1)).loadPageAsync(page);
+        verifyThat("#pageSelector", hasSelectedItem(5));
     }
 
     @Test
@@ -346,7 +491,7 @@ public class TestMainFrameController extends TestSupport {
         createMenuNode(node, "Using code examples", 9);
         createMenuNode(node, "Acknowledgments", 12);
 
-        PageNode page = new PageNode(pages.get(11), 11);
+        PageNode page = new PageNode(pages.get(11), 12);
 
         doNothing().when(viewModel).loadPageAsync(page);
 
@@ -362,6 +507,7 @@ public class TestMainFrameController extends TestSupport {
         robot.clickOn("Acknowledgments");
 
         verify(viewModel, times(1)).loadPageAsync(page);
+        verifyThat("#pageSelector", hasSelectedItem(12));
     }
 
     private TreeItem<MenuNode> createMenuNode(TreeItem<MenuNode> parent, String title, Integer number) {

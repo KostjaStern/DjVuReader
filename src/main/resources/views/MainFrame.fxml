@@ -61,6 +61,50 @@
                         </ImageView>
                     </graphic>
                 </Button>
+
+                <Button fx:id="firstPageButton" onAction="#goToFirstPage">
+                    <tooltip>
+                        <Tooltip text="Go to the first page"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="24" fitHeight="24">
+                            <Image url="/icons/arrow-caret-first.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="prevPageButton" onAction="#goToPrevPage">
+                    <tooltip>
+                        <Tooltip text="Go to the previous page"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="24" fitHeight="24">
+                            <Image url="/icons/arrow-left.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <ComboBox fx:id="pageSelector" prefHeight="32.0" prefWidth="80.0" visibleRowCount="8" />
+
+                <Button fx:id="nextPageButton" onAction="#goToNextPage">
+                    <tooltip>
+                        <Tooltip text="Go to the next page"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="24" fitHeight="24">
+                            <Image url="/icons/arrow-right.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="lastPageButton" onAction="#goToLastPage">
+                    <tooltip>
+                        <Tooltip text="Go to the last page"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitWidth="24" fitHeight="24">
+                            <Image url="/icons/arrow-caret-last.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
             </ToolBar>
         </VBox>
     </top>
