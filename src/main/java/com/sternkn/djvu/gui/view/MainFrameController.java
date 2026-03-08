@@ -62,7 +62,7 @@ import java.util.Objects;
 import static com.sternkn.djvu.utils.ExceptionUtils.getStackTraceAsString;
 
 
-public class MainFrameController {
+public class MainFrameController implements PageScrolling {
 
     private static final Logger LOG = LoggerFactory.getLogger(MainFrameController.class);
 
@@ -182,6 +182,7 @@ public class MainFrameController {
                 .addListener((obs, old, current) -> {
             if (current != null && !Objects.equals(current, old)) {
                 LOG.debug("Page clicked: {}", current);
+                pageSelector.setValue(current.getIndex());
                 viewModel.loadPageAsync(current);
             }
         });
@@ -364,42 +365,42 @@ public class MainFrameController {
 
     @FXML
     private void goToFirstPage() {
-        LOG.debug("Going to first page ...");
-
-        ObservableList<PageNode> pgs = pageList.itemsProperty().getValue();
-        if (pgs == null || pgs.isEmpty()) {
+        ObservableList<PageNode> pages = pageList.itemsProperty().getValue();
+        if (pages == null || pages.isEmpty()) {
             return;
         }
+
+        LOG.debug("Going to the first page with index 0");
 
         goToPage(0);
     }
 
     @FXML
     private void goToPrevPage() {
-        LOG.debug("Going to previous page ...");
-
-        PageNode node = pageList.getSelectionModel().getSelectedItem();
-        if (node == null) {
+        PageNode selectedPage = pageList.getSelectionModel().getSelectedItem();
+        if (selectedPage == null) {
             return;
         }
 
-        int prevIndex = Math.max(node.getIndex() - 2, 0);
+        int prevIndex = Math.max(selectedPage.getIndex() - 2, 0);
+        LOG.debug("Going to previous page with index {}", prevIndex);
+
         goToPage(prevIndex);
     }
 
     @FXML
     private void goToNextPage() {
-        ObservableList<PageNode> pgs = pageList.itemsProperty().getValue();
-        if (pgs == null || pgs.isEmpty()) {
+        ObservableList<PageNode> pages = pageList.itemsProperty().getValue();
+        if (pages == null || pages.isEmpty()) {
             return;
         }
 
-        PageNode node = pageList.getSelectionModel().getSelectedItem();
-        if (node == null) {
+        PageNode selectedPage = pageList.getSelectionModel().getSelectedItem();
+        if (selectedPage == null) {
             return;
         }
 
-        int nextIndex = Math.min(node.getIndex(), pgs.size() - 1);
+        int nextIndex = Math.min(selectedPage.getIndex(), pages.size() - 1);
         LOG.debug("Going to next page with index {}", nextIndex);
 
         goToPage(nextIndex);
@@ -418,6 +419,7 @@ public class MainFrameController {
         goToPage(lastIndex);
     }
 
+    @Override
     public void goToPage(int pageIndex) {
         pageSelector.setValue(pageIndex + 1);
         pageList.scrollTo(pageIndex);

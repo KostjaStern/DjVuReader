@@ -36,11 +36,11 @@ public class TableOfContentsDialogController {
     @FXML
     private TreeView<MenuNode> menuTree;
 
-    private final MainFrameController mainFrameController;
+    private final PageScrolling pageScrolling;
 
-    public TableOfContentsDialogController(MainViewModel viewModel, MainFrameController mainFrameController) {
+    public TableOfContentsDialogController(MainViewModel viewModel, PageScrolling pageScrolling) {
         this.viewModel = viewModel;
-        this.mainFrameController = mainFrameController;
+        this.pageScrolling = pageScrolling;
     }
 
     @FXML
@@ -66,7 +66,7 @@ public class TableOfContentsDialogController {
         LOG.debug("scroll to page {}", number);
 
         Platform.runLater(() -> {
-            mainFrameController.goToPage(number);
+            pageScrolling.goToPage(number);
         });
     }
 }
