@@ -373,7 +373,6 @@ public class TestMainFrameController extends TestSupport {
                     .setValue(4);
         });
 
-        robot.sleep(2000);
         verify(viewModel, times(1)).loadPageAsync(page4);
         verifyThat("#pageSelector", hasSelectedItem(4));
     }
