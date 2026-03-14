@@ -47,7 +47,7 @@
                     </tooltip>
                     <graphic>
                         <ImageView fitWidth="24" fitHeight="24">
-                            <Image url="/icons/zoom-in-32.png"/>
+                            <Image url="@../icons/zoom-in-32.png"/>
                         </ImageView>
                     </graphic>
                 </Button>
@@ -57,7 +57,7 @@
                     </tooltip>
                     <graphic>
                         <ImageView fitWidth="24" fitHeight="24">
-                            <Image url="/icons/zoom-out-32.png"/>
+                            <Image url="@../icons/zoom-out-32.png"/>
                         </ImageView>
                     </graphic>
                 </Button>
@@ -68,7 +68,7 @@
                     </tooltip>
                     <graphic>
                         <ImageView fitWidth="24" fitHeight="24">
-                            <Image url="/icons/arrow-caret-first.png"/>
+                            <Image url="@../icons/arrow-caret-first.png"/>
                         </ImageView>
                     </graphic>
                 </Button>
@@ -78,7 +78,7 @@
                     </tooltip>
                     <graphic>
                         <ImageView fitWidth="24" fitHeight="24">
-                            <Image url="/icons/arrow-left.png"/>
+                            <Image url="@../icons/arrow-left.png"/>
                         </ImageView>
                     </graphic>
                 </Button>
@@ -91,7 +91,7 @@
                     </tooltip>
                     <graphic>
                         <ImageView fitWidth="24" fitHeight="24">
-                            <Image url="/icons/arrow-right.png"/>
+                            <Image url="@../icons/arrow-right.png"/>
                         </ImageView>
                     </graphic>
                 </Button>
@@ -101,7 +101,7 @@
                     </tooltip>
                     <graphic>
                         <ImageView fitWidth="24" fitHeight="24">
-                            <Image url="/icons/arrow-caret-last.png"/>
+                            <Image url="@../icons/arrow-caret-last.png"/>
                         </ImageView>
                     </graphic>
                 </Button>

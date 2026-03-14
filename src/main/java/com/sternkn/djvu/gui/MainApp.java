@@ -50,7 +50,7 @@ public class MainApp extends Application {
     }
 
     private static Image getAppIcon() {
-        URL appImageURL = MainApp.class.getResource("/icons/djvu_app_icon_2_128.png");
+        URL appImageURL = MainApp.class.getResource("/icons/djvu_app_icon_1_128.png");
         return Toolkit.getDefaultToolkit().getImage(appImageURL);
     }
 }

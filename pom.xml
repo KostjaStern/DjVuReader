@@ -22,7 +22,7 @@
 
     <groupId>com.sternkn.djvu</groupId>
     <artifactId>djvu-reader</artifactId>
-    <version>0.0.2</version>
+    <version>1.0.0</version>
 
     <developers>
         <developer>
@@ -49,9 +49,13 @@
               Linux / aarch64 (Raspberry Pi): linux-aarch64
         -->
         <javafx.platform>mac-aarch64</javafx.platform>
+        <app.name>DjVu Viewer</app.name>
+        <app.mainClass>com.sternkn.djvu.gui.MainApp</app.mainClass>
 
-        <version.slf4j>1.7.5</version.slf4j>
-        <logback.version>1.2.3</logback.version>
+        <create-installer.skip>true</create-installer.skip>
+
+        <version.slf4j>2.0.13</version.slf4j>
+        <logback.version>1.5.13</logback.version>
     </properties>
 
     <dependencies>
@@ -115,6 +119,41 @@
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <profile>
+            <!--
+               MacOS Apple Silicon aarch64
+               $ mvn clean package -Pmac-aarch64-installer
+            -->
+            <id>mac-aarch64-installer</id>
+            <properties>
+                <create-installer.skip>false</create-installer.skip>
+            </properties>
+        </profile>
+        <profile>
+            <!--
+               MacOS Intel
+               $ mvn clean package -Pmac-installer
+            -->
+            <id>mac-installer</id>
+            <properties>
+                <create-installer.skip>false</create-installer.skip>
+                <javafx.platform>mac</javafx.platform>
+            </properties>
+        </profile>
+        <profile>
+            <!--
+               Windows
+               $ mvn clean package -Pwin-installer
+            -->
+            <id>win-installer</id>
+            <properties>
+                <create-installer.skip>false</create-installer.skip>
+                <javafx.platform>win</javafx.platform>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -144,6 +183,14 @@
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.9.3.1</version>
             </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>${app.mainClass}</mainClass>
+                </configuration>
+            </plugin>
 
             <!--
                 $ mvnDebug package
@@ -154,15 +201,63 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <mainClass>com.sternkn.djvu.gui.MainApp</mainClass>
+                    <mainClass>${app.mainClass}</mainClass>
                     <classpathScope>runtime</classpathScope>
                     <systemProperties>
                         <systemProperty>
                             <key>apple.awt.application.name</key>
-                            <value>DjVu Viewer</value>
+                            <value>${app.name}</value>
                         </systemProperty>
                     </systemProperties>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>mvn-javafx-jlink</id>
+                        <phase>package</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <skip>${create-installer.skip}</skip>
+                            <executable>mvn</executable>
+                            <arguments>
+                                <argument>javafx:jlink</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jpackage</id>
+                        <phase>package</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <skip>${create-installer.skip}</skip>
+                            <executable>jpackage</executable>
+                            <arguments>
+                                <argument>--runtime-image</argument>
+                                <argument>${project.build.directory}/image</argument>
+
+                                <argument>--name</argument>
+                                <argument>${app.name}</argument>
+
+                                <argument>--app-version</argument>
+                                <argument>${project.version}</argument>
+
+                                <argument>--dest</argument>
+                                <argument>${project.build.directory}/installer</argument>
+
+                                <argument>--main-class</argument>
+                                <argument>${app.mainClass}</argument>
+
+                                <argument>--icon</argument>
+                                <argument>${project.build.directory}/classes/icons/djvu_app_icon_1_128.icns</argument>
+
+                                <argument>--input</argument>
+                                <argument>${project.build.directory}</argument>
+
+                                <argument>--main-jar</argument>
+                                <argument>${project.build.finalName}.jar</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
