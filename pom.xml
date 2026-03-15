@@ -50,6 +50,7 @@
         -->
         <javafx.platform>mac-aarch64</javafx.platform>
         <app.name>DjVu Viewer</app.name>
+        <app.installer.type>dmg</app.installer.type>
         <app.mainClass>com.sternkn.djvu.gui.MainApp</app.mainClass>
         <app.icon.file>djvu_app_icon_1_128.icns</app.icon.file>
 
@@ -152,6 +153,7 @@
                 <create-installer.skip>false</create-installer.skip>
                 <javafx.platform>win</javafx.platform>
                 <app.icon.file>djvu_app_icon_1_128.ico</app.icon.file>
+                <app.installer.type>msi</app.installer.type>
             </properties>
         </profile>
     </profiles>
@@ -175,8 +177,6 @@
                 <configuration>
                     <argLine>
                         --add-opens java.base/java.util=ALL-UNNAMED
-                        --add-opens java.desktop/java.awt=ALL-UNNAMED
-                        --add-opens java.desktop/javax.swing=ALL-UNNAMED
                         --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
                     </argLine>
                 </configuration>
@@ -236,27 +236,34 @@
                             <arguments>
                                 <argument>--runtime-image</argument>
                                 <argument>${project.build.directory}/image</argument>
-
+                                
                                 <argument>--name</argument>
                                 <argument>${app.name}</argument>
-
+                                
+                                <argument>--type</argument>
+                                <argument>${app.installer.type}</argument>
+                                
                                 <argument>--app-version</argument>
                                 <argument>${project.version}</argument>
-
+                                
                                 <argument>--dest</argument>
                                 <argument>${project.build.directory}/installer</argument>
-
+                                
                                 <argument>--main-class</argument>
                                 <argument>${app.mainClass}</argument>
-
+                                
                                 <argument>--icon</argument>
                                 <argument>${project.build.directory}/classes/icons/${app.icon.file}</argument>
-
+                                
                                 <argument>--input</argument>
                                 <argument>${project.build.directory}</argument>
 
                                 <argument>--main-jar</argument>
                                 <argument>${project.build.finalName}.jar</argument>
+
+                                <argument>--win-dir-chooser</argument>
+                                <argument>--win-shortcut</argument>
+                                <argument>--win-menu</argument>
                             </arguments>
                         </configuration>
                     </execution>
