@@ -63,13 +63,13 @@ import static org.testfx.matcher.control.ComboBoxMatchers.hasSelectedItem;
 import static org.testfx.matcher.control.TextInputControlMatchers.hasText;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.argThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(ApplicationExtension.class)
@@ -410,9 +410,9 @@ public class TestMainFrameController extends TestSupport {
         GRectangle selectionRectangle = selectionRectangleCap.getValue();
         Double pageBoxWidth = pageBoxWidthCap.getValue();
 
-        assertEquals(width, selectionRectangle.getWidth());
-        assertEquals(height, selectionRectangle.getHeight());
-        assertEquals(fitWidth, pageBoxWidth, DOUBLE_DELTA);
+        assertEquals(width, selectionRectangle.getWidth(), 2.0);
+        assertEquals(height, selectionRectangle.getHeight(), 2.0);
+        assertEquals(fitWidth, pageBoxWidth, 2.0);
 
         robot.interact(() -> assertEquals(expectedText, Clipboard.getSystemClipboard().getString()));
     }
