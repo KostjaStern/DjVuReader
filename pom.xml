@@ -53,6 +53,7 @@
         <app.installer.type>dmg</app.installer.type>
         <app.mainClass>com.sternkn.djvu.gui.MainApp</app.mainClass>
         <app.icon.file>djvu_app_icon_1_128.icns</app.icon.file>
+        <platform.bash>bash</platform.bash>
 
         <create-installer.skip>true</create-installer.skip>
 
