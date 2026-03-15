@@ -51,6 +51,7 @@
         <javafx.platform>mac-aarch64</javafx.platform>
         <app.name>DjVu Viewer</app.name>
         <app.mainClass>com.sternkn.djvu.gui.MainApp</app.mainClass>
+        <app.icon.file>djvu_app_icon_1_128.icns</app.icon.file>
 
         <create-installer.skip>true</create-installer.skip>
 
@@ -150,6 +151,7 @@
             <properties>
                 <create-installer.skip>false</create-installer.skip>
                 <javafx.platform>win</javafx.platform>
+                <app.icon.file>djvu_app_icon_1_128.ico</app.icon.file>
             </properties>
         </profile>
     </profiles>
@@ -175,6 +177,7 @@
                         --add-opens java.base/java.util=ALL-UNNAMED
                         --add-opens java.desktop/java.awt=ALL-UNNAMED
                         --add-opens java.desktop/javax.swing=ALL-UNNAMED
+                        --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>
@@ -247,7 +250,7 @@
                                 <argument>${app.mainClass}</argument>
 
                                 <argument>--icon</argument>
-                                <argument>${project.build.directory}/classes/icons/djvu_app_icon_1_128.icns</argument>
+                                <argument>${project.build.directory}/classes/icons/${app.icon.file}</argument>
 
                                 <argument>--input</argument>
                                 <argument>${project.build.directory}</argument>
