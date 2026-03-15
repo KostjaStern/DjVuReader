@@ -35,7 +35,6 @@ import com.sternkn.djvu.utils.PNGPixmap;
 import javafx.scene.image.Image;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -69,7 +68,6 @@ public class TestDjVuModelImpl extends TestSupport {
 
     }
 
-    @Disabled
     @Test
     public void testGetChunkStatistics() {
         List<Chunk> chunks = List.of(
@@ -93,26 +91,26 @@ public class TestDjVuModelImpl extends TestSupport {
 
         when(djvuFile.getChunks()).thenReturn(chunks);
 
-        String statistics = model.getChunkStatistics();
-        String expectedStatistics = """
-            Composite chunks
-        ---------------------------------
-         FORM:DJVU      : 2
-         FORM:DJVI      : 1
-         FORM:DJVM      : 1
-        
-        
-            Data chunks
-        ---------------------------------
-         DIRM           : 1
-         FG44           : 1
-         Sjbz           : 1
-         BG44           : 4
-         INCL           : 1
-         INFO           : 2
-         Djbz           : 1
-         NAVM           : 1
-        """;
+        List<String> statistics = model.getChunkStatistics().lines().toList();
+        List<String> expectedStatistics = List.of(
+        "    Composite chunks",
+        "---------------------------------",
+        " FORM:DJVU      : 2",
+        " FORM:DJVI      : 1",
+        " FORM:DJVM      : 1",
+        "",
+        "",
+        "    Data chunks",
+        "---------------------------------",
+        " DIRM           : 1",
+        " FG44           : 1",
+        " Sjbz           : 1",
+        " BG44           : 4",
+        " INCL           : 1",
+        " INFO           : 2",
+        " Djbz           : 1",
+        " NAVM           : 1"
+        );
         assertEquals(expectedStatistics, statistics);
     }
 
@@ -198,7 +196,6 @@ public class TestDjVuModelImpl extends TestSupport {
         assertEquals(error, exception.getMessage());
     }
 
-    @Disabled
     @Test
     public void testGetChunkInfoForIW44Chunk() {
         long chunkId = 1L;
@@ -213,29 +210,28 @@ public class TestDjVuModelImpl extends TestSupport {
 
         ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
         GPixmap expectedPixmap = readPixmap("BG44_test.png");
-        String expectedTextData = """
-          ChunkId: BG44
-         OffsetStart: 0
-         OffsetEnd: 26143
-         Size: 26143
-        
-         majorVersion = 1
-         minorVersion = 2
-         colorType = 0
-         chrominanceDelay = 10
-         crcbHalf = 0
-         height = 1115
-         width = 792
-        """;
+        List<String> expectedTextData = List.of(
+        "  ChunkId: BG44",
+        " OffsetStart: 0",
+        " OffsetEnd: 26143",
+        " Size: 26143",
+        "",
+        " majorVersion = 1",
+        " minorVersion = 2",
+        " colorType = 0",
+        " chrominanceDelay = 10",
+        " crcbHalf = 0",
+        " height = 1115",
+        " width = 792"
+        );
 
         assertEquals(chunkId, chunkInfo.getChunkId());
         assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
-        assertEquals(expectedTextData, chunkInfo.getTextData());
+        assertEquals(expectedTextData, chunkInfo.getTextData().lines().toList());
         assertNull(chunkInfo.getTextZones());
         assertEquals(0, chunkInfo.getTextZoneCount());
     }
     
-    @Disabled
     @Test
     public void testGetChunkInfoForBitonalChunk() {
         long chunkId = 2L;
@@ -247,21 +243,20 @@ public class TestDjVuModelImpl extends TestSupport {
 
         ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
         GPixmap expectedPixmap = readPixmap("Mozart.png");
-        String expectedTextData = """
-         ChunkId: Sjbz
-         OffsetStart: 0
-         OffsetEnd: 249179
-         Size: 249179
-        """;
+        List<String> expectedTextData = List.of(
+        " ChunkId: Sjbz",
+        " OffsetStart: 0",
+        " OffsetEnd: 249179",
+        " Size: 249179"
+        );
 
         assertEquals(chunkId, chunkInfo.getChunkId());
         assertPixmapEquals(expectedPixmap, chunkInfo.getBitmap());
-        assertEquals(expectedTextData, chunkInfo.getTextData());
+        assertEquals(expectedTextData, chunkInfo.getTextData().lines().toList());
         assertNull(chunkInfo.getTextZones());
         assertEquals(0, chunkInfo.getTextZoneCount());
     }
 
-    @Disabled
     @Test
     public void testGetChunkInfoForTextChunk() {
         long chunkId = 2L;
@@ -271,31 +266,31 @@ public class TestDjVuModelImpl extends TestSupport {
 
         ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
 
-        String expectedTextData = """
-         ChunkId: TXTz
-         OffsetStart: 0
-         OffsetEnd: 304
-         Size: 304
-        
-         Version: 1
-         Text zone count: 19
-         Size of the text string in bytes: 239
-         Text:\s
-        --------------------------------------------------------
-        Эрик Эеанс\s
-        Предисловие\s
-        Мартина Фаулера\s
-        Предметно-ориентированное\s
-        проектирование\s
-        СТРУКТУРИЗАЦИЯ СЛОЖНЫХ\s
-        ПРОГРАММНЫХ СИСТЕМ\s
-        
-        
-        """;
+        List<String> expectedTextData = List.of(
+        " ChunkId: TXTz",
+        " OffsetStart: 0",
+        " OffsetEnd: 304",
+        " Size: 304",
+        "",
+        " Version: 1",
+        " Text zone count: 19",
+        " Size of the text string in bytes: 239",
+        " Text:\s",
+        "--------------------------------------------------------",
+        "Эрик Эеанс\s",
+        "Предисловие\s",
+        "Мартина Фаулера\s",
+        "Предметно-ориентированное\s",
+        "проектирование\s",
+        "СТРУКТУРИЗАЦИЯ СЛОЖНЫХ\s",
+        "ПРОГРАММНЫХ СИСТЕМ\s",
+        "",
+        ""
+        );
 
         assertEquals(chunkId, chunkInfo.getChunkId());
         assertNull(chunkInfo.getBitmap());
-        assertEquals(expectedTextData, chunkInfo.getTextData());
+        assertEquals(expectedTextData, chunkInfo.getTextData().lines().toList());
         assertEquals(1, chunkInfo.getTextZones().size());
         assertEquals(19, chunkInfo.getTextZoneCount());
 
@@ -306,7 +301,6 @@ public class TestDjVuModelImpl extends TestSupport {
         assertEquals(new GRectangle(0, 0, 3956, 5575), textZone.getRect());
     }
 
-    @Disabled
     @Test
     public void testGetChunkInfo() {
         String data = "Ab0009_0001.djbz";
@@ -324,18 +318,18 @@ public class TestDjVuModelImpl extends TestSupport {
 
         ChunkInfo chunkInfo = model.getChunkInfo(chunkId);
 
-        String expectedTextData = """
-         ChunkId: INCL
-         OffsetStart: 0
-         OffsetEnd: 16
-         Size: 16
-        
-         Shared component ID: Ab0009_0001.djbz
-        """;
+        List<String> expectedTextData = List.of(
+        " ChunkId: INCL",
+        " OffsetStart: 0",
+        " OffsetEnd: 16",
+        " Size: 16",
+        "",
+        " Shared component ID: Ab0009_0001.djbz"
+        );
 
         assertEquals(chunkId, chunkInfo.getChunkId());
         assertNull(chunkInfo.getBitmap());
-        assertEquals(expectedTextData, chunkInfo.getTextData());
+        assertEquals(expectedTextData, chunkInfo.getTextData().lines().toList());
         assertNull(chunkInfo.getTextZones());
         assertEquals(0, chunkInfo.getTextZoneCount());
     }
