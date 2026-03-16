@@ -53,9 +53,13 @@
         <app.installer.type>dmg</app.installer.type>
         <app.mainClass>com.sternkn.djvu.gui.MainApp</app.mainClass>
         <app.icon.file>djvu_app_icon_1_128.icns</app.icon.file>
-        <platform.bash>bash</platform.bash>
+        <app.vendor>Kostya Stern</app.vendor>
+        <app.copyright>Copyright (C) 2025 ${app.vendor}</app.copyright>
+        <app.java.options>-Xmx1g</app.java.options>
 
         <create-installer.skip>true</create-installer.skip>
+        <create-win-installer.skip>true</create-win-installer.skip>
+        <create-mac-installer.skip>true</create-mac-installer.skip>
 
         <version.slf4j>2.0.13</version.slf4j>
         <logback.version>1.5.13</logback.version>
@@ -131,6 +135,7 @@
             <id>mac-aarch64-installer</id>
             <properties>
                 <create-installer.skip>false</create-installer.skip>
+                <create-mac-installer.skip>false</create-mac-installer.skip>
             </properties>
         </profile>
         <profile>
@@ -141,6 +146,7 @@
             <id>mac-installer</id>
             <properties>
                 <create-installer.skip>false</create-installer.skip>
+                <create-mac-installer.skip>false</create-mac-installer.skip>
                 <javafx.platform>mac</javafx.platform>
             </properties>
         </profile>
@@ -152,6 +158,7 @@
             <id>win-installer</id>
             <properties>
                 <create-installer.skip>false</create-installer.skip>
+                <create-win-installer.skip>false</create-win-installer.skip>
                 <javafx.platform>win</javafx.platform>
                 <app.icon.file>djvu_app_icon_1_128.ico</app.icon.file>
                 <app.installer.type>msi</app.installer.type>
@@ -228,11 +235,59 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>jpackage</id>
+                        <id>jpackage-mac</id>
                         <phase>package</phase>
                         <goals><goal>exec</goal></goals>
                         <configuration>
-                            <skip>${create-installer.skip}</skip>
+                            <skip>${create-mac-installer.skip}</skip>
+                            <executable>jpackage</executable>
+                            <arguments>
+                                <argument>--runtime-image</argument>
+                                <argument>${project.build.directory}/image</argument>
+
+                                <argument>--name</argument>
+                                <argument>${app.name}</argument>
+
+                                <argument>--type</argument>
+                                <argument>${app.installer.type}</argument>
+
+                                <argument>--app-version</argument>
+                                <argument>${project.version}</argument>
+
+                                <argument>--copyright</argument>
+                                <argument>${app.copyright}</argument>
+
+                                <argument>--vendor</argument>
+                                <argument>${app.vendor}</argument>
+
+                                <argument>--verbose</argument>
+
+                                <argument>--dest</argument>
+                                <argument>${project.build.directory}/installer</argument>
+
+                                <argument>--main-class</argument>
+                                <argument>${app.mainClass}</argument>
+
+                                <argument>--java-options</argument>
+                                <argument>${app.java.options}</argument>
+
+                                <argument>--icon</argument>
+                                <argument>${project.build.directory}/classes/icons/${app.icon.file}</argument>
+
+                                <argument>--input</argument>
+                                <argument>${project.build.directory}</argument>
+
+                                <argument>--main-jar</argument>
+                                <argument>${project.build.finalName}.jar</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jpackage-win</id>
+                        <phase>package</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <skip>${create-win-installer.skip}</skip>
                             <executable>jpackage</executable>
                             <arguments>
                                 <argument>--runtime-image</argument>
@@ -246,12 +301,23 @@
                                 
                                 <argument>--app-version</argument>
                                 <argument>${project.version}</argument>
+
+                                <argument>--copyright</argument>
+                                <argument>${app.copyright}</argument>
+
+                                <argument>--vendor</argument>
+                                <argument>${app.vendor}</argument>
+
+                                <argument>--verbose</argument>
                                 
                                 <argument>--dest</argument>
                                 <argument>${project.build.directory}/installer</argument>
                                 
                                 <argument>--main-class</argument>
                                 <argument>${app.mainClass}</argument>
+
+                                <argument>--java-options</argument>
+                                <argument>${app.java.options}</argument>
                                 
                                 <argument>--icon</argument>
                                 <argument>${project.build.directory}/classes/icons/${app.icon.file}</argument>
