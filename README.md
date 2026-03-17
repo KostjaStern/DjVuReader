@@ -1,19 +1,31 @@
 # DjVuReader
 
-This tool lets you view the structure of a [DjVu](https://en.wikipedia.org/wiki/DjVu) file. 
+This tool lets you view [DjVu](https://en.wikipedia.org/wiki/DjVu) files. 
 
 ![Main application window](docs/djvu_reader_main_window.png)
 
 ### Implemented features
+
+ The tool has two tabs on the left side: *Pages* and *Chunks*. The *Pages* tab is suitable for people 
+ who are only interested in reading the document content. The *Chunks* tab is intended for those who 
+ want to study the file structure.
+
+#### Pages tab
+
+ - Select a page thumbnail in the left-hand list to view it on the right. You can also select a page using the buttons on the toolbar.
+ - When a navigation menu is present (*NAVM* chunk is optional), you can select a chapter from a dialog available via *View → Navigation*.
+ - When an OCR layer is present (*TXTa*, *TXTz* chunks), you can select part of the text by pressing the left mouse button, dragging, and then releasing the button.
+
+#### Chunks tab
+
  - Select a chunk in the left-hand tree to view its details on the right.
  - Save non-composite chunk data to a separate file.
- - View chunk-frequency statistics: **View → Show Statistics**.
+ - View chunk-frequency statistics: *View → Show Statistics*.
+
+![Chunks_statics window](docs/djvu_reader_chunks_statistics.png)
 
 ### Planned features
- - Add document page view 
-   - Render pages from related layers (bitonal mask, background/foreground images, OCR text)
-   - Add a page selector
-   - Show a navigation menu when present (**NAVM** chunk)
+
  - Edit **DjVu** file data
    - OCR text (**TXTa**, **TXTz** chunks)
    - Annotations (**ANTa**, **ANTz** chunks)
@@ -73,4 +85,3 @@ The choice depends on the processor being used: Intel or Apple Silicon (aarch64)
       * Go to System Settings > Security & Privacy > Accessibility
         * If you’re running tests from your **IDE**, enable your IDE in the list.
         * If you’re running tests from **Maven** in the **Terminal** app, enable **Terminal**.
-
