@@ -81,6 +81,33 @@ public class TestAnnotationParser {
     }
 
     @Test
+    public void testGetMapAreasTextFieldWithBackslash() {
+        String text =
+        """
+        (maparea "" "command: scanmagic.exe  -render -dpi=600 -dict=85 -dee=aggressive -cpc=3\\rprecrop=100x100x160x100\\rprecrop=LxRxTxB" (rect 100 60 120 90) (border #00F0F0)  (shadow_in 32) (hilite #C0FFFF) )
+        (maparea "" "made 4 K0LX03" (rect 140 30 120 90) (border #00F0F0)  (shadow_out 32) (hilite #C0FFFF) )
+        """;
+
+        AnnotationParser parser = new AnnotationParser(text);
+        List<MapArea> mapAreas = parser.getMapAreas();
+
+        assertEquals(List.of(
+            new MapArea(new MapUrl("", null, false),
+                "command: scanmagic.exe  -render -dpi=600 -dict=85 -dee=aggressive -cpc=3\\rprecrop=100x100x160x100\\rprecrop=LxRxTxB",
+                new Rectangle(100, 60, 120, 90)
+                    .setHighlightedColor(new Color(255, 255, 192))
+                    .setOpacity(50)
+                    .setBorder(new Border().setColor(new Color(240, 240, 0)).setShadowIn(32))),
+            new MapArea(new MapUrl("", null, false),
+                "made 4 K0LX03",
+                new Rectangle(140, 30, 120, 90)
+                    .setHighlightedColor(new Color(255, 255, 192))
+                    .setOpacity(50)
+                    .setBorder(new Border().setColor(new Color(240, 240, 0)).setShadowOut(32)))
+        ), mapAreas);
+    }
+
+    @Test
     public void testGetMapAreasWithOval() {
         AnnotationParser parser = new AnnotationParser(
             "www (maparea (url \"http://test.com/\" \"_blank\") \"This is an oval\" (oval 1068 2853 429 195 ) (xor ))");

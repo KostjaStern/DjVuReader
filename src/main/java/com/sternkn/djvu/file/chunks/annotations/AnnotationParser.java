@@ -280,6 +280,10 @@ public class AnnotationParser {
                 isPrevBackslash = true;
             }
 
+            if (!BACKSLASH.equals(ch) && isTextToken && isPrevBackslash) {
+                isPrevBackslash = false;
+            }
+
             if (ch.isBlank() && !isTextToken) {
                 if (!stringToken.isBlank() && !nodes.empty()) {
                     Node node = nodes.peek();
