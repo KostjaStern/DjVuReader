@@ -81,7 +81,7 @@ public class TestAnnotationParser {
     }
 
     @Test
-    public void testGetMapAreas() {
+    public void testGetMapAreasTextFieldWithBackslash() {
         String text =
         """
         (maparea "" "command: scanmagic.exe  -render -dpi=600 -dict=85 -dee=aggressive -cpc=3\\rprecrop=100x100x160x100\\rprecrop=LxRxTxB" (rect 100 60 120 90) (border #00F0F0)  (shadow_in 32) (hilite #C0FFFF) )
@@ -91,7 +91,20 @@ public class TestAnnotationParser {
         AnnotationParser parser = new AnnotationParser(text);
         List<MapArea> mapAreas = parser.getMapAreas();
 
-        assertEquals(2, mapAreas.size());
+        assertEquals(List.of(
+            new MapArea(new MapUrl("", null, false),
+                "command: scanmagic.exe  -render -dpi=600 -dict=85 -dee=aggressive -cpc=3\\rprecrop=100x100x160x100\\rprecrop=LxRxTxB",
+                new Rectangle(100, 60, 120, 90)
+                    .setHighlightedColor(new Color(255, 255, 192))
+                    .setOpacity(50)
+                    .setBorder(new Border().setColor(new Color(240, 240, 0)).setShadowIn(32))),
+            new MapArea(new MapUrl("", null, false),
+                "made 4 K0LX03",
+                new Rectangle(140, 30, 120, 90)
+                    .setHighlightedColor(new Color(255, 255, 192))
+                    .setOpacity(50)
+                    .setBorder(new Border().setColor(new Color(240, 240, 0)).setShadowOut(32)))
+        ), mapAreas);
     }
 
     @Test
