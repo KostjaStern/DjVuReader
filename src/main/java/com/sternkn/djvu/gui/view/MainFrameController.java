@@ -309,6 +309,7 @@ public class MainFrameController implements PageScrolling {
 
         File file = chooser.showOpenDialog(stage);
         if (file != null) {
+            LOG.info("File to open: {}", file.getAbsolutePath());
             viewModel.loadFileAsync(file);
         }
     }
@@ -348,8 +349,8 @@ public class MainFrameController implements PageScrolling {
     private void onAbout() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About the program");
-        alert.setHeaderText("DjVu Viewer");
-        alert.setContentText("Version 0.2");
+        alert.setHeaderText(MainViewModel.APP_TITLE);
+        alert.setContentText("Version 1.0.0");
         alert.showAndWait();
     }
 

@@ -19,6 +19,7 @@ package com.sternkn.djvu.gui;
 
 import com.sternkn.djvu.gui.view.MainFrame;
 import com.sternkn.djvu.gui.view_model.MainViewModel;
+import com.sternkn.djvu.utils.LogUtils;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -33,6 +34,7 @@ public class MainApp extends Application {
     }
 
     public static void main(String[] args) {
+        LogUtils.init();
         launch(args);
     }
 }
