@@ -20,6 +20,8 @@ package com.sternkn.djvu.utils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestStringUtils {
 
@@ -36,5 +38,14 @@ public class TestStringUtils {
     @Test
     public void testRepeatString() {
         assertEquals("----------", StringUtils.repeatString("-", 10));
+    }
+
+    @Test
+    public void testIsBlank() {
+        assertTrue(StringUtils.isBlank(null));
+        assertTrue(StringUtils.isBlank(""));
+        assertTrue(StringUtils.isBlank(" \n"));
+
+        assertFalse(StringUtils.isBlank(" s \n"));
     }
 }
