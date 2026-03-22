@@ -190,7 +190,7 @@ public class TestMainViewModel {
 
         assertEquals(errorMessage, viewModel.getProgressMessage().get());
         assertEquals(0.0, viewModel.getProgress().get(), DOUBLE_DELTA);
-        assertEquals(MainViewModel.APP_TITLE, viewModel.getTitle().get());
+        assertEquals(MainViewModel.APP_NAME, viewModel.getTitle().get());
         assertNull(viewModel.getChunkRootNode().get());
     }
 

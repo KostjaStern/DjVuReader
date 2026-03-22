@@ -349,7 +349,7 @@ public class MainFrameController implements PageScrolling {
     private void onAbout() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About the program");
-        alert.setHeaderText(MainViewModel.APP_TITLE);
+        alert.setHeaderText(MainViewModel.APP_NAME);
         alert.setContentText("Version 1.0.0");
         alert.showAndWait();
     }

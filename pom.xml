@@ -49,7 +49,7 @@
               Linux / aarch64 (Raspberry Pi): linux-aarch64
         -->
         <javafx.platform>mac-aarch64</javafx.platform>
-        <app.name>DjVu Viewer</app.name>
+        <app.name>DjVuViewer</app.name>
         <app.installer.type>dmg</app.installer.type>
         <app.mainClass>com.sternkn.djvu.gui.MainApp</app.mainClass>
         <app.icon.file>djvu_app_icon_1_128.icns</app.icon.file>

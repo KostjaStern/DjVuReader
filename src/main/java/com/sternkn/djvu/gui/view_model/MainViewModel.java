@@ -61,7 +61,7 @@ import static com.sternkn.djvu.utils.ImageUtils.toImage;
 public class MainViewModel {
     private static final Logger LOG = LoggerFactory.getLogger(MainViewModel.class);
 
-    public static final String APP_TITLE = "DjVu Viewer";
+    public static final String APP_NAME = "DjVuViewer";
     public static final int ZOOM_DELTA = 10;
 
     private final FileTaskFactory fileTaskFactory;
@@ -114,7 +114,7 @@ public class MainViewModel {
         this.chunkDecodingTaskFactory = chunkDecodingTaskFactory;
         this.thumbnailLoadingTaskFactory = thumbnailLoadingTaskFactory;
 
-        title = new SimpleStringProperty(APP_TITLE);
+        title = new SimpleStringProperty(APP_NAME);
         progressMessage = new SimpleStringProperty("");
         topText = new SimpleStringProperty("");
 
@@ -138,7 +138,7 @@ public class MainViewModel {
             thumbnailLoadingTask.cancel();
         }
 
-        title.setValue(APP_TITLE);
+        title.setValue(APP_NAME);
         progressMessage.setValue("");
         topText.setValue("");
 
