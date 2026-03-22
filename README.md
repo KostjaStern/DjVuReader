@@ -1,4 +1,4 @@
-# DjVuReader
+# DjVuViewer
 
 This tool lets you view [DjVu](https://en.wikipedia.org/wiki/DjVu) files. 
 
@@ -57,12 +57,12 @@ You can create a Windows *.msi* installer by running the following command on a 
 ```
 $ mvn clean package -Pwin-installer
 ```
-After the command completes successfully, you will find the *target/installer/DjVu Viewer-1.0.0.msi* file. 
+After the command completes successfully, you will find the *target/installer/DjVuViewer-1.0.0.msi* file. 
 Please note that you need to have [WiX v3](https://github.com/wixtoolset/wix3/) installed.
 
 You can find the logs here:
 ```
-C:\Users\<user>\AppData\Local\DjVu Viewer\Logs\app.log
+C:\Users\<user>\AppData\Local\DjVuViewer\Logs\app.log
 ```
 
 #### MacOS
@@ -80,15 +80,15 @@ $ mvn clean package -Pmac-aarch64-installer
 
 You can find the logs here:
 ```
-/Users/<user>/Library/Logs/DjVu Viewer/app.log
+/Users/<user>/Library/Logs/DjVuViewer/app.log
 ```
 If you need more detailed debug logs, run the application from the terminal:
 ```
-$ /Applications/DjVu\ Viewer.app/Contents/MacOS/DjVu\ Viewer
+$ /Applications/DjVuViewer.app/Contents/MacOS/DjVuViewer
 ```
 
 The choice depends on the processor being used: Intel or Apple Silicon (aarch64). After the command completes successfully, 
-you will find the target/installer/DjVu Viewer-1.0.0.dmg file.
+you will find the target/installer/DjVuViewer-1.0.0.dmg file.
 
 ### Links
  - [This](https://djvureader.atlassian.net/jira/software/projects/DJV/boards/1) is a jira board of the project.

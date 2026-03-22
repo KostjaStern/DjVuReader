@@ -21,8 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static com.sternkn.djvu.gui.view_model.MainViewModel.APP_NAME;
+
 public final class LogUtils {
-    public static final String APP_NAME = "DjVu_Viewer";
     private static final String OS = System.getProperty("os.name", "").toLowerCase();
     private static final String USER_HOME = System.getProperty("user.home");
 
