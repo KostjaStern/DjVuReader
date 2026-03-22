@@ -53,4 +53,8 @@ public class StringUtils {
         final int codePoint = text.codePointAt(index);
         return new String(Character.toChars(codePoint));
     }
+
+    public static boolean isBlank(String text) {
+        return text == null || text.isBlank();
+    }
 }

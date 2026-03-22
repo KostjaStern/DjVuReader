@@ -14,7 +14,8 @@ This tool lets you view [DjVu](https://en.wikipedia.org/wiki/DjVu) files.
 
  - Select a page thumbnail in the left-hand list to view it on the right. You can also select a page using the buttons on the toolbar.
  - When a navigation menu is present (*NAVM* chunk is optional), you can select a chapter from a dialog available via *View → Navigation*.
- - When an OCR layer is present (*TXTa*, *TXTz* chunks), you can select part of the text by pressing the left mouse button, dragging, and then releasing the button.
+ - When an OCR layer is present (*TXTa*, *TXTz* chunks), you can select part of the text by pressing 
+   the left mouse button, dragging, and then releasing the button.
 
 #### Chunks tab
 
@@ -56,7 +57,13 @@ You can create a Windows *.msi* installer by running the following command on a 
 ```
 $ mvn clean package -Pwin-installer
 ```
-After the command completes successfully, you will find the *target/installer/DjVu Viewer-1.0.0.msi* file. Please note that you need to have [WiX v3](https://github.com/wixtoolset/wix3/) installed.
+After the command completes successfully, you will find the *target/installer/DjVu Viewer-1.0.0.msi* file. 
+Please note that you need to have [WiX v3](https://github.com/wixtoolset/wix3/) installed.
+
+You can find the logs here:
+```
+C:\Users\<user>\AppData\Local\DjVu Viewer\Logs\app.log
+```
 
 #### MacOS
 
@@ -71,7 +78,17 @@ or
 $ mvn clean package -Pmac-aarch64-installer
 ```
 
-The choice depends on the processor being used: Intel or Apple Silicon (aarch64). After the command completes successfully, you will find the target/installer/DjVu Viewer-1.0.0.dmg file.
+You can find the logs here:
+```
+/Users/<user>/Library/Logs/DjVu Viewer/app.log
+```
+If you need more detailed debug logs, run the application from the terminal:
+```
+$ /Applications/DjVu\ Viewer.app/Contents/MacOS/DjVu\ Viewer
+```
+
+The choice depends on the processor being used: Intel or Apple Silicon (aarch64). After the command completes successfully, 
+you will find the target/installer/DjVu Viewer-1.0.0.dmg file.
 
 ### Links
  - [This](https://djvureader.atlassian.net/jira/software/projects/DJV/boards/1) is a jira board of the project.
