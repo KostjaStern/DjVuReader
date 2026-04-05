@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -216,16 +218,19 @@ public class DjVuModelImpl implements DjVuModel {
         InfoChunk info = chunks.info();
         Map<ChunkId, List<Chunk>> pageChunks = chunks.pageChunks();
 
-        Chunk sjbz = getChunk(pageChunks, ChunkId.Sjbz);
-        Chunk fgbz = getChunk(pageChunks, ChunkId.FGbz);
-        FGbzChunk foregroundColors = fgbz == null ? null : new FGbzChunk(fgbz);
+        Image image = null;
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
-        Pixmap mask = getBitonalImage(sjbz, foregroundColors);
-        Pixmap background = getColorImage(pageChunks.get(ChunkId.BG44));
-        Pixmap foreground = getColorImage(pageChunks.get(ChunkId.FG44));
+            CompletableFuture<Pixmap> backgroundFuture = CompletableFuture.supplyAsync(
+                    () -> getColorImage(pageChunks, ChunkId.BG44), executor);
+            CompletableFuture<Pixmap> foregroundFuture = CompletableFuture.supplyAsync(
+                    () -> getColorImage(pageChunks, ChunkId.FG44), executor);
+            CompletableFuture<Pixmap> maskFuture = CompletableFuture.supplyAsync(
+                    () -> getBitonalImage(pageChunks), executor);
+            image = composeImage(maskFuture.join(), backgroundFuture.join(), foregroundFuture.join(),
+                    info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
+        }
 
-        Image image = composeImage(mask, background, foreground,
-                info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
         if (image == null) {
             image = createBlank(info.getWidth(), info.getHeight());
         }
@@ -364,21 +369,26 @@ public class DjVuModelImpl implements DjVuModel {
         Methods of Bitonal Image Conversion for Modern and Classic Documents
      */
     private ChunkInfo getBitonalChunkInfo(Chunk chunk) {
-        Pixmap bitmap = getBitonalImage(chunk, null);
+        Pixmap bitmap = getBitonalImage(Map.of(ChunkId.Sjbz, List.of(chunk)));
 
         return new ChunkInfo(chunk.getId())
             .setTextData(chunk.getDataAsText())
             .setBitmap(bitmap);
     }
 
-    private Pixmap getBitonalImage(Chunk bitonalMask, FGbzChunk foregroundColors) {
-        if (bitonalMask == null) {
+    private Pixmap getBitonalImage(Map<ChunkId, List<Chunk>> pageChunks) {
+        Chunk sjbz = getChunk(pageChunks, ChunkId.Sjbz);
+
+        if (sjbz == null) {
             return null;
         }
 
-        Chunk sharedShape = this.djvuFile.findSharedShapeChunk(bitonalMask);
+        Chunk fgbz = getChunk(pageChunks, ChunkId.FGbz);
+        FGbzChunk foregroundColors = fgbz == null ? null : new FGbzChunk(fgbz);
 
-        byte[] data = bitonalMask.getData();
+        Chunk sharedShape = this.djvuFile.findSharedShapeChunk(sjbz);
+
+        byte[] data = sjbz.getData();
         byte[] dict = sharedShape == null ? null : sharedShape.getData();
 
         JB2Image image = decodeJB2Image(data, dict);
@@ -386,7 +396,8 @@ public class DjVuModelImpl implements DjVuModel {
         return foregroundColors == null ? image.get_bitmap() : image.get_bitmap(foregroundColors);
     }
 
-    private Pixmap getColorImage(List<Chunk> chunks) {
+    private Pixmap getColorImage(Map<ChunkId, List<Chunk>> pageChunks, ChunkId chunkId) {
+        List<Chunk> chunks = pageChunks.get(chunkId);
         if (chunks == null || chunks.isEmpty()) {
             return null;
         }
