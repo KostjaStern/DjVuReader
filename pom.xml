@@ -208,7 +208,7 @@
             </plugin>
 
             <!--
-               $ mvn jmh:benchmark  -Djmh.benchmarks=MyBenchmark -Djmh.o=MyBenchmark_results.txt
+               $ mvn jmh:benchmark  -Djmh.benchmarks=DjVuModelBenchmark -Djmh.o=DjVuModelBenchmark_results.txt
             -->
             <plugin>
                 <groupId>pw.krejci</groupId>
@@ -230,6 +230,9 @@
 
             <!--
                 $ mvnDebug package
+                $ mvn exec:java
+
+                $ MAVEN_OPTS="-Xmx2g -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
                 $ mvn exec:java
             -->
             <plugin>
