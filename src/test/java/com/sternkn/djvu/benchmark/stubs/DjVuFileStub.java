@@ -32,7 +32,7 @@ import java.util.Optional;
 public class DjVuFileStub implements DjVuFile {
 
     private static final String PATH_CHUNKS = "benchmark_data/load/";
-    private final ClassLoader classLoader = getClass().getClassLoader(); // DjVuFile.class.getClassLoader()
+    private final ClassLoader classLoader = getClass().getClassLoader();
 
     @Override
     public List<Chunk> getChunks() {

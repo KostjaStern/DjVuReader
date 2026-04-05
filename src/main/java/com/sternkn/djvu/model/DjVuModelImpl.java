@@ -171,6 +171,16 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     @Override
+    public PageData loadAsync(Page page) {
+        PageChunks chunks = getPageChunks(page.getOffset());
+
+        Image image = getPageImageAsync(chunks);
+        TextChunk text = getTextChunk(chunks);
+
+        return new PageData(image, text);
+    }
+
+    @Override
     public PageData load(Page page) {
         PageChunks chunks = getPageChunks(page.getOffset());
 
@@ -209,12 +219,12 @@ public class DjVuModelImpl implements DjVuModel {
     }
 
     @Override
-    public Image getPageImage(Page page) {
+    public Image getPageImageAsync(Page page) {
         PageChunks chunks = getPageChunks(page.getOffset());
-        return getPageImage(chunks);
+        return getPageImageAsync(chunks);
     }
 
-    private Image getPageImage(PageChunks chunks) {
+    private Image getPageImageAsync(PageChunks chunks) {
         InfoChunk info = chunks.info();
         Map<ChunkId, List<Chunk>> pageChunks = chunks.pageChunks();
 
@@ -230,6 +240,23 @@ public class DjVuModelImpl implements DjVuModel {
             image = composeImage(maskFuture.join(), backgroundFuture.join(), foregroundFuture.join(),
                     info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
         }
+
+        if (image == null) {
+            image = createBlank(info.getWidth(), info.getHeight());
+        }
+
+        return image;
+    }
+
+    private Image getPageImage(PageChunks chunks) {
+        InfoChunk info = chunks.info();
+        Map<ChunkId, List<Chunk>> pageChunks = chunks.pageChunks();
+
+        Pixmap background = getColorImage(pageChunks, ChunkId.BG44);
+        Pixmap foreground = getColorImage(pageChunks, ChunkId.FG44);
+        Pixmap mask = getBitonalImage(pageChunks);
+        Image image = composeImage(mask, background, foreground,
+            info.getHeight(), info.getWidth(), ImageRotationType.UPSIDE_DOWN);
 
         if (image == null) {
             image = createBlank(info.getWidth(), info.getHeight());

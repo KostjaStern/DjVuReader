@@ -58,6 +58,17 @@ public class DjVuModelBenchmark {
     @Benchmark
     @Fork(value = 1, warmups = 2)
     @BenchmarkMode(Mode.AverageTime)
+    public void loadAsyncBenchmark() {
+
+        Page page = new Page(offset, PAGE_IDS.get(offset));
+        LOG.info("model.loadAsync for page: {}", page);
+
+        model.loadAsync(page);
+    }
+
+    @Benchmark
+    @Fork(value = 1, warmups = 2)
+    @BenchmarkMode(Mode.AverageTime)
     public void loadBenchmark() {
 
         Page page = new Page(offset, PAGE_IDS.get(offset));

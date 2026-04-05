@@ -29,9 +29,11 @@ public interface DjVuModel {
 
     List<MenuNode> getMenuNodes();
 
+    PageData loadAsync(Page page);
+
     PageData load(Page page);
 
-    Image getPageImage(Page page);
+    Image getPageImageAsync(Page page);
 
     ChunkInfo getChunkInfo(long chunkId);
 
