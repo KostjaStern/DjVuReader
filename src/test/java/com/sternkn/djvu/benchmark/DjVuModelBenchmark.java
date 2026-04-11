@@ -39,12 +39,16 @@ public class DjVuModelBenchmark {
     private static final Logger LOG = LoggerFactory.getLogger(DjVuModelBenchmark.class);
 
     private static final Map<Long, String> PAGE_IDS = Map.of(
-            13192L, "0001_0001.djvu",
-            315744L, "0008_0001.djvu",
-            374690L, "0009_0001.djvu",
-            427552L, "0010_0001.djvu");
+            1L, "0001_0001.djvu",
+            2L, "0008_0001.djvu",
+            3L, "0009_0001.djvu",
+            4L, "0010_0001.djvu",
+            6L, "Ab0005_0001.djvu",
+            7L, "Ab0006_0001.djvu",
+            8L, "Ab0007_0001.djvu",
+            9L, "Ab0008_0001.djvu");
 
-    @Param({"13192", "315744", "374690", "427552"})
+    @Param({"1", "2", "3", "4", "6", "7", "8", "9"})
     public long offset;
 
     private DjVuModelImpl model;
