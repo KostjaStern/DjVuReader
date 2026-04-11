@@ -349,7 +349,7 @@ public class TestDjVuModelImpl extends TestSupport {
                                          createChunk(7L, ChunkId.BG44, "Yunger_revolution_BG44_4.data"))
         ));
 
-        Image image = model.getPageImage(new Page(offset, "nb0001.djvu"));
+        Image image = model.getPageImageAsync(new Page(offset, "nb0001.djvu"));
 
         Pixmap actual = new PNGPixmap(image);
         Pixmap expected = createPixmap("Yunger_revolution.png");
@@ -363,7 +363,7 @@ public class TestDjVuModelImpl extends TestSupport {
         when(djvuFile.getChunkByOffset(offset)).thenReturn(info);
         when(djvuFile.getAllPageChunks(info)).thenReturn(Map.of());
 
-        Image image = model.getPageImage(new Page(offset, "nb0001.djvu"));
+        Image image = model.getPageImageAsync(new Page(offset, "nb0001.djvu"));
 
         Pixmap actual = new PNGPixmap(image);
 

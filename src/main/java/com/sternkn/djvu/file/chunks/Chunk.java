@@ -19,6 +19,8 @@ package com.sternkn.djvu.file.chunks;
 
 import com.sternkn.djvu.file.DjVuFileException;
 
+import java.util.Objects;
+
 import static com.sternkn.djvu.utils.StringUtils.NL;
 
 public class Chunk {
@@ -191,6 +193,23 @@ public class Chunk {
         public Chunk build() {
             return new Chunk(this);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Chunk other)) {
+            return false;
+        }
+        return id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override

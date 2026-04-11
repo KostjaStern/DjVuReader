@@ -64,16 +64,16 @@ public class TestSimplePageCache {
     @BeforeEach
     public void setUp() {
         when(djvuModel.getPages()).thenReturn(pages);
-        when(djvuModel.load(any())).thenReturn(pageData);
+        when(djvuModel.loadAsync(any())).thenReturn(pageData);
 
         cache = new SimplePageCache(djvuModel, executor);
     }
 
     @Test
     public void testCacheInitialization() {
-        verify(djvuModel, times(2)).load(any(Page.class));
-        verify(djvuModel, times(1)).load(eq(pages.get(0)));
-        verify(djvuModel, times(1)).load(eq(pages.get(1)));
+        verify(djvuModel, times(2)).loadAsync(any(Page.class));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(0)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(1)));
 
         assertEquals(Set.of(pages.get(0), pages.get(1)),
                      cache.getCache().keySet());
@@ -85,12 +85,12 @@ public class TestSimplePageCache {
 
         assertSame(pageData, page.join());
 
-        verify(djvuModel, times(5)).load(any(Page.class));
-        verify(djvuModel, times(1)).load(eq(pages.get(0)));
-        verify(djvuModel, times(1)).load(eq(pages.get(1)));
-        verify(djvuModel, times(1)).load(eq(pages.get(2)));
-        verify(djvuModel, times(1)).load(eq(pages.get(3)));
-        verify(djvuModel, times(1)).load(eq(pages.get(4)));
+        verify(djvuModel, times(5)).loadAsync(any(Page.class));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(0)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(1)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(2)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(3)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(4)));
 
         assertEquals(Set.of(pages.get(2), pages.get(3), pages.get(4)),
                      cache.getCache().keySet());
@@ -102,11 +102,11 @@ public class TestSimplePageCache {
 
         assertSame(pageData, page.join());
 
-        verify(djvuModel, times(4)).load(any(Page.class));
-        verify(djvuModel, times(1)).load(eq(pages.get(0)));
-        verify(djvuModel, times(1)).load(eq(pages.get(1)));
-        verify(djvuModel, times(1)).load(eq(pages.get(7)));
-        verify(djvuModel, times(1)).load(eq(pages.get(8)));
+        verify(djvuModel, times(4)).loadAsync(any(Page.class));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(0)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(1)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(7)));
+        verify(djvuModel, times(1)).loadAsync(eq(pages.get(8)));
 
         assertEquals(Set.of(pages.get(7), pages.get(8)),
                 cache.getCache().keySet());

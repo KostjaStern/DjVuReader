@@ -70,7 +70,7 @@ public class SimplePageCache implements PageCache {
         }
         else {
             LOG.debug("cache MISS page: {}", page);
-            cachedPage = CompletableFuture.supplyAsync(() -> this.model.load(page), executor);
+            cachedPage = CompletableFuture.supplyAsync(() -> this.model.loadAsync(page), executor);
             cache.put(page, cachedPage);
         }
 
@@ -113,7 +113,7 @@ public class SimplePageCache implements PageCache {
             .filter(p -> !cache.containsKey(p))
             .forEach(p -> {
                 LOG.debug("Adding page: {} to cache", p);
-                cache.put(p, CompletableFuture.supplyAsync(() -> model.load(p), executor));
+                cache.put(p, CompletableFuture.supplyAsync(() -> model.loadAsync(p), executor));
             });
     }
 
